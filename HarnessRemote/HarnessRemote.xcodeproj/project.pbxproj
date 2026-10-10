@@ -1,0 +1,86 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		C00000000000000000000001 /* HarnessRemoteApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000001 /* HarnessRemoteApp.swift */; };
+		C00000000000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000002 /* ContentView.swift */; };
+		C00000000000000000000003 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000003 /* DesignSystem.swift */; };
+		C00000000000000000000004 /* RemoteProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000004 /* RemoteProtocol.swift */; };
+		C00000000000000000000005 /* RemoteSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000005 /* RemoteSession.swift */; };
+		C00000000000000000000006 /* RemoteProtocolTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000007 /* RemoteProtocolTests.swift */; };
+		C00000000000000000000007 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000010 /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		F00000000000000000000002 = {isa = PBXContainerItemProxy; containerPortal = G00000000000000000000001 /* Project object */; proxyType = 1; remoteGlobalIDString = A00000000000000000000001; remoteInfo = HarnessRemote; };
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		B00000000000000000000001 /* HarnessRemoteApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HarnessRemoteApp.swift; sourceTree = "<group>"; };
+		B00000000000000000000002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		B00000000000000000000003 /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
+		B00000000000000000000004 /* RemoteProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteProtocol.swift; sourceTree = "<group>"; };
+		B00000000000000000000005 /* RemoteSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteSession.swift; sourceTree = "<group>"; };
+		B00000000000000000000006 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B00000000000000000000007 /* RemoteProtocolTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteProtocolTests.swift; sourceTree = "<group>"; };
+		B00000000000000000000008 /* HarnessRemote.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HarnessRemote.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B00000000000000000000009 /* HarnessRemoteTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HarnessRemoteTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B00000000000000000000010 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		E00000000000000000000002 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		E00000000000000000000005 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		D00000000000000000000001 = {isa = PBXGroup; children = (D00000000000000000000002 /* HarnessRemote */, D00000000000000000000003 /* HarnessRemoteTests */, D00000000000000000000004 /* Products */); sourceTree = "<group>"; };
+		D00000000000000000000002 /* HarnessRemote */ = {isa = PBXGroup; children = (B00000000000000000000001, B00000000000000000000002, B00000000000000000000003, B00000000000000000000004, B00000000000000000000005, B00000000000000000000006, B00000000000000000000010); path = HarnessRemote; sourceTree = "<group>"; };
+		D00000000000000000000003 /* HarnessRemoteTests */ = {isa = PBXGroup; children = (B00000000000000000000007); path = HarnessRemoteTests; sourceTree = "<group>"; };
+		D00000000000000000000004 /* Products */ = {isa = PBXGroup; children = (B00000000000000000000008, B00000000000000000000009); name = Products; sourceTree = "<group>"; };
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A00000000000000000000001 /* HarnessRemote */ = {isa = PBXNativeTarget; buildConfigurationList = H00000000000000000000002; buildPhases = (E00000000000000000000001, E00000000000000000000002, E00000000000000000000003); buildRules = (); dependencies = (); name = HarnessRemote; productName = HarnessRemote; productReference = B00000000000000000000008; productType = "com.apple.product-type.application"; };
+		A00000000000000000000002 /* HarnessRemoteTests */ = {isa = PBXNativeTarget; buildConfigurationList = H00000000000000000000003; buildPhases = (E00000000000000000000004, E00000000000000000000005, E00000000000000000000006); buildRules = (); dependencies = (F00000000000000000000001); name = HarnessRemoteTests; productName = HarnessRemoteTests; productReference = B00000000000000000000009; productType = "com.apple.product-type.bundle.unit-test"; };
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		G00000000000000000000001 /* Project object */ = {isa = PBXProject; attributes = {BuildIndependentTargetsInParallel = 1; LastSwiftUpdateCheck = 2660; LastUpgradeCheck = 2660; TargetAttributes = {A00000000000000000000001 = {CreatedOnToolsVersion = 26.0;}; A00000000000000000000002 = {CreatedOnToolsVersion = 26.0; TestTargetID = A00000000000000000000001;};};}; buildConfigurationList = H00000000000000000000001; compatibilityVersion = "Xcode 14.0"; developmentRegion = ja; hasScannedForEncodings = 0; knownRegions = (ja, en, Base); mainGroup = D00000000000000000000001; productRefGroup = D00000000000000000000004; projectDirPath = ""; projectRoot = ""; targets = (A00000000000000000000001, A00000000000000000000002); };
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		E00000000000000000000003 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (C00000000000000000000007); runOnlyForDeploymentPostprocessing = 0; };
+		E00000000000000000000006 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		E00000000000000000000001 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (C00000000000000000000001, C00000000000000000000002, C00000000000000000000003, C00000000000000000000004, C00000000000000000000005); runOnlyForDeploymentPostprocessing = 0; };
+		E00000000000000000000004 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (C00000000000000000000006); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		F00000000000000000000001 = {isa = PBXTargetDependency; target = A00000000000000000000001; targetProxy = F00000000000000000000002; };
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		I00000000000000000000001 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO; CLANG_ENABLE_MODULES = YES; DEBUG_INFORMATION_FORMAT = dwarf; ENABLE_TESTABILITY = YES; IPHONEOS_DEPLOYMENT_TARGET = 17.0; SDKROOT = iphoneos; SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG; SWIFT_OPTIMIZATION_LEVEL = "-Onone"; SWIFT_VERSION = 6.0;}; name = Debug; };
+		I00000000000000000000002 /* Release */ = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO; CLANG_ENABLE_MODULES = YES; DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym"; IPHONEOS_DEPLOYMENT_TARGET = 17.0; SDKROOT = iphoneos; SWIFT_COMPILATION_MODE = wholemodule; SWIFT_OPTIMIZATION_LEVEL = "-O"; SWIFT_VERSION = 6.0;}; name = Release; };
+		I00000000000000000000003 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = HarnessRemote/Info.plist; MARKETING_VERSION = 1.0; PRODUCT_BUNDLE_IDENTIFIER = local.harness.harnessremote; PRODUCT_NAME = "$(TARGET_NAME)"; SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; SWIFT_EMIT_LOC_STRINGS = YES; SWIFT_STRICT_CONCURRENCY = complete; SWIFT_VERSION = 6.0; TARGETED_DEVICE_FAMILY = 1;}; name = Debug; };
+		I00000000000000000000004 /* Release */ = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = HarnessRemote/Info.plist; MARKETING_VERSION = 1.0; PRODUCT_BUNDLE_IDENTIFIER = local.harness.harnessremote; PRODUCT_NAME = "$(TARGET_NAME)"; SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; SWIFT_EMIT_LOC_STRINGS = YES; SWIFT_STRICT_CONCURRENCY = complete; SWIFT_VERSION = 6.0; TARGETED_DEVICE_FAMILY = 1;}; name = Release; };
+		I00000000000000000000005 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {BUNDLE_LOADER = "$(TEST_HOST)"; CODE_SIGN_STYLE = Automatic; GENERATE_INFOPLIST_FILE = YES; IPHONEOS_DEPLOYMENT_TARGET = 17.0; PRODUCT_BUNDLE_IDENTIFIER = local.harness.harnessremote.tests; PRODUCT_NAME = "$(TARGET_NAME)"; SWIFT_STRICT_CONCURRENCY = complete; SWIFT_VERSION = 6.0; TARGETED_DEVICE_FAMILY = 1; TEST_HOST = "$(BUILT_PRODUCTS_DIR)/HarnessRemote.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/HarnessRemote";}; name = Debug; };
+		I00000000000000000000006 /* Release */ = {isa = XCBuildConfiguration; buildSettings = {BUNDLE_LOADER = "$(TEST_HOST)"; CODE_SIGN_STYLE = Automatic; GENERATE_INFOPLIST_FILE = YES; IPHONEOS_DEPLOYMENT_TARGET = 17.0; PRODUCT_BUNDLE_IDENTIFIER = local.harness.harnessremote.tests; PRODUCT_NAME = "$(TARGET_NAME)"; SWIFT_STRICT_CONCURRENCY = complete; SWIFT_VERSION = 6.0; TARGETED_DEVICE_FAMILY = 1; TEST_HOST = "$(BUILT_PRODUCTS_DIR)/HarnessRemote.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/HarnessRemote";}; name = Release; };
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		H00000000000000000000001 = {isa = XCConfigurationList; buildConfigurations = (I00000000000000000000001, I00000000000000000000002); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		H00000000000000000000002 = {isa = XCConfigurationList; buildConfigurations = (I00000000000000000000003, I00000000000000000000004); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		H00000000000000000000003 = {isa = XCConfigurationList; buildConfigurations = (I00000000000000000000005, I00000000000000000000006); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+/* End XCConfigurationList section */
+	};
+	rootObject = G00000000000000000000001 /* Project object */;
+}

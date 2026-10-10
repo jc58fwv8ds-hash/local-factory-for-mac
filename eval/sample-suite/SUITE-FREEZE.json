@@ -1,0 +1,11 @@
+{
+  "files": {
+    "SUITE-SCHEMA.md": "9b83cc4da49727393fedaffd8a542eb609285e0e15ce49220f5118a48a463dca",
+    "tasks/s-01.json": "a6d3dc055a10176ca18ddc3f054869754215023fc843f78cf5f21a8d97b36eaa",
+    "tasks/s-02.json": "e89c032d3459ecd856cc3c6563b358bb252a7fc506e5e9c78a5ec6a2c5a2b6d6",
+    "tasks/s-03.json": "9f9b1c6ab5cdc970ed3b749fe3b0270e21f89f307ecaae1c0dc22e6c010acbfe",
+    "validate_suite.py": "2b26c128b5117c4b178f5fe70902849c01ce73b3a300c9b57b9d15e12c3cc9a3"
+  },
+  "frozenAt": "2026-10-08T15:54:21+09:00",
+  "taskCount": 3
+}

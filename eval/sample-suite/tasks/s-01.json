@@ -1,0 +1,29 @@
+{
+  "id": "s-01",
+  "objective": "送料無料の判定がおかしいと問い合わせがありました。規約では「商品代金が5,000円以上なら送料無料」なのに、ちょうど5,000円の注文で送料550円がかかっていたそうです。規約どおりに直してください。",
+  "size": "small",
+  "category": "bugfix",
+  "multiFile": false,
+  "unfamiliar": false,
+  "initialFiles": {
+    "Package.swift": "// swift-tools-version: 6.0\nimport PackageDescription\n\nlet package = Package(\n    name: \"Shop\",\n    targets: [\n        .target(name: \"Shop\"),\n        .testTarget(name: \"ShopTests\", dependencies: [\"Shop\"])\n    ]\n)\n",
+    "Sources/Shop/ShippingFee.swift": "/// 送料の計算。\n///\n/// ショップの規約: 商品代金(税込)が `freeThreshold` 円以上なら送料無料。それ未満は一律 `flatFee` 円。\npublic struct ShippingFee: Sendable {\n    public var freeThreshold = 5_000\n    public var flatFee = 550\n\n    public init() {}\n\n    public func fee(forSubtotal subtotal: Int) -> Int {\n        subtotal > freeThreshold ? 0 : flatFee\n    }\n}\n",
+    "Tests/ShopTests/ShippingFeeAcceptanceTests.swift": "import Testing\n@testable import Shop\n\n@Test func exactlyThresholdIsFree() {\n    #expect(ShippingFee().fee(forSubtotal: 5_000) == 0)\n}\n\n@Test func largeOrderIsFree() {\n    #expect(ShippingFee().fee(forSubtotal: 12_000) == 0)\n}\n"
+  },
+  "protectedTests": [
+    "Tests/ShopTests/ShippingFeeAcceptanceTests.swift"
+  ],
+  "maxEdits": 2,
+  "maxLines": 10,
+  "reference": {
+    "Sources/Shop/ShippingFee.swift": "/// 送料の計算。\n///\n/// ショップの規約: 商品代金(税込)が `freeThreshold` 円以上なら送料無料。それ未満は一律 `flatFee` 円。\npublic struct ShippingFee: Sendable {\n    public var freeThreshold = 5_000\n    public var flatFee = 550\n\n    public init() {}\n\n    public func fee(forSubtotal subtotal: Int) -> Int {\n        subtotal >= freeThreshold ? 0 : flatFee\n    }\n}\n"
+  },
+  "holdoutTests": {
+    "Tests/ShopTests/ShippingFeeHoldoutTests.swift": "import Testing\n@testable import Shop\n\n/// しきい値の1円下は送料がかかる。\n@Test func justBelowThresholdIsCharged() {\n    #expect(ShippingFee().fee(forSubtotal: 4_999) == 550)\n}\n\n/// しきい値の設定を変えても同じ規則。\n@Test func customThresholdIsInclusive() {\n    var fee = ShippingFee()\n    fee.freeThreshold = 3_000\n    #expect(fee.fee(forSubtotal: 3_000) == 0)\n    #expect(fee.fee(forSubtotal: 2_999) == 550)\n}\n"
+  },
+  "plausibleWrong": {
+    "Sources/Shop/ShippingFee.swift": "/// 送料の計算。\n///\n/// ショップの規約: 商品代金(税込)が `freeThreshold` 円以上なら送料無料。それ未満は一律 `flatFee` 円。\npublic struct ShippingFee: Sendable {\n    public var freeThreshold = 5_000\n    public var flatFee = 550\n\n    public init() {}\n\n    public func fee(forSubtotal subtotal: Int) -> Int {\n        subtotal > freeThreshold || subtotal == 5_000 ? 0 : flatFee\n    }\n}\n"
+  },
+  "origin": "ネットショップの送料計算(公開用の見本)",
+  "rationale": "見えるテストはちょうど5,000円を確かめ、隠しテストは4,999円と、しきい値を変えた場合の境界で、定数への場当たり的な対処を見分ける。"
+}

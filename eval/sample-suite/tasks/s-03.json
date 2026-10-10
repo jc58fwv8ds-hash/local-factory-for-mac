@@ -1,0 +1,29 @@
+{
+  "id": "s-03",
+  "objective": "あいさつの時間帯を変えたいです。朝の5時から11時の手前までは「おはようございます」、11時から17時の手前までは「こんにちは」、それ以外(夜と深夜〜朝4時台)は「こんばんは」にしてください。",
+  "size": "small",
+  "category": "behaviour-change",
+  "multiFile": false,
+  "unfamiliar": false,
+  "initialFiles": {
+    "Package.swift": "// swift-tools-version: 6.0\nimport PackageDescription\n\nlet package = Package(\n    name: \"Greet\",\n    targets: [\n        .target(name: \"Greet\"),\n        .testTarget(name: \"GreetTests\", dependencies: [\"Greet\"])\n    ]\n)\n",
+    "Sources/Greet/Greeting.swift": "/// 時刻(0〜23時)に応じたあいさつ。\npublic enum Greeting {\n    public static func message(hour: Int) -> String {\n        precondition((0...23).contains(hour))\n        if hour < 12 { return \"おはようございます\" }\n        if hour < 18 { return \"こんにちは\" }\n        return \"こんばんは\"\n    }\n}\n",
+    "Tests/GreetTests/GreetingAcceptanceTests.swift": "import Testing\n@testable import Greet\n\n@Test func middayIsHello() {\n    #expect(Greeting.message(hour: 13) == \"こんにちは\")\n}\n\n@Test func earlyMorningIsEvening() {\n    #expect(Greeting.message(hour: 3) == \"こんばんは\")\n}\n\n@Test func lateAfternoonIsEvening() {\n    #expect(Greeting.message(hour: 17) == \"こんばんは\")\n}\n"
+  },
+  "protectedTests": [
+    "Tests/GreetTests/GreetingAcceptanceTests.swift"
+  ],
+  "maxEdits": 3,
+  "maxLines": 12,
+  "reference": {
+    "Sources/Greet/Greeting.swift": "/// 時刻(0〜23時)に応じたあいさつ。\npublic enum Greeting {\n    public static func message(hour: Int) -> String {\n        precondition((0...23).contains(hour))\n        if (5..<11).contains(hour) { return \"おはようございます\" }\n        if (11..<17).contains(hour) { return \"こんにちは\" }\n        return \"こんばんは\"\n    }\n}\n"
+  },
+  "holdoutTests": {
+    "Tests/GreetTests/GreetingHoldoutTests.swift": "import Testing\n@testable import Greet\n\n/// 境目: 5時は朝、4時は夜。\n@Test func morningStartsAtFive() {\n    #expect(Greeting.message(hour: 5) == \"おはようございます\")\n    #expect(Greeting.message(hour: 4) == \"こんばんは\")\n}\n\n/// 境目: 11時は昼、10時は朝。\n@Test func noonStartsAtEleven() {\n    #expect(Greeting.message(hour: 11) == \"こんにちは\")\n    #expect(Greeting.message(hour: 10) == \"おはようございます\")\n}\n"
+  },
+  "plausibleWrong": {
+    "Sources/Greet/Greeting.swift": "/// 時刻(0〜23時)に応じたあいさつ。\npublic enum Greeting {\n    public static func message(hour: Int) -> String {\n        precondition((0...23).contains(hour))\n        if (5...11).contains(hour) { return \"おはようございます\" }\n        if (12..<17).contains(hour) { return \"こんにちは\" }\n        return \"こんばんは\"\n    }\n}\n"
+  },
+  "origin": "あいさつ表示(公開用の見本)",
+  "rationale": "見えるテストは区間の内側だけを確かめ、隠しテストは5時・11時の境目で、閉区間と半開区間の取り違えを見分ける。"
+}

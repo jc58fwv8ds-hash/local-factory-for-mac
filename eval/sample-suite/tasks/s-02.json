@@ -1,0 +1,32 @@
+{
+  "id": "s-02",
+  "objective": "やることリストの要約行に、まだ終わっていない件数も出したいです。今は「全 3 件」とだけ出ていますが、「全 3 件・残り 2 件」のように、完了済みを除いた残りの件数を後ろに付けてください。TodoList にも残り件数を `remaining` として持たせてください。",
+  "size": "medium",
+  "category": "feature",
+  "multiFile": true,
+  "unfamiliar": false,
+  "initialFiles": {
+    "Package.swift": "// swift-tools-version: 6.0\nimport PackageDescription\n\nlet package = Package(\n    name: \"Todo\",\n    targets: [\n        .target(name: \"Todo\"),\n        .testTarget(name: \"TodoTests\", dependencies: [\"Todo\"])\n    ]\n)\n",
+    "Sources/Todo/Todo.swift": "/// やることリストの1件。\npublic struct Todo: Sendable, Equatable {\n    public var title: String\n    public var isDone: Bool\n\n    public init(title: String, isDone: Bool = false) {\n        self.title = title\n        self.isDone = isDone\n    }\n}\n\npublic struct TodoList: Sendable {\n    public var items: [Todo]\n\n    public init(items: [Todo] = []) { self.items = items }\n\n    /// 登録されている件数(完了済みも含む)。\n    public var count: Int { items.count }\n}\n",
+    "Sources/Todo/TodoSummary.swift": "/// 一覧の上に出す要約の1行。例: \"全 3 件\"\npublic enum TodoSummary {\n    public static func line(for list: TodoList) -> String {\n        \"全 \\(list.count) 件\"\n    }\n}\n",
+    "Tests/TodoTests/TodoSummaryAcceptanceTests.swift": "import Testing\n@testable import Todo\n\n@Test func summaryShowsRemaining() {\n    let list = TodoList(items: [Todo(title: \"買い物\"), Todo(title: \"洗濯\", isDone: true), Todo(title: \"掃除\")])\n    #expect(TodoSummary.line(for: list) == \"全 3 件・残り 2 件\")\n}\n"
+  },
+  "protectedTests": [
+    "Tests/TodoTests/TodoSummaryAcceptanceTests.swift"
+  ],
+  "maxEdits": 4,
+  "maxLines": 20,
+  "reference": {
+    "Sources/Todo/Todo.swift": "/// やることリストの1件。\npublic struct Todo: Sendable, Equatable {\n    public var title: String\n    public var isDone: Bool\n\n    public init(title: String, isDone: Bool = false) {\n        self.title = title\n        self.isDone = isDone\n    }\n}\n\npublic struct TodoList: Sendable {\n    public var items: [Todo]\n\n    public init(items: [Todo] = []) { self.items = items }\n\n    /// 登録されている件数(完了済みも含む)。\n    public var count: Int { items.count }\n\n    /// 完了していない件数。\n    public var remaining: Int { items.filter { !$0.isDone }.count }\n}\n",
+    "Sources/Todo/TodoSummary.swift": "/// 一覧の上に出す要約の1行。例: \"全 3 件\"\npublic enum TodoSummary {\n    public static func line(for list: TodoList) -> String {\n        \"全 \\(list.count) 件・残り \\(list.remaining) 件\"\n    }\n}\n"
+  },
+  "holdoutTests": {
+    "Tests/TodoTests/TodoSummaryHoldoutTests.swift": "import Testing\n@testable import Todo\n\n/// 全部終わっていれば残り 0 件。\n@Test func allDoneShowsZeroRemaining() {\n    let list = TodoList(items: [Todo(title: \"a\", isDone: true), Todo(title: \"b\", isDone: true)])\n    #expect(list.remaining == 0)\n    #expect(TodoSummary.line(for: list) == \"全 2 件・残り 0 件\")\n}\n\n/// 空のリスト。\n@Test func emptyList() {\n    #expect(TodoList().remaining == 0)\n    #expect(TodoSummary.line(for: TodoList()) == \"全 0 件・残り 0 件\")\n}\n"
+  },
+  "plausibleWrong": {
+    "Sources/Todo/Todo.swift": "/// やることリストの1件。\npublic struct Todo: Sendable, Equatable {\n    public var title: String\n    public var isDone: Bool\n\n    public init(title: String, isDone: Bool = false) {\n        self.title = title\n        self.isDone = isDone\n    }\n}\n\npublic struct TodoList: Sendable {\n    public var items: [Todo]\n\n    public init(items: [Todo] = []) { self.items = items }\n\n    /// 登録されている件数(完了済みも含む)。\n    public var count: Int { items.count }\n\n    /// 完了していない件数。\n    public var remaining: Int { max(1, items.filter { !$0.isDone }.count) }\n}\n",
+    "Sources/Todo/TodoSummary.swift": "/// 一覧の上に出す要約の1行。例: \"全 3 件\"\npublic enum TodoSummary {\n    public static func line(for list: TodoList) -> String {\n        \"全 \\(list.count) 件・残り \\(list.remaining) 件\"\n    }\n}\n"
+  },
+  "origin": "やることリストアプリ(公開用の見本)",
+  "rationale": "見えるテストは混在したリストだけを確かめ、隠しテストは全件完了と空のリストで、0 件の扱いを確かめる。"
+}
