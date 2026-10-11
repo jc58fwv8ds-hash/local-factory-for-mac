@@ -46,6 +46,10 @@ def main():
     if (out / "results.jsonl").exists():
         done = {json.loads(l)["id"] for l in (out / "results.jsonl").read_text().splitlines() if l.strip()}
     pilot = Path(a.candidate).resolve() / ".build/debug/HarnessKernelPilot"
+    # 2026-10-11: 別の場所でビルドしたまま古い実行ファイルで 2 時間測ってしまったので、ソースより古ければ止める
+    newest = max(f.stat().st_mtime for f in (Path(a.candidate).resolve() / "Sources").rglob("*.swift"))
+    if not pilot.exists() or pilot.stat().st_mtime < newest:
+        sys.exit("実行ファイルがソースより古いです。先に swift build --build-system native を実行してください")
     for task in sorted((SUITE / "tasks").glob("*-*.json")):
         tid = task.stem
         if (a.only and tid != a.only) or tid in done: continue

@@ -13,11 +13,16 @@ public struct RequirementCoveragePlan: Codable, Sendable, Equatable {
         public let rationale: String
         public let coverage: String // complete | incomplete | uncertain
         public let no_change_reason: String?
+        /// One concrete case with every input value and the expected result (backlog #40, 2026-10-11): the builder
+        /// implements toward it and the examiner turns it into a test. Optional so older plans still decode.
+        public let example: String?
         public init(requirement: String, source_clause_ids: [String] = [], relevant_symbols: [String], editable_targets: [String],
-                    read_only_evidence: [String], rationale: String, coverage: String, no_change_reason: String? = nil) {
+                    read_only_evidence: [String], rationale: String, coverage: String, no_change_reason: String? = nil,
+                    example: String? = nil) {
             self.requirement = requirement; self.source_clause_ids = source_clause_ids; self.relevant_symbols = relevant_symbols
             self.editable_targets = editable_targets; self.read_only_evidence = read_only_evidence
             self.rationale = rationale; self.coverage = coverage; self.no_change_reason = no_change_reason
+            self.example = example
         }
     }
     public let requirements: [Item]
@@ -39,10 +44,11 @@ struct CoveragePlanSchema: Encodable {
             let rationale = Text()
             let coverage = Coverage()
             let no_change_reason = Text()
+            let example = Text()
         }
         let type = "object"
         let properties = Properties()
-        let required = ["requirement", "source_clause_ids", "relevant_symbols", "editable_targets", "read_only_evidence", "rationale", "coverage", "no_change_reason"]
+        let required = ["requirement", "source_clause_ids", "relevant_symbols", "editable_targets", "read_only_evidence", "rationale", "coverage", "no_change_reason", "example"]
         let additionalProperties = false
     }
     struct Items: Encodable { let type = "array"; let items = Item(); let minItems = 1; let maxItems = 6 }

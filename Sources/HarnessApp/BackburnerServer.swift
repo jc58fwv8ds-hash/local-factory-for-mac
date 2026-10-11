@@ -147,3 +147,37 @@ struct BackburnerAwareInferenceProvider: ModelInferenceProvider {
         return await base.events(for: request)
     }
 }
+
+/// The App's own model calls (conversation, rename, analysis, documents, images' prompt) are appended per day to
+/// ~/Library/Application Support/Harness/model-calls/YYYY-MM-DD.jsonl (backlog #41); files older than 14 days are removed.
+struct LoggingInferenceProvider: ModelInferenceProvider {
+    let base: any ModelInferenceProvider
+
+    static var folder: URL {
+        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("Harness/model-calls", isDirectory: true)
+    }
+
+    func events(for request: InferenceRequest) async -> AsyncThrowingStream<String, Error> {
+        let upstream = await base.events(for: request)
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        let file = Self.folder.appendingPathComponent(formatter.string(from: Date()) + ".jsonl")
+        let started = Date()
+        return AsyncThrowingStream { continuation in
+            let task = Task {
+                var text = ""
+                do {
+                    for try await piece in upstream { text += piece; continuation.yield(piece) }
+                    ModelCallLog.record(request, response: text, error: nil, seconds: Date().timeIntervalSince(started), to: file)
+                    continuation.finish()
+                } catch {
+                    ModelCallLog.record(request, response: text.isEmpty ? nil : text, error: error,
+                                        seconds: Date().timeIntervalSince(started), to: file)
+                    continuation.finish(throwing: error)
+                }
+            }
+            continuation.onTermination = { _ in task.cancel() }
+        }
+    }
+}

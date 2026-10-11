@@ -102,7 +102,10 @@ extension WorkspaceStore {
         guard change.status == .ready else { return }
         let output = SpreadsheetIntent.outputURL(for: change.source)
         do {
-            _ = try XLSXEditor.apply(change.edits, to: change.source, output: output)
+            _ = try FileOperationRunner.perform(.init(kind: .excel, action: .write, instruction: change.instruction,
+                                                      reads: [change.source], writes: [output]), hooks: fileOperationHooks) {
+                try XLSXEditor.apply(change.edits, to: change.source, output: output)
+            }
             change.status = .applied(output)
             appendAssistantNote("「\(output.lastPathComponent)」に書き出しました(元のファイルはそのままです)。")
         } catch {
@@ -114,7 +117,10 @@ extension WorkspaceStore {
     func revertSpreadsheetChange(_ change: SpreadsheetChange) {
         guard case .applied(let output) = change.status else { return }
         do {
-            try FileManager.default.trashItem(at: output, resultingItemURL: nil)
+            try FileOperationRunner.perform(.init(kind: .excel, action: .revert, instruction: change.instruction,
+                                                  reads: [change.source], writes: [output]), hooks: fileOperationHooks) {
+                try FileManager.default.trashItem(at: output, resultingItemURL: nil)
+            }
             change.status = .ready
             appendAssistantNote("書き出した「\(output.lastPathComponent)」をゴミ箱へ移しました。")
         } catch {

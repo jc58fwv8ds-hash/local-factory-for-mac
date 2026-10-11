@@ -57,6 +57,8 @@ final class WorkspaceStore {
     var analysisChanges: [UUID: AnalysisChange] = [:]
     var pdfChanges: [UUID: PDFChange] = [:]
     var wordChanges: [UUID: WordChange] = [:]
+    /// Checks before and records after every file operation from the chat (backlog #42). The app adds the journal at launch.
+    var fileOperationHooks: [any FileOperationHook] = [OriginalProtectionHook()]
     /// What the next message is for (会話 / 文章を書く / 画像を作る), image cards, and a request waiting for consent.
     var composerPurpose: ComposerPurpose = .conversation
     var imageChanges: [UUID: ImageChange] = [:]
@@ -107,7 +109,7 @@ final class WorkspaceStore {
 
     init(
         repository: WorkspaceRepository = WorkspaceRepository(),
-        inferenceProvider: any ModelInferenceProvider = BackburnerAwareInferenceProvider(base: LocalInferenceService()),
+        inferenceProvider: any ModelInferenceProvider = LoggingInferenceProvider(base: BackburnerAwareInferenceProvider(base: LocalInferenceService())),
         sourceContextProvider: any ProjectSourceContextProviding = ProjectSourceContextCollector(),
         fileEditor: any ProjectFileEditing = RecordedProjectFileEditor(),
         gitCheckpointProvider: (any GitCheckpointing)? = nil,

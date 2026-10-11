@@ -105,9 +105,12 @@ extension WorkspaceStore {
     func applyPDFChange(_ change: PDFChange) {
         guard change.status == .ready, let first = change.files.first else { return }
         do {
-            let (document, _) = try PDFEditor.apply(change.operations, files: change.files)
             let output = PDFEditor.outputURL(for: first)
-            guard document.write(to: output) else { throw PDFEditor.Failure.write }
+            try FileOperationRunner.perform(.init(kind: .pdf, action: .write, instruction: change.instruction,
+                                                  reads: change.files, writes: [output]), hooks: fileOperationHooks) {
+                let (document, _) = try PDFEditor.apply(change.operations, files: change.files)
+                guard document.write(to: output) else { throw PDFEditor.Failure.write }
+            }
             change.status = .applied(output)
             appendAssistantNote("「\(output.lastPathComponent)」に書き出しました(元のファイルはそのままです)。")
         } catch {
@@ -118,7 +121,10 @@ extension WorkspaceStore {
     func revertPDFChange(_ change: PDFChange) {
         guard case .applied(let output) = change.status else { return }
         do {
-            try FileManager.default.trashItem(at: output, resultingItemURL: nil)
+            try FileOperationRunner.perform(.init(kind: .pdf, action: .revert, instruction: change.instruction,
+                                                  reads: change.files, writes: [output]), hooks: fileOperationHooks) {
+                try FileManager.default.trashItem(at: output, resultingItemURL: nil)
+            }
             change.status = .ready
             appendAssistantNote("書き出した「\(output.lastPathComponent)」をゴミ箱へ移しました。")
         } catch {

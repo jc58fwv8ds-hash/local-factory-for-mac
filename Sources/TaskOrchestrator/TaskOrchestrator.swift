@@ -33,7 +33,14 @@ package enum TaskOrchestrator {
     package enum Failure: Error { case scope, alreadyStarted, context, testDiff, environmentInvalid }
     /// The pipeline body for one task. `root` must lie inside `candidate/work/` (isolation requirement);
     /// `output` receives the run record and evidence. Behaviour is identical for the CLI and for tests.
+    /// Every model call of the run is appended to `output/model-calls.jsonl` (ModelCallLog, backlog #41).
     package static func runTask(candidate: URL, root: URL, key: String, model: String, output: URL) async throws {
+        try await ModelCallLog.$destination.withValue(output.appendingPathComponent("model-calls.jsonl")) {
+            try await runTaskLogged(candidate: candidate, root: root, key: key, model: model, output: output)
+        }
+    }
+
+    private static func runTaskLogged(candidate: URL, root: URL, key: String, model: String, output: URL) async throws {
         guard root.path.hasPrefix(candidate.path + "/work/") else { throw Failure.scope }
         let task = try JSONDecoder().decode(Task.self, from: Data(contentsOf: root.appendingPathComponent("task.json")))
         try FileManager.default.createDirectory(at: output, withIntermediateDirectories: true)

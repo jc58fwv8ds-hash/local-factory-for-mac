@@ -61,6 +61,17 @@ enum BatchExaminerStage {
         do { return try await run.execute(.test, evidence: evidence).output } catch { return SecondCandidate.latestReceiptOutput(evidence) }
     }
 
+    /// The developer's own examples from the last accepted coverage plan (backlog #40, 2026-10-11), as cases to test.
+    static func planExamples(_ record: BatchRunRecord) -> String {
+        let plan = ((record["coveragePlans"] as? [[String: Any]])?.last?["plan"] as? [String: Any])?["requirements"] as? [[String: Any]]
+        let examples = (plan ?? []).compactMap { ($0["example"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        guard !examples.isEmpty else { return "" }
+        return "\n\nThe developer planned with these examples (from the request; they may be wrong). Include a test for each one "
+            + "whose expected value you get from the request itself, not from the example:\n"
+            + examples.map { "- " + $0 }.joined(separator: "\n")
+    }
+
     static func examine(candidate: URL, root: URL, directory: URL, model: String, objective: String,
                         originals: [String: String], visibleTests: [String: String], permitted: [String], allowed: Bool,
                         record: BatchRunRecord) async throws -> Finding? {
@@ -102,8 +113,8 @@ enum BatchExaminerStage {
         declared API. You may call the helpers and fixtures of the existing tests directly (they are available to your tests); \
         do not copy or redefine them. Swift String has no integer subscript (use Array(s) or prefix/dropFirst).
         """
-        let compactPrompt = context + "\n\n" + compactFormat
-        let swiftPrompt = context + "\n\nWrite them as ONE new Swift Testing file (import Testing, @testable import \(module), "
+        let compactPrompt = context + planExamples(record) + "\n\n" + compactFormat
+        let swiftPrompt = context + planExamples(record) + "\n\nWrite them as ONE new Swift Testing file (import Testing, @testable import \(module), "
             + "@Test func ... with #expect). Give test functions new unique names. Return the Swift source only, in one ```swift block."
 
         // 2. Run on a copy of the final code; drop test functions that do not compile (one slip must not void the rest).

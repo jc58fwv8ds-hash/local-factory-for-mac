@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 @testable import TaskOrchestrator
 
@@ -102,5 +103,17 @@ struct BatchExaminerStageTests {
         #expect(source.contains("#expect(throws: (any Error).self) { _ = try try Parser.parse(\"\") }") || source.contains("_ = try Parser"))
         #expect(BatchExaminerStage.blindVerdict(value: "1", expected: "(1)", actual: "0") == "code_wrong")
         #expect(BatchExaminerStage.compactAspects(response) == ["examiner_graceBoundary": "a", "examiner_broken": "a"])
+    }
+
+    @Test func thePlansExamplesReachTheExaminerAndOldPlansAddNothing() throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("record-\(UUID().uuidString).json")
+        let record = BatchRunRecord(url: url, start: Date(), values: [:])
+        #expect(BatchExaminerStage.planExamples(record) == "")
+        record.append("coveragePlans", ["plan": ["requirements": [["requirement": "old", "example": "最初の例"]]]])
+        record.append("coveragePlans", ["plan": ["requirements": [
+            ["requirement": "送料", "example": "合計がちょうど5000円 → 送料0円"], ["requirement": "古い計画"], ["requirement": "空", "example": " "]]]])
+        let text = BatchExaminerStage.planExamples(record)
+        #expect(text.contains("- 合計がちょうど5000円 → 送料0円") && !text.contains("最初の例"))
+        #expect(text.components(separatedBy: "\n- ").count == 2)
     }
 }

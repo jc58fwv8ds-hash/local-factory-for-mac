@@ -193,6 +193,8 @@ public enum RequirementCoverage {
         Plan before editing. Split the objective into at most 6 small requirements; keep every field to one short sentence. For each give:
         requirement; source_clause_ids (IDs of the objective clauses below that this requirement comes from); relevant_symbols (identifiers involved); editable_targets (files you will change for it);
         read_only_evidence (files you only read for it); rationale (why these targets satisfy it);
+        example (one concrete case of this requirement with every input value and the expected result, in the objective's
+        language, e.g. "合計がちょうど5000円の注文 → 送料0円"; a boundary or an exception the objective states when it has one);
         coverage: complete | incomplete | uncertain; no_change_reason when no file needs to change.
         Only EDITABLE files are writable now. If a READ-ONLY file must change to meet a requirement, list it in
         editable_targets; the Harness verifies the code relation before allowing it. Never list files you were not shown.

@@ -258,7 +258,7 @@ public enum TargetCoverage {
             return .init(requirement: item.requirement, source_clause_ids: item.source_clause_ids,
                          relevant_symbols: item.relevant_symbols, editable_targets: owners,
                          read_only_evidence: item.read_only_evidence.filter { !owners.contains($0) },
-                         rationale: item.rationale, coverage: "complete", no_change_reason: "")
+                         rationale: item.rationale, coverage: "complete", no_change_reason: "", example: item.example)
         })
     }
 

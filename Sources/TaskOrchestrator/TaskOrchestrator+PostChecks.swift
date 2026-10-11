@@ -10,6 +10,14 @@ extension TaskOrchestrator {
     /// successes carried no risk signal. Returns the updated run record.
     package static func postChecks(candidate: URL, root: URL, model: String, objective: String,
                                    originals: [String: String], output: URL, seeds: [[String: String]] = []) async -> URL {
+        await ModelCallLog.$destination.withValue(output.appendingPathComponent("model-calls.jsonl")) {
+            await postChecksLogged(candidate: candidate, root: root, model: model, objective: objective, originals: originals,
+                                   output: output, seeds: seeds)
+        }
+    }
+
+    private static func postChecksLogged(candidate: URL, root: URL, model: String, objective: String,
+                                         originals: [String: String], output: URL, seeds: [[String: String]]) async -> URL {
         let result = output.appendingPathComponent("result.json")
         let values = (try? JSONSerialization.jsonObject(with: Data(contentsOf: result))) as? [String: Any] ?? [:]
         let record = BatchRunRecord(url: result, start: Date(), values: values)

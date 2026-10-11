@@ -28,10 +28,12 @@ package enum DogfoodLocalProposalRunner {
             let response = try await collectUncounted(original)
             InferenceEnvironment.shared.recordUsage(promptBytes: bytes, responseBytes: response.utf8.count,
                 seconds: InferenceEnvironment.continuousSeconds() - started, failed: false)
+            ModelCallLog.record(original, response: response, error: nil, seconds: InferenceEnvironment.continuousSeconds() - started)
             return response
         } catch {
             InferenceEnvironment.shared.recordUsage(promptBytes: bytes, responseBytes: 0,
                 seconds: InferenceEnvironment.continuousSeconds() - started, failed: true)
+            ModelCallLog.record(original, response: nil, error: error, seconds: InferenceEnvironment.continuousSeconds() - started)
             throw error
         }
     }

@@ -118,7 +118,12 @@ extension WorkspaceStore {
         let access = change.folder.startAccessingSecurityScopedResource()
         defer { if access { change.folder.stopAccessingSecurityScopedResource() } }
         do {
-            try BulkRenameExecutor.apply(plan.items, in: change.folder)
+            try FileOperationRunner.perform(.init(kind: .rename, action: .write, instruction: change.instruction,
+                                                  reads: plan.items.map { change.folder.appendingPathComponent($0.from) },
+                                                  writes: plan.items.map { change.folder.appendingPathComponent($0.to) }),
+                                            hooks: fileOperationHooks) {
+                try BulkRenameExecutor.apply(plan.items, in: change.folder)
+            }
             change.status = .applied
             appendAssistantNote("\(plan.items.count) 件の名前を変えました。カードの「取り消す」で元に戻せます。")
         } catch {
@@ -131,7 +136,12 @@ extension WorkspaceStore {
         let access = change.folder.startAccessingSecurityScopedResource()
         defer { if access { change.folder.stopAccessingSecurityScopedResource() } }
         do {
-            try BulkRenameExecutor.undo(plan.items, in: change.folder)
+            try FileOperationRunner.perform(.init(kind: .rename, action: .revert, instruction: change.instruction,
+                                                  reads: plan.items.map { change.folder.appendingPathComponent($0.to) },
+                                                  writes: plan.items.map { change.folder.appendingPathComponent($0.from) }),
+                                            hooks: fileOperationHooks) {
+                try BulkRenameExecutor.undo(plan.items, in: change.folder)
+            }
             change.status = .ready
             appendAssistantNote("名前の変更を取り消し、元の名前に戻しました。")
         } catch {

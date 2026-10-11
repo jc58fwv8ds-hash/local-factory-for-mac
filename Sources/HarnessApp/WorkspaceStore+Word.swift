@@ -83,7 +83,10 @@ extension WorkspaceStore {
         guard change.status == .ready else { return }
         let output = WordEditor.outputURL(for: change.source)
         do {
-            _ = try WordEditor.apply(change.edits, to: change.source, output: output)
+            _ = try FileOperationRunner.perform(.init(kind: .word, action: .write, instruction: change.instruction,
+                                                      reads: [change.source], writes: [output]), hooks: fileOperationHooks) {
+                try WordEditor.apply(change.edits, to: change.source, output: output)
+            }
             change.status = .applied(output)
             appendAssistantNote("「\(output.lastPathComponent)」に書き出しました(元のファイルはそのままです)。")
         } catch {
@@ -94,7 +97,10 @@ extension WorkspaceStore {
     func revertWordChange(_ change: WordChange) {
         guard case .applied(let output) = change.status else { return }
         do {
-            try FileManager.default.trashItem(at: output, resultingItemURL: nil)
+            try FileOperationRunner.perform(.init(kind: .word, action: .revert, instruction: change.instruction,
+                                                  reads: [change.source], writes: [output]), hooks: fileOperationHooks) {
+                try FileManager.default.trashItem(at: output, resultingItemURL: nil)
+            }
             change.status = .ready
             appendAssistantNote("書き出した「\(output.lastPathComponent)」をゴミ箱へ移しました。")
         } catch {
