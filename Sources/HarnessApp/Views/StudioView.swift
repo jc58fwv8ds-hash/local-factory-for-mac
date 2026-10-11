@@ -7,6 +7,7 @@ struct StudioView: View {
     @State private var isShowingWorkPlan = false
     @State private var isShowingPreview = false
     @State private var isShowingConventions = false
+    @State private var isShowingSchedules = false
     @AppStorage(StudioLayout.sidebarKey) private var isSidebarVisible = true
     @AppStorage(StudioLayout.inspectorKey) private var isInspectorVisible = false
 
@@ -74,6 +75,36 @@ struct StudioView: View {
         .frame(width: 420, height: 320)
     }
 
+    private var scheduleList: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("予約した指示").font(.harness(.headline))
+            Text("時間になると案をカードで出します。ファイルが変わるのは「適用する」を押したときだけです。")
+                .font(.harness(.caption)).foregroundStyle(.secondary)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 8) {
+                    ForEach(store.scheduledInstructions) { booking in
+                        HStack(alignment: .top) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(booking.schedule.description).font(.harness(.caption)).bold()
+                                Text(booking.instruction).font(.harness(.caption)).textSelection(.enabled)
+                                if let next = booking.nextRun(after: max(Date(), booking.lastRun ?? booking.created)) {
+                                    Text("次回 \(next.formatted(date: .abbreviated, time: .shortened))")
+                                        .font(.harness(.caption)).foregroundStyle(.secondary)
+                                }
+                            }
+                            Spacer()
+                            Button { store.cancelScheduledInstruction(booking.id) } label: { Image(systemName: "xmark.circle") }
+                                .buttonStyle(.borderless)
+                                .help("この予約を取り消す")
+                        }
+                    }
+                }
+            }
+        }
+        .padding(16)
+        .frame(width: 420, height: 320)
+    }
+
     /// One slim bar instead of the large header: name, summary, stage, targets, and the panels that open on demand.
     private var topBar: some View {
         HStack(spacing: 10) {
@@ -111,6 +142,13 @@ struct StudioView: View {
                     .controlSize(.small)
                     .help("例の確認で「違う」と答えたときに覚えた、このプロジェクトの決まり")
                     .popover(isPresented: $isShowingConventions, arrowEdge: .bottom) { conventionList }
+            }
+            if !store.scheduledInstructions.isEmpty {
+                Button { isShowingSchedules.toggle() } label: { Label("予約 \(store.scheduledInstructions.count)", systemImage: "clock") }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .help("「毎朝8時に…」のように頼んで予約した指示")
+                    .popover(isPresented: $isShowingSchedules, arrowEdge: .bottom) { scheduleList }
             }
             Button { isShowingWorkPlan.toggle() } label: {
                 Label("作業計画 \(Int(store.project.progress * 100))%", systemImage: "checklist")

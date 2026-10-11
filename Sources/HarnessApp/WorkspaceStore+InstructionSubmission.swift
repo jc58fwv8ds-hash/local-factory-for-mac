@@ -12,6 +12,13 @@ extension WorkspaceStore {
         }
         // 文章を書く / 画像を作る: the user's own choice of purpose; no code-change routing and no system-model check.
         if submitPurposeInstruction() { return }
+        // 「毎朝8時に…」: booked for later instead of run now (backlog #43).
+        if submitScheduleBooking(instruction) {
+            instruction = ""
+            documentAttachments = []
+            attachedFolder = nil
+            return
+        }
         if PrimaryInstructionIntentRouter.route(instruction) == .computerOperation {
             if handoffPrimaryInstructionToComputerOperator(instruction) {
                 instruction = ""

@@ -16,6 +16,24 @@ public struct IsolatedPackageExecution: Sendable {
         self.protectedPaths = protectedPaths
         self.stable = stable
     }
+    /// SwiftPM's build system. "native" is deprecated in Swift 6.4 but still the default here; HARNESS_BUILD_SYSTEM=swiftbuild
+    /// selects Swift Build (2026-10-11) until it has passed the full suites.
+    static var buildSystem: String {
+        ProcessInfo.processInfo.environment["HARNESS_BUILD_SYSTEM"] == "swiftbuild" ? "swiftbuild" : "native"
+    }
+
+    /// What Swift Build needs beyond the native build (measured 2026-10-11 on a one-test package in this sandbox): it runs
+    /// mkdir, touch, derq (entitlements), an ad-hoc codesign, clang-stat-cache, bitcode_strip and the platform's plugin
+    /// server, and its linker step makes `TemporaryDirectory.*` directly in /tmp whatever TMPDIR says (writes there are
+    /// allowed for that name only; anything else in /tmp stays denied).
+    static func swiftBuildAllowances(developer: String, bin: String, quote q: (String) -> String) -> String {
+        let system = ["/bin/mkdir", "/usr/bin/touch", "/usr/bin/derq", "/usr/bin/codesign"]
+        let toolchain = [bin + "/clang-stat-cache", bin + "/bitcode_strip", developer + "/Platforms/MacOSX.platform/Developer/usr/bin/swift-plugin-server"]
+        return "\n(allow process-exec " + (system + toolchain).map { "(literal \(q($0)))" }.joined(separator: " ") + ")"
+            + "\n(allow file-read* " + system.map { "(literal \(q($0)))" }.joined(separator: " ") + ")"
+            + "\n(allow file-write* (regex #\"^/private/tmp/TemporaryDirectory\\.[A-Za-z0-9]+(/|$)\"))"
+    }
+
     public func execute(_ operation: Operation, evidence: URL) async throws -> BoundedCommandResult {
         let fm = FileManager.default
         let scratch = root.appendingPathComponent(".harness-execution")
@@ -55,7 +73,7 @@ public struct IsolatedPackageExecution: Sendable {
         (allow file-read* (literal "/") (subpath "/usr/lib") (subpath "/System/Library") (subpath "/System/Cryptexes") (subpath \(q(developer))) (subpath \(q(root.path))) (literal "/dev/null"))
         (allow file-write* (subpath \(q(scratch.path))) (literal "/dev/null"))
         (allow process-exec \(tools.map { "(literal \(q(bin + "/" + $0)))" }.joined(separator: " ")) (subpath \(q(scratch.path))))
-        """
+        """ + (Self.buildSystem == "swiftbuild" ? Self.swiftBuildAllowances(developer: developer, bin: bin, quote: q) : "")
         var record: [String: Any] = ["taskID": taskID, "worktree": root.path,
             "allowedPaths": [scratch.path], "protectedPaths": protectedPaths,
             "allowedOperations": [operation.rawValue], "networkPolicy": "deny",
@@ -83,13 +101,15 @@ public struct IsolatedPackageExecution: Sendable {
                     // pruning found no error line and 12 of 112 runs gave no verdict).
                     "-Xswiftc", "-diagnostic-style", "-Xswiftc", "llvm",
                     "-Xlinker", "-rpath", "-Xlinker", frameworks,
-                    "--build-system", "native", "--disable-sandbox"],
+                    "--build-system", Self.buildSystem, "--disable-sandbox"]
+                    + (Self.buildSystem == "swiftbuild"
+                       ? ["-Xlinker", "-rpath", "-Xlinker", developer + "/Platforms/MacOSX.platform/Developer/usr/lib"] : []),
                 workspace: root,
                 environment: ["PATH": bin + ":/usr/bin:/bin", "HOME": scratch.path,
                     "TMPDIR": scratch.path, "DEVELOPER_DIR": developer,
                     "SDKROOT": developer + "/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk",
                     "LIBTOOL": bin + "/libtool", "CC": bin + "/clang",
-                    "CLANG_MODULE_CACHE_PATH": scratch.appendingPathComponent("modules").path])
+                    "CLANG_MODULE_CACHE_PATH": scratch.appendingPathComponent("modules").path]).withoutColorCodes()
             // --disable-sandbox disables only SwiftPM's nested sandbox, never our outer one.
             let current = try await RepairAcceptanceContract.capture(root: root, paths: protectedPaths)
             let changed = ExecutionIntegritySnapshot.changes(before, try ExecutionIntegritySnapshot.capture(root, excluding: [".harness-execution", "receipts"]))

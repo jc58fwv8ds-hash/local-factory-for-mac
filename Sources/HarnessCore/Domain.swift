@@ -212,6 +212,8 @@ public struct HarnessProject: Identifiable, Codable, Equatable, Sendable {
     /// of a change was wrong. They go with every later code-change instruction of this project. Optional so older saved
     /// projects still load.
     public var conventions: [String]?
+    /// Instructions booked to run again at a fixed time (2026-10-11, backlog #43). Optional so older projects still load.
+    public var scheduledInstructions: [ScheduledInstruction]?
 
     public init(
         id: UUID = UUID(),
@@ -232,7 +234,8 @@ public struct HarnessProject: Identifiable, Codable, Equatable, Sendable {
         creationLoop: CreationLoopState = CreationLoopState(),
         artifactCreationPlan: ArtifactCreationPlan? = nil,
         runCoordinator: RunCoordinatorState = RunCoordinatorState(),
-        conventions: [String]? = nil
+        conventions: [String]? = nil,
+        scheduledInstructions: [ScheduledInstruction]? = nil
     ) {
         self.id = id
         self.name = name
@@ -253,6 +256,7 @@ public struct HarnessProject: Identifiable, Codable, Equatable, Sendable {
         self.artifactCreationPlan = artifactCreationPlan
         self.runCoordinator = runCoordinator
         self.conventions = conventions
+        self.scheduledInstructions = scheduledInstructions
     }
 }
 

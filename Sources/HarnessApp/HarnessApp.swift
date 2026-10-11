@@ -22,6 +22,11 @@ struct HarnessApp: App {
                     ModelCallLog.prune(LoggingInferenceProvider.folder)   // keep 14 days of the App's model-call log
                     store.fileOperationHooks.append(FileOperationJournal.standard)   // what the app did to files (#42)
                     ModelCallLog.prune(FileOperationJournal.standard.folder, keepingDays: 90)
+                    // Booked instructions (#43): checked once a minute while the app is open.
+                    while !Task.isCancelled {
+                        store.runDueScheduledInstructions()
+                        try? await Task.sleep(for: .seconds(60))
+                    }
                 }
                 .font(.harness(.body))
                 .environment(appearance)

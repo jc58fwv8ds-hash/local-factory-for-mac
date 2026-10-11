@@ -5,6 +5,14 @@ public struct BoundedCommandResult: Codable, Sendable {
     public let output: String
     public let outputWasTruncated: Bool
     public let duration: TimeInterval
+
+    /// The same result with terminal color codes removed from the output. Swift Build colors its diagnostics even when told
+    /// not to (2026-10-11), and every parser here expects plain "file:line:col: error:" lines.
+    public func withoutColorCodes() -> BoundedCommandResult {
+        BoundedCommandResult(exitCode: exitCode,
+                             output: output.replacingOccurrences(of: "\u{1B}\\[[0-9;]*m", with: "", options: .regularExpression),
+                             outputWasTruncated: outputWasTruncated, duration: duration)
+    }
 }
 
 public enum BoundedCommandError: Error, Equatable, Sendable {
