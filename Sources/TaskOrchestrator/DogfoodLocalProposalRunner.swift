@@ -61,7 +61,7 @@ package enum DogfoodLocalProposalRunner {
                 var result = ""
                 for try await part in await LocalInferenceService().events(for: request) {
                     try Task.checkCancellation()
-                    progress.mark(InferenceEnvironment.awakeSeconds() - awakeStart)
+                    progress.mark(InferenceEnvironment.awakeSeconds() - awakeStart, units: InferenceHealth.decodeUnits(part))
                     result += part
                     // 16 KB for the default 2048-token calls; proportionally more for calls granted a larger output budget.
                     guard result.utf8.count <= max(16_000, original.maximumOutputTokens * 6) else { throw Failure.scope }
@@ -97,9 +97,11 @@ package enum DogfoodLocalProposalRunner {
 final class GenerationProgress: @unchecked Sendable {
     private let lock = NSLock()
     private var progress = InferenceHealth.Progress()
-    func mark(_ time: Double) {
+    func mark(_ time: Double, units: Int = 1) {
         lock.withLock {
-            if progress.firstTokenAt == nil { progress.firstTokenAt = time } else { progress.chunkTimes.append(time) }
+            if progress.firstTokenAt == nil { progress.firstTokenAt = time } else {
+                progress.chunkTimes.append(contentsOf: repeatElement(time, count: units))
+            }
             progress.lastChunkAt = time
         }
     }

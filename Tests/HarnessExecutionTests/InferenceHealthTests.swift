@@ -83,4 +83,11 @@ struct InferenceHealthTests {
         #expect(!InferenceHealth.slept(continuousDelta: 100, awakeDelta: 98))
         #expect(InferenceHealth.slept(continuousDelta: 1_300, awakeDelta: 100))
     }
+
+    @Test func japaneseOutputCountsByAmountNotByPieces() {
+        #expect(InferenceHealth.decodeUnits("") == 1)
+        #expect(InferenceHealth.decodeUnits(" the") == 1)
+        // 合計がちょうど5000円 (one larger piece of Japanese): about one unit per token, not one per piece.
+        #expect(InferenceHealth.decodeUnits("合計がちょうど5000円") == 7)
+    }
 }

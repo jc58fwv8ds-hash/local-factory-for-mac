@@ -116,4 +116,28 @@ struct BatchExaminerStageTests {
         #expect(text.contains("- 合計がちょうど5000円 → 送料0円") && !text.contains("最初の例"))
         #expect(text.components(separatedBy: "\n- ").count == 2)
     }
+
+    @Test func theCalculatorFindsOnlyTheWrongStep() {
+        // c2-03 (2026-10-09): the one wrong alarm in 10 rested on 49 × 1021 = 49929.
+        let working = #"""
+        *   $50 \times 1021 = 51050$, $51050 / 10000 = 5.105$, integer division: **5**
+        *   $49 \times 1021 = 49929$
+        *   (20 + 9) / 10 = 29 / 10 = 2 pages; 25 / 10 + 1 = 2 + 1 = 3; 12_000 * 0.9 = 10,800; 7 × 3 = 21
+        """#
+        #expect(ArithmeticCheck.wrongSteps(in: working) == ["49 * 1021 = 50029"])
+        #expect(ArithmeticCheck.wrongSteps(in: "10 / 4 = 2.5 and 10 / 4 = 2 and -3 + 5 = 2") == [])
+        #expect(ArithmeticCheck.evaluate("(25 + 9) / 10", integerDivision: true) == 3)
+        #expect(ArithmeticCheck.evaluate("2 * (3", integerDivision: false) == nil)
+    }
+
+    @Test func aStructAnswerIsComparedFieldByField() {
+        // c2-15 (2026-10-11): the answer left out a field and the module name, but its score is the expected 75, not 99.
+        let expected = #"Candidate(entry: TMEntry(id: 1, target: "3 個のファイルを3回削除しますか？", client: "acme"), baseScore: 75, score: 75, isNumberSubstituted: false)"#
+        let actual = #"Candidate(entry: TransMemory.TMEntry(id: 1, target: "3 個のファイルを3回削除しますか？", client: Optional("acme"), previousSource: nil), baseScore: 99, score: 99, isNumberSubstituted: true)"#
+        let answer = #"Candidate(entry: TMEntry(id: 1, target: "3 個のファイルを3回削除しますか？", client: "acme", previousSource: nil), baseScore: 75, score: 75)"#
+        #expect(BatchExaminerStage.blindVerdict(value: answer, expected: expected, actual: actual) == "code_wrong")
+        #expect(BatchExaminerStage.blindVerdict(value: answer.replacingOccurrences(of: "75", with: "99"), expected: expected, actual: actual) == "test_wrong")
+        #expect(BatchExaminerStage.blindVerdict(value: "Candidate(baseScore: 50, score: 50)", expected: expected, actual: actual) == "unclear")
+        #expect(BatchExaminerStage.blindVerdict(value: "Candidate(id: 1)", expected: expected, actual: actual) == "unclear")
+    }
 }

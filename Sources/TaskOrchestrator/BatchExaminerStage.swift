@@ -226,25 +226,45 @@ enum BatchExaminerStage {
                 If the request is implemented correctly, what does this Swift expression return in that test?
                 \(failure.expression)
 
-                Work it out step by step from the request and the code before the change (follow the code's rules exactly; \
-                change only what the request asks). Then end with three lines:
+                First, under the heading RULES, quote word for word every comment, constant and condition in the code before \
+                the change that affects this value (including the ones that look unrelated to the request, such as grace periods, \
+                rounding and what counts toward a limit). Mark each one KEPT or CHANGED BY THE REQUEST; a rule is changed only \
+                when the request says so. Then work it out step by step from the request and the code before the change, using \
+                every KEPT rule (change only what the request asks). Then end with three lines:
                 CASE: <in Japanese, one short sentence without code: the situation this test sets up, in the words of the request>
                 WHAT: <in Japanese, a few words without code: what this value is, e.g. 各人の源泉徴収額>
                 VALUE: <the value as a Swift literal, or throws if it throws an error>
                 """
+                // Quoting the rules first (#45, 2026-10-12): the wrong alarms that were not arithmetic slips came from a rule the
+                // working left out (c2-01: the grace period counts toward the blocks). On 31 past rechecks, with the calculator:
+                // right alarms 15 of 17 kept, wrong alarms 3 → 0. The quotes make the working longer, hence 3000 tokens.
                 var answer = try await DogfoodLocalProposalRunner.collect(.init(runtime: .ollama, modelIdentifier: model,
-                    messages: SharedContextMessages.messages(for: check), maximumOutputTokens: 2000))
+                    messages: SharedContextMessages.messages(for: check), maximumOutputTokens: 3000))
                 if SecondCandidate.matches(#"(?m)VALUE:\s*`?(.+?)`?\s*$"#, in: answer).isEmpty {
                     // The working ran out of tokens before the last line (c2-01, c2-05, c2-14 offline): ask for it.
                     answer += "\n" + (try await DogfoodLocalProposalRunner.collect(.init(runtime: .ollama, modelIdentifier: model,
                         messages: SharedContextMessages.messages(for: check + "\n\nYour working so far:\n" + String(answer.suffix(3000))
                             + "\n\nNow give only the final line `VALUE: <the value as a Swift literal>`."), maximumOutputTokens: 200)))
                 }
-                let value = SecondCandidate.matches(#"(?m)VALUE:\s*`?(.+?)`?\s*$"#, in: answer).last ?? ""
-                let result = blindVerdict(value: value, expected: failure.expected, actual: failure.actual)
+                var value = SecondCandidate.matches(#"(?m)VALUE:\s*`?(.+?)`?\s*$"#, in: answer).last ?? ""
+                var result = blindVerdict(value: value, expected: failure.expected, actual: failure.actual)
+                // An alarm resting on a slip in hand arithmetic is worked out again with the calculator's results (#44).
+                let slips = result == "code_wrong" ? ArithmeticCheck.wrongSteps(in: answer) : []
+                if !slips.isEmpty {
+                    let redo = try await DogfoodLocalProposalRunner.collect(.init(runtime: .ollama, modelIdentifier: model,
+                        messages: SharedContextMessages.messages(for: check + "\n\nYour working:\n" + String(answer.suffix(4000))
+                            + "\n\nA calculator checked your arithmetic. These steps were wrong; the right results are: "
+                            + slips.joined(separator: "; ") + ". Redo the working with them and end with the same three lines."),
+                        maximumOutputTokens: 2000))
+                    if let redone = SecondCandidate.matches(#"(?m)VALUE:\s*`?(.+?)`?\s*$"#, in: redo).last {
+                        answer = redo; value = redone
+                        result = blindVerdict(value: value, expected: failure.expected, actual: failure.actual)
+                    }
+                }
                 // Kept for diagnosis: on C2 (2026-10-09) every in-pipeline recheck came back "unclear".
                 blind.append(["test": name, "expression": failure.expression, "expected": failure.expected,
-                              "actual": failure.actual, "value": value, "tail": String(answer.suffix(300))])
+                              "actual": failure.actual, "value": value, "tail": String(answer.suffix(300))]
+                             .merging(slips.isEmpty ? [:] : ["arithmetic": slips.joined(separator: "; ")]) { $1 })
                 if result == "code_wrong" {
                     verdict = result
                     examples.append(plainExample(answer: answer, failure: failure))
@@ -450,6 +470,30 @@ enum BatchExaminerStage {
         let (v, e, a) = (normalized(value), normalized(expected), normalized(actual))
         if v == e && v != a { return "code_wrong" }
         if v == a && v != e { return "test_wrong" }
+        return fieldwiseVerdict(value: value, expected: expected, actual: actual)
+    }
+
+    /// Whole values compared field by field (#46, 2026-10-12): the blind answer to a struct often differs from the test's
+    /// literal only in how it is written (a field left out, `TMEntry` for `TransMemory.TMEntry`, `"acme"` for
+    /// `Optional("acme")`), and c2-15's right answer (score 75, not 99) came back unclear. Only the fields where the expected
+    /// and the actual value differ count; the answer must give at least half of them and agree with one side on all it gives.
+    /// On the past rechecks it changed one unclear verdict (to test_wrong) and raised no new alarm.
+    static func fieldwiseVerdict(value: String, expected: String, actual: String) -> String {
+        func fields(_ text: String) -> [String: String] {
+            let clean = text.replacingOccurrences(of: #"\b[A-Z]\w*\.(?=[A-Z])"#, with: "", options: .regularExpression)
+                .replacingOccurrences(of: #"Optional\((.*?)\)"#, with: "$1", options: .regularExpression)
+            var out: [String: String] = [:]
+            for match in SecondCandidate.matchGroups(#"(\w+):\s*("(?:[^"\\]|\\.)*"|[^,()\[\]]+)"#, in: clean) where match.count == 2 {
+                out[match[0]] = match[1].trimmingCharacters(in: .whitespaces)
+            }
+            return out
+        }
+        let (v, e, a) = (fields(value), fields(expected), fields(actual))
+        let differing = e.keys.filter { a[$0] != nil && e[$0] != a[$0] }
+        let present = differing.filter { v[$0] != nil }
+        guard !differing.isEmpty, present.count >= max(1, differing.count / 2) else { return "unclear" }
+        if present.allSatisfy({ v[$0] == e[$0] }) { return "code_wrong" }
+        if present.allSatisfy({ v[$0] == a[$0] }) { return "test_wrong" }
         return "unclear"
     }
 
@@ -486,6 +530,9 @@ enum BatchExaminerStage {
     throws: yes   (input that must be rejected with an error)
     With property:, add one more line: rule: <the same rule in Japanese, one short sentence without code, with the input \
     values, e.g. 介助者の無料券を含む8枚の注文では団体割引にならない>
+    Make each call produce ONE field, number, flag or label the request talks about (e.g. `quote(for: order)?.total`, \
+    `match(a, b)?.isExact`, `report.rows.map(\\.label)`), not a whole struct. Expect nil or an empty result only \
+    when the request or the code says there is none; "as before" means the old behaviour, not no result.
     """
 
     /// Swift Testing source for the compact blocks, the kind of each test (expect / property / throws) and each property's

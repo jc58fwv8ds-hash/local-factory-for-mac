@@ -100,9 +100,9 @@ package enum InferenceHealthGate {
             group.addTask {
                 var first: Double?, last = start, chunks = 0
                 do {
-                    for try await _ in await LocalInferenceService().events(for: request) {
+                    for try await piece in await LocalInferenceService().events(for: request) {
                         let now = InferenceEnvironment.awakeSeconds()
-                        if first == nil { first = now } else { chunks += 1 }
+                        if first == nil { first = now } else { chunks += InferenceHealth.decodeUnits(piece) }
                         last = now
                     }
                 } catch {}

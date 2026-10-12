@@ -30,8 +30,10 @@ enum BatchCoverageStage {
                 editable: sources.filter { scope.editable.contains($0.key) },
                 readOnly: readOnlyForModel, feedback: note, clauses: clauses)
             record.increment("modelPlanCalls"); try record.save()
+            // 2560, not 1536 (2026-10-11): with an example per requirement (#40) a Japanese plan ran past 1536 tokens and was
+            // cut off mid-JSON (c2-13, planUnavailable).
             let response = try await DogfoodLocalProposalRunner.collect(.init(runtime: .ollama, modelIdentifier: model,
-                messages: SharedContextMessages.messages(for: prompt), maximumOutputTokens: 1536, structuredOutput: .coveragePlan))
+                messages: SharedContextMessages.messages(for: prompt), maximumOutputTokens: 2560, structuredOutput: .coveragePlan))
             try JSONSerialization.data(withJSONObject: ["response": response, "feedback": note ?? ""], options: [.prettyPrinted])
                 .write(to: directory.appendingPathComponent("plan-\(index).json"), options: .atomic)
             guard var plan = try? JSONDecoder().decode(RequirementCoveragePlan.self, from: Data(response.utf8)) else {

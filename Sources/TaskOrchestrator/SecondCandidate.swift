@@ -110,6 +110,14 @@ package enum SecondCandidate {
         }
     }
 
+    /// Every capture group of every match.
+    static func matchGroups(_ pattern: String, in text: String) -> [[String]] {
+        guard let regex = try? NSRegularExpression(pattern: pattern) else { return [] }
+        return regex.matches(in: text, range: NSRange(text.startIndex..., in: text)).map { match in
+            (1..<match.numberOfRanges).compactMap { Range(match.range(at: $0), in: text).map { String(text[$0]) } }
+        }
+    }
+
     static func latestReceiptOutput(_ evidence: URL) -> String {
         let receipts = ((try? FileManager.default.contentsOfDirectory(at: evidence, includingPropertiesForKeys: [.contentModificationDateKey])) ?? [])
             .filter { $0.lastPathComponent.hasPrefix("test-") && !$0.lastPathComponent.contains("adjudicated") }

@@ -101,6 +101,12 @@ public enum InferenceHealth {
 
     // MARK: In-task watchdog
 
+    /// How many decode units a streamed piece counts for: about one per token (4 bytes of UTF-8), at least one per piece.
+    /// Counting pieces alone misjudged Japanese and grammar-constrained output, which arrives in fewer, larger pieces:
+    /// on 2026-10-11/12 plans with Japanese examples (#40) were cut off as decodeStalled at 6 pieces/s while the server
+    /// generated 15 tokens/s (1 → 1 → 2 of 22 C2 runs).
+    public static func decodeUnits(_ piece: String) -> Int { max(1, (piece.utf8.count + 3) / 4) }
+
     public struct Progress: Sendable, Equatable {
         public var firstTokenAt: Double?
         public var lastChunkAt: Double?
