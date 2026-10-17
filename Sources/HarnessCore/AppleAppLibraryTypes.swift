@@ -171,17 +171,24 @@ public struct AppleAppInstallReport: Equatable, Sendable {
     public let deviceName: String
     public let platform: AppleAppPlatform
     public let finishedAt: Date
+    /// The device and the signing profile built into the installed app (nil for a Mac install), for the expiry reminder.
+    public let deviceIdentifier: String
+    public let profile: ProvisioningProfile?
 
     public init(
         appName: String,
         deviceName: String,
         platform: AppleAppPlatform,
-        finishedAt: Date = .now
+        finishedAt: Date = .now,
+        deviceIdentifier: String = "",
+        profile: ProvisioningProfile? = nil
     ) {
         self.appName = appName
         self.deviceName = deviceName
         self.platform = platform
         self.finishedAt = finishedAt
+        self.deviceIdentifier = deviceIdentifier
+        self.profile = profile
     }
 }
 

@@ -36,14 +36,15 @@ enum XLSXEditor {
         let after: String
     }
 
-    enum Failure: LocalizedError {
-        case unreadable(String), unknownSheet(String), badCell(String), zip(String)
+    enum Failure: LocalizedError, Equatable {
+        case unreadable(String), unknownSheet(String), badCell(String), zip(String), sharedFormula(String)
         var errorDescription: String? {
             switch self {
             case .unreadable(let name): "「\(name)」を開けませんでした"
             case .unknownSheet(let sheet): "シート「\(sheet)」が見つかりません"
             case .badCell(let cell): "セルの番地「\(cell)」が読めません(例: B5)"
             case .zip(let detail): "新しいファイルを書き出せませんでした(\(detail))"
+            case .sharedFormula(let cell): "「\(cell)」はほかのセルと共有している数式(配列数式)の元なので書き換えません。Excel で直接直してください"
             }
         }
     }
@@ -79,6 +80,12 @@ enum XLSXEditor {
             let before = XLSXReader.cells(Data(xml.utf8), strings: strings)
             let old = row - 1 < before.count && column < before[row - 1].count ? before[row - 1][column] : ""
             let reference = edit.cell.uppercased()
+            // The first cell of a shared or array formula holds the formula text the other cells refer to; replacing it
+            // would leave them without one (2026-10-12 review).
+            if let existing = xml.range(of: #"<c r=""# + reference + #""[^>]*?>.*?</c>"#, options: .regularExpression),
+               xml[existing].range(of: #"<f[^>]*(t="array"|t="shared"[^>]*ref=)"#, options: .regularExpression) != nil {
+                throw Failure.sharedFormula(reference)
+            }
             sheets[path] = setting(cellXML(reference, edit: edit, style: styleOf(reference, in: xml)), at: reference,
                                    column: column, row: row, in: xml)
             changes.append(.init(sheet: edit.sheet, cell: reference, before: old,
@@ -87,7 +94,11 @@ enum XLSXEditor {
         for (path, xml) in sheets {
             try xml.write(to: work.appendingPathComponent(path), atomically: true, encoding: .utf8)
         }
-        if edits.contains(where: { $0.formula != nil }) {
+        // Recalculate on open whenever the workbook has formulas: a changed value would otherwise show the old results of
+        // the formulas that use it until Excel recalculates (2026-10-12 review).
+        let sheetXML = paths.values.compactMap { sheets[$0] ?? (try? String(contentsOf: work.appendingPathComponent($0), encoding: .utf8)) }
+        let hasFormulas = edits.contains(where: { $0.formula != nil }) || sheetXML.contains { $0.contains("<f>") || $0.contains("<f ") }
+        if hasFormulas {
             // Excel recalculates every formula when it opens the file; the old calculation chain would be stale.
             var text = String(decoding: workbook, as: UTF8.self)
             if text.contains("<calcPr") {
@@ -108,6 +119,13 @@ enum XLSXEditor {
         }
         guard !fm.fileExists(atPath: output.path) else { throw Failure.zip("同じ名前のファイルがあります") }
         guard run("/usr/bin/zip", ["-q", "-X", "-r", output.path, "."], in: work) else { throw Failure.zip("zip") }
+        do {
+            try OfficePackageCheck.verify(source: source, output: output, edited: Set(sheets.keys).union(hasFormulas
+                ? ["xl/workbook.xml", "[Content_Types].xml", "xl/_rels/workbook.xml.rels"] : []), removed: ["xl/calcChain.xml"])
+        } catch {
+            try? fm.removeItem(at: output)   // a file this call just wrote, never the user's
+            throw error
+        }
         return changes
     }
 

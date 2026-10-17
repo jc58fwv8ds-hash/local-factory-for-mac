@@ -25,6 +25,11 @@ extension WorkspaceStore {
             }
             return
         }
+        // 「◯◯をインストールして」: Homebrew cask candidates on a card; nothing is downloaded until the user picks one (#49).
+        if documentAttachments.isEmpty, submitAppInstall(instruction) {
+            instruction = ""
+            return
+        }
         // A change request with an Excel file attached: cell edits previewed on a copy, written to a new file on apply.
         if documentAttachments.contains(where: { $0.kind == "Excel" }), submitSpreadsheetEdit(instruction) {
             instruction = ""

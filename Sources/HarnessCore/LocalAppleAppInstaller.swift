@@ -123,7 +123,9 @@ struct LocalAppleAppInstaller: Sendable {
         return AppleAppInstallReport(
             appName: app.displayName,
             deviceName: device.name,
-            platform: device.platform
+            platform: device.platform,
+            deviceIdentifier: device.deviceIdentifier,
+            profile: ProvisioningProfileReader.read(appURL: appURL)
         )
     }
 

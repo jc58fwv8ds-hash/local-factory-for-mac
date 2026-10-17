@@ -88,6 +88,7 @@ struct InferenceHealthTests {
         #expect(InferenceHealth.decodeUnits("") == 1)
         #expect(InferenceHealth.decodeUnits(" the") == 1)
         // 合計がちょうど5000円 (one larger piece of Japanese): about one unit per token, not one per piece.
-        #expect(InferenceHealth.decodeUnits("合計がちょうど5000円") == 7)
+        #expect(InferenceHealth.decodeUnits("合計がちょうど5000円") == 9)
+        #expect(InferenceHealth.decodeUnits(#"{"requirement": "x"}"#) == 5)
     }
 }

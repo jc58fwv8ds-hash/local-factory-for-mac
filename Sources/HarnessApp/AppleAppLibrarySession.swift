@@ -25,6 +25,8 @@ final class AppleAppLibrarySession {
     @ObservationIgnored private let provider: any AppleAppLibraryProviding
     @ObservationIgnored private var sources: [AppleAppSource]
     @ObservationIgnored private var task: Task<Void, Never>?
+    /// Where installs to a device are recorded with their signature's expiry (tests use their own file).
+    @ObservationIgnored var installRecordStore = DeviceInstallRecordStore.standard
 
     init(sources: [AppleAppSource], provider: any AppleAppLibraryProviding) {
         self.sources = sources
@@ -151,6 +153,11 @@ final class AppleAppLibrarySession {
                         await self?.setStage(stage, platform: platform)
                     }
                     reports.append(report)
+                    if report.profile != nil {
+                        installRecordStore.record(DeviceInstallRecord(
+                            appKey: app.source.rootPath, appName: report.appName, deviceIdentifier: report.deviceIdentifier,
+                            deviceName: report.deviceName, profile: report.profile))
+                    }
                 }
                 statusMessage = completionMessage(app: app)
             } catch is CancellationError {
@@ -163,6 +170,47 @@ final class AppleAppLibrarySession {
             installStage = nil
             task = nil
         }
+    }
+
+    /// 入れ直す (2026-10-12, the user's request): the app of the record installed again on the same device, one press.
+    /// Returns why it cannot start (the app or the device is not here), or nil once the install has begun.
+    @discardableResult
+    func reinstall(_ record: DeviceInstallRecord) -> String? {
+        guard !isBusy else { return "ほかのインストールが終わってから押してください。" }
+        guard let app = apps.first(where: { $0.source.rootPath == record.appKey }) else {
+            return "「\(record.appName)」のプロジェクトが見つかりません。作成アプリの一覧を更新してください。"
+        }
+        guard let device = devices.first(where: { $0.deviceIdentifier == record.deviceIdentifier }) else {
+            return "\(record.deviceName) が見つかりません。ケーブルか同じ Wi-Fi でつないでから、もう一度押してください。"
+        }
+        selectApp(app.id)
+        phase = .installing
+        reports = []
+        errorMessage = nil
+        statusMessage = nil
+        task = Task { [weak self] in
+            guard let self else { return }
+            do {
+                activePlatform = device.platform
+                let report = try await provider.install(app, on: device) { [weak self] stage in
+                    await self?.setStage(stage, platform: device.platform)
+                }
+                reports.append(report)
+                let renewed = DeviceInstallRecord(appKey: record.appKey, appName: report.appName, deviceIdentifier: report.deviceIdentifier,
+                                                  deviceName: report.deviceName, profile: report.profile)
+                if report.profile != nil { installRecordStore.record(renewed) }
+                statusMessage = "\(app.displayName)を\(device.name)に入れ直しました" + (renewed.expiryNote().map { "(\($0))" } ?? "")
+            } catch is CancellationError {
+                errorMessage = "インストールを停止しました。"
+            } catch {
+                errorMessage = error.localizedDescription
+            }
+            phase = .idle
+            activePlatform = nil
+            installStage = nil
+            task = nil
+        }
+        return nil
     }
 
     func stop() {

@@ -53,11 +53,19 @@ enum WordEditor {
         try xml.write(to: documentURL, atomically: true, encoding: .utf8)
         guard !FileManager.default.fileExists(atPath: output.path) else { throw Failure.write("同じ名前のファイルがあります") }
         guard run("/usr/bin/zip", ["-q", "-X", "-r", output.path, "."], in: work) else { throw Failure.write("zip") }
+        do {
+            try OfficePackageCheck.verify(source: source, output: output, edited: ["word/document.xml"])
+        } catch {
+            try? FileManager.default.removeItem(at: output)   // a file this call just wrote, never the user's
+            throw error
+        }
         return changes
     }
 
     static func paragraphRanges(in xml: String) -> [Range<String.Index>] {
-        guard let regex = try? NSRegularExpression(pattern: #"<w:p[ >].*?</w:p>"#, options: [.dotMatchesLineSeparators]) else { return [] }
+        // Innermost paragraphs only: a text box's paragraphs sit inside a paragraph of the body, and a plain
+        // `<w:p>.*?</w:p>` would end the outer one at the inner one's end tag (2026-10-12 review).
+        guard let regex = try? NSRegularExpression(pattern: #"<w:p[ >](?:(?!<w:p[ >]).)*?</w:p>"#, options: [.dotMatchesLineSeparators]) else { return [] }
         return regex.matches(in: xml, range: NSRange(xml.startIndex..., in: xml)).compactMap { Range($0.range, in: xml) }
     }
 

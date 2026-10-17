@@ -5,6 +5,8 @@ import SwiftUI
 struct AppleAppTile: View {
     let app: InstallableAppleApp
     let isSelected: Bool
+    /// 「iPhone: 署名の期限まであと 3 日」 per device this app was installed on (free accounts must reinstall weekly).
+    var expiryNotes: [(text: String, urgent: Bool)] = []
     let action: () -> Void
 
     var body: some View {
@@ -32,6 +34,11 @@ struct AppleAppTile: View {
                     }
                 }
                 signingStatus
+                ForEach(expiryNotes, id: \.text) { note in
+                    Label(note.text, systemImage: note.urgent ? "exclamationmark.triangle.fill" : "clock")
+                        .font(.harness(.caption2, weight: .semibold))
+                        .foregroundStyle(note.urgent ? Color.red : Color.secondary)
+                }
             }
             .padding(18)
             .frame(maxWidth: .infinity, minHeight: 245, alignment: .leading)

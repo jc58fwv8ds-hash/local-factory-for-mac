@@ -24,7 +24,7 @@ public struct PhysicalAppleDevice: Identifiable, Equatable, Sendable {
     public let isPaired: Bool
     public let isDeveloperModeEnabled: Bool
     public let isBooted: Bool
-    let deviceIdentifier: String
+    public let deviceIdentifier: String
     let destinationIdentifier: String
 
     public init(
@@ -222,17 +222,24 @@ public struct PhysicalDeviceRunReport: Equatable, Sendable {
     public let productName: String
     public let bundleIdentifier: String
     public let finishedAt: Date
+    public let deviceIdentifier: String
+    /// The signing profile built into the installed app, for the expiry reminder (free accounts: about 7 days).
+    public let profile: ProvisioningProfile?
 
     public init(
         deviceName: String,
         productName: String,
         bundleIdentifier: String,
-        finishedAt: Date = .now
+        finishedAt: Date = .now,
+        deviceIdentifier: String = "",
+        profile: ProvisioningProfile? = nil
     ) {
         self.deviceName = deviceName
         self.productName = productName
         self.bundleIdentifier = bundleIdentifier
         self.finishedAt = finishedAt
+        self.deviceIdentifier = deviceIdentifier
+        self.profile = profile
     }
 }
 

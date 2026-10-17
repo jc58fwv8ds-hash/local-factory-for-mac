@@ -49,6 +49,9 @@ struct ConversationView: View {
                         if let word = store.wordChanges[message.id] {
                             WordChangeCard(change: word, store: store)
                         }
+                        if let install = store.appInstallChanges[message.id] {
+                            AppInstallCard(change: install, store: store)
+                        }
                         if let pdf = store.pdfChanges[message.id] {
                             PDFChangeCard(change: pdf, store: store)
                         }

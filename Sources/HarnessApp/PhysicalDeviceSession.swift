@@ -82,7 +82,10 @@ final class PhysicalDeviceSession {
             if let updated = try? await provider.inspect(rootPath: rootPath, device: device) {
                 readiness = updated
             }
-            statusMessage = "\(report.productName)をiPhoneで起動しました"
+            let record = DeviceInstallRecord(appKey: rootPath, appName: report.productName,
+                                             deviceIdentifier: report.deviceIdentifier, deviceName: report.deviceName, profile: report.profile)
+            if report.profile != nil { DeviceInstallRecordStore.standard.record(record) }
+            statusMessage = "\(report.productName)をiPhoneで起動しました" + (record.expiryNote().map { "(\($0))" } ?? "")
         }
     }
 

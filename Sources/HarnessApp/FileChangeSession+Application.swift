@@ -32,11 +32,22 @@ extension FileChangeSession {
                 appliedChange = AppliedFileChange(proposal: proposal, checkpoint: createdCheckpoint)
             } else {
                 // A related file failed after the primary applied: the change is all or nothing.
+                var unreverted: [String] = []
                 if primaryApplied {
-                    await revertRelated()
-                    do { try await editor.revert(rootPath: rootPath, proposal: proposal) } catch { hasUnresolvedEdit = true }
+                    unreverted = await revertRelated()
+                    do { try await editor.revert(rootPath: rootPath, proposal: proposal) } catch {
+                        hasUnresolvedEdit = true
+                        unreverted.insert(proposal.relativePath, at: 0)
+                    }
                 }
-                if let createdCheckpoint { await gitCheckpointProvider.discard(createdCheckpoint) }
+                // The restore point stays while any file is still changed.
+                if unreverted.isEmpty, let createdCheckpoint { await gitCheckpointProvider.discard(createdCheckpoint) }
+                if !unreverted.isEmpty {
+                    errorMessage = "適用できませんでした(\(error.localizedDescription))。次のファイルは元に戻せず、修正後のままです: "
+                        + unreverted.joined(separator: "、")
+                    isApplying = false
+                    return nil
+                }
             }
             errorMessage = error.localizedDescription
             isApplying = false
@@ -59,18 +70,22 @@ extension FileChangeSession {
         }
     }
 
-    /// Reverts the related files in reverse order; failures are reported, never hidden.
-    private func revertRelated() async {
+    /// Reverts the related files in reverse order; failures are reported, never hidden. Returns the paths that could not be
+    /// reverted; they stay in `appliedRelated` so a later revert retries them.
+    private func revertRelated() async -> [String] {
+        var stuck: [(FileChangeProposal, GitFileCheckpoint?)] = []
         for (related, checkpoint) in appliedRelated.reversed() {
             do {
                 try await editor.revert(rootPath: rootPath, proposal: related)
                 if let checkpoint { await gitCheckpointProvider.discard(checkpoint) }
             } catch {
                 hasUnresolvedEdit = true
+                stuck.insert((related, checkpoint), at: 0)
                 errorMessage = "関連ファイル \(related.relativePath) を元に戻せませんでした: \(error.localizedDescription)"
             }
         }
-        appliedRelated = []
+        appliedRelated = stuck
+        return stuck.map(\.0.relativePath)
     }
 
     func revertAppliedProposal() async -> AppliedFileChange? {
@@ -79,7 +94,14 @@ extension FileChangeSession {
         isApplying = true
         errorMessage = nil
         do {
-            await revertRelated()
+            // A related file that stays changed means the revert did not happen: report it, keep the change applied.
+            let stuck = await revertRelated()
+            guard stuck.isEmpty else {
+                errorMessage = "次の関連ファイルを元に戻せなかったため、取り消しを止めました(主なファイルは修正後のままです): "
+                    + stuck.joined(separator: "、")
+                isApplying = false
+                return nil
+            }
             try await editor.revert(rootPath: rootPath, proposal: proposal)
             if let checkpoint {
                 await gitCheckpointProvider.discard(checkpoint)

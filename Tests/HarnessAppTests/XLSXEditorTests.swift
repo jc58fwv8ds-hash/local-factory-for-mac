@@ -66,6 +66,70 @@ struct XLSXEditorTests {
     }
 }
 
+/// 2026-10-12 review: complex workbooks. Only the edited sheet (and the recalculation flags) may change; the first cell of a
+/// shared formula is never replaced; a value edit in a workbook with formulas asks Excel to recalculate on open.
+struct XLSXPreservationTests {
+    let folder = FileManager.default.temporaryDirectory.appendingPathComponent("xlsx-keep-\(UUID().uuidString)")
+
+    func workbook(_ sheet: String, extra: [String: String] = [:]) throws -> URL {
+        let parts = folder.appendingPathComponent("parts-\(UUID().uuidString)")
+        var files: [String: String] = [
+            "[Content_Types].xml": #"<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"/>"#,
+            "xl/workbook.xml": #"<workbook xmlns:r="r"><sheets><sheet name="表" sheetId="1" r:id="rId1"/></sheets><calcPr calcId="1"/></workbook>"#,
+            "xl/_rels/workbook.xml.rels": #"<Relationships><Relationship Id="rId1" Target="worksheets/sheet1.xml"/></Relationships>"#,
+            "xl/worksheets/sheet1.xml": sheet,
+        ]
+        files.merge(extra) { $1 }
+        for (path, text) in files {
+            let url = parts.appendingPathComponent(path)
+            try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try text.write(to: url, atomically: true, encoding: .utf8)
+        }
+        let xlsx = folder.appendingPathComponent("\(UUID().uuidString).xlsx")
+        let zip = Process()
+        zip.executableURL = URL(fileURLWithPath: "/usr/bin/zip")
+        zip.currentDirectoryURL = parts
+        zip.arguments = ["-q", "-r", xlsx.path, "."]
+        try zip.run(); zip.waitUntilExit()
+        return xlsx
+    }
+
+    @Test func otherPartsStayAndSharedFormulasAreProtected() throws {
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let sheet = #"<worksheet><sheetData><row r="1"><c r="A1"><v>10</v></c><c r="B1"><f t="shared" ref="B1:B2" si="0">A1*2</f><v>20</v></c></row><row r="2"><c r="A2"><v>5</v></c><c r="B2"><f t="shared" si="0"/><v>10</v></c></row></sheetData></worksheet>"#
+        let drawing = #"<xdr:wsDr><xdr:sp><xdr:txBody><a:p><a:r><a:t>図形の文字</a:t></a:r></a:p></xdr:txBody></xdr:sp></xdr:wsDr>"#
+        let source = try workbook(sheet, extra: ["xl/drawings/drawing1.xml": drawing, "xl/media/image1.png": "PNG"])
+        let output = folder.appendingPathComponent("out.xlsx")
+        _ = try XLSXEditor.apply([.init(sheet: "表", cell: "A1", value: "12")], to: source, output: output)
+        let before = try #require(OfficePackageCheck.parts(of: source)), after = try #require(OfficePackageCheck.parts(of: output))
+        #expect(after["xl/drawings/drawing1.xml"] == before["xl/drawings/drawing1.xml"] && after["xl/media/image1.png"] == before["xl/media/image1.png"])
+        let unzip = Process(), check = folder.appendingPathComponent("check")
+        unzip.executableURL = URL(fileURLWithPath: "/usr/bin/unzip")
+        unzip.arguments = ["-q", output.path, "-d", check.path]
+        try unzip.run(); unzip.waitUntilExit()
+        // A value edit in a workbook with formulas: Excel recalculates B1 and B2 when it opens the file.
+        #expect(try String(contentsOf: check.appendingPathComponent("xl/workbook.xml"), encoding: .utf8).contains("fullCalcOnLoad=\"1\""))
+        #expect(throws: XLSXEditor.Failure.sharedFormula("B1")) {
+            try XLSXEditor.apply([.init(sheet: "表", cell: "B1", value: "0")], to: source, output: folder.appendingPathComponent("x.xlsx"))
+        }
+        #expect(!FileManager.default.fileExists(atPath: folder.appendingPathComponent("x.xlsx").path))
+        // A cell that only uses the shared formula may be replaced.
+        _ = try XLSXEditor.apply([.init(sheet: "表", cell: "B2", value: "0")], to: source, output: folder.appendingPathComponent("y.xlsx"))
+    }
+
+    @Test func aChangedPartThatWasNotEditedIsCaught() throws {
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let a = try workbook("<worksheet/>", extra: ["xl/styles.xml": "<styleSheet/>"])
+        let b = try workbook("<worksheet/>", extra: ["xl/styles.xml": "<styleSheet><fonts/></styleSheet>"])
+        #expect(throws: OfficePackageCheck.Failure.changed(["xl/styles.xml"])) {
+            try OfficePackageCheck.verify(source: a, output: b, edited: ["xl/worksheets/sheet1.xml"])
+        }
+        try OfficePackageCheck.verify(source: a, output: b, edited: ["xl/styles.xml"])
+    }
+}
+
 /// The chat flow: an attached workbook and 「〜にして」 become a card; apply writes 「〜_編集済み.xlsx」 next to it.
 @MainActor
 struct SpreadsheetChatTests {

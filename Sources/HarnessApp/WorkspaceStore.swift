@@ -57,6 +57,7 @@ final class WorkspaceStore {
     var analysisChanges: [UUID: AnalysisChange] = [:]
     var pdfChanges: [UUID: PDFChange] = [:]
     var wordChanges: [UUID: WordChange] = [:]
+    var appInstallChanges: [UUID: AppInstallChange] = [:]
     /// Checks before and records after every file operation from the chat (backlog #42). The app adds the journal at launch.
     var fileOperationHooks: [any FileOperationHook] = [OriginalProtectionHook()]
     /// What the next message is for (会話 / 文章を書く / 画像を作る), image cards, and a request waiting for consent.
@@ -79,6 +80,8 @@ final class WorkspaceStore {
     let modelManager: ModelManagerStore
     let remoteControl: RemoteControlStore
     let computerOperator: ComputerOperatorSession
+    /// Computer Use stage 1: one action at a time, approval before anything that cannot be undone.
+    let computerUse = ComputerUseSession()
     let permissionPolicy = PermissionPolicy()
     let inferenceProvider: any ModelInferenceProvider
     let termExplanationService: any TermExplanationProviding

@@ -121,7 +121,9 @@ public struct LocalPhysicalDeviceService: PhysicalDeviceProviding, Sendable {
         return PhysicalDeviceRunReport(
             deviceName: device.name,
             productName: prepared.configuration.productName,
-            bundleIdentifier: bundleIdentifier
+            bundleIdentifier: bundleIdentifier,
+            deviceIdentifier: device.deviceIdentifier,
+            profile: ProvisioningProfileReader.read(appURL: appURL)
         )
     }
 

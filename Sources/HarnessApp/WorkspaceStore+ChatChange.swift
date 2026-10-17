@@ -240,14 +240,26 @@ extension WorkspaceStore {
             change.status = .applied
             appendAssistantNote("適用しました(\(change.proposals.count) ファイル)。取り消すときはカードの「取り消す」を押してください。")
         } catch {
-            await revertApplied(change, root: root)
-            presentNotice("適用できませんでした。変更は元に戻しました: \(error.localizedDescription)", kind: .information)
+            let stuck = await revertApplied(change, root: root)
+            if stuck.isEmpty {
+                presentNotice("適用できませんでした。変更は元に戻しました: \(error.localizedDescription)", kind: .information)
+            } else {
+                // Never "元に戻しました" while a file is still changed: the card stays applied so 取り消す can retry them.
+                change.status = .applied
+                appendAssistantNote("適用できませんでした(\(error.localizedDescription))。次のファイルは元に戻せず、修正後のままです: "
+                    + stuck.joined(separator: "、") + "。カードの「取り消す」でもう一度戻すか、ファイルを確かめてください。")
+            }
         }
     }
 
     func revertChatChange(_ change: ChatChange) async {
         guard change.status == .applied, let root = library.selectedRecord?.sourceLocation else { return }
-        await revertApplied(change, root: root)
+        let stuck = await revertApplied(change, root: root)
+        guard stuck.isEmpty else {
+            appendAssistantNote("一部を元に戻せませんでした。次のファイルは修正後のままです: " + stuck.joined(separator: "、")
+                + "。もう一度「取り消す」を押すと、残りだけを戻します。")
+            return
+        }
         change.status = .ready
         appendAssistantNote("取り消しました。プロジェクトは修正前の状態です。")
     }
@@ -257,16 +269,21 @@ extension WorkspaceStore {
         change.status = .discarded
     }
 
-    private func revertApplied(_ change: ChatChange, root: String) async {
+    /// Reverts the applied files in reverse order. Returns the files that could not be reverted ("path(理由)"); those stay in
+    /// `change.applied` with their checkpoints, so a later 取り消す retries exactly them.
+    private func revertApplied(_ change: ChatChange, root: String) async -> [String] {
+        var stuck: [(FileChangeProposal, GitFileCheckpoint?)] = [], reasons: [String] = []
         for (proposal, checkpoint) in change.applied.reversed() {
             do {
                 try await fileEditor.revert(rootPath: root, proposal: proposal)
                 if let checkpoint { await gitCheckpointProvider.discard(checkpoint) }
             } catch {
-                presentNotice("\(proposal.relativePath) を元に戻せませんでした: \(error.localizedDescription)", kind: .information)
+                stuck.insert((proposal, checkpoint), at: 0)
+                reasons.append("\(proposal.relativePath)(\(error.localizedDescription))")
             }
         }
-        change.applied = []
+        change.applied = stuck
+        return reasons
     }
 
     func appendAssistantNote(_ text: String) {

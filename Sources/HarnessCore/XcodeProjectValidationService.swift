@@ -26,10 +26,16 @@ public struct XcodeProjectValidationService: ProjectValidating, Sendable {
         let environment = try await xcodeEnvironment(rootURL: rootURL)
 
         let startedAt = Date()
+        let derivedDataURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("HarnessDerivedData-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: derivedDataURL) }
+        // Listing also fetches the project's Swift packages into the run's folder, outside the sandbox (it needs the
+        // network; SwiftPM evaluates the manifests in its own sandbox). Build and test then use only that copy.
         let listResult = try await runner.run(
             kind: .xcodeBuild,
             executableURL: URL(fileURLWithPath: "/usr/bin/xcrun"),
-            arguments: ["xcodebuild", "-list", "-json"] + container.selectorArguments,
+            arguments: ["xcodebuild", "-list", "-json"] + container.selectorArguments
+                + ["-clonedSourcePackagesDirPath", derivedDataURL.appendingPathComponent("SourcePackages").path],
             currentDirectoryURL: rootURL,
             environment: environment
         )
@@ -49,22 +55,18 @@ public struct XcodeProjectValidationService: ProjectValidating, Sendable {
         ) else {
             throw ProjectValidationError.xcodeSchemeUnavailable(container.name)
         }
-        let derivedDataURL = FileManager.default.temporaryDirectory
-            .appendingPathComponent("HarnessDerivedData-\(UUID().uuidString)", isDirectory: true)
-        defer { try? FileManager.default.removeItem(at: derivedDataURL) }
-
         let buildResult = try await runner.run(
             kind: .xcodeBuild,
-            executableURL: URL(fileURLWithPath: "/usr/bin/xcrun"),
-            arguments: buildArguments(
+            executableURL: URL(fileURLWithPath: "/usr/bin/sandbox-exec"),
+            arguments: isolated(buildArguments(
                 container: container,
                 scheme: scheme,
                 derivedDataURL: derivedDataURL
-            ),
+            ), derivedDataURL: derivedDataURL),
             currentDirectoryURL: rootURL,
-            environment: environment
+            environment: isolatedEnvironment(environment, derivedDataURL: derivedDataURL)
         )
-        let buildContext = "[Local Factory] \(container.relativePath) / scheme: \(scheme) / Debug / 署名なし"
+        let buildContext = "[Local Factory] \(container.relativePath) / scheme: \(scheme) / Debug / 署名なし / 隔離(通信なし)"
         let buildOutput = buildResult.output.isEmpty
             ? buildContext
             : "\(buildContext)\n\n\(buildResult.output)"
@@ -119,6 +121,21 @@ public struct XcodeProjectValidationService: ProjectValidating, Sendable {
         return environment
     }
 
+    /// `sandbox-exec -p <profile> /usr/bin/xcrun xcodebuild …` with the packages already fetched into the run's folder.
+    func isolated(_ arguments: [String], derivedDataURL: URL) -> [String] {
+        ["-p", XcodeIsolation.profile(workDirectory: derivedDataURL), "/usr/bin/xcrun"] + arguments
+            + ["-clonedSourcePackagesDirPath", derivedDataURL.appendingPathComponent("SourcePackages").path,
+               "-disableAutomaticPackageResolution"] + XcodeIsolation.buildSettings
+    }
+
+    private func isolatedEnvironment(_ environment: [String: String], derivedDataURL: URL) -> [String: String] {
+        let temporary = derivedDataURL.appendingPathComponent("tmp", isDirectory: true)
+        try? FileManager.default.createDirectory(at: temporary, withIntermediateDirectories: true)
+        var copy = environment
+        copy["TMPDIR"] = temporary.path + "/"
+        return copy
+    }
+
     private func buildArguments(
         container: XcodeProjectContainer,
         scheme: String,
@@ -154,17 +171,17 @@ public struct XcodeProjectValidationService: ProjectValidating, Sendable {
         }
         let result = try await runner.run(
             kind: .xcodeTest,
-            executableURL: URL(fileURLWithPath: "/usr/bin/xcrun"),
-            arguments: testArguments(
+            executableURL: URL(fileURLWithPath: "/usr/bin/sandbox-exec"),
+            arguments: isolated(testArguments(
                 container: container,
                 scheme: scheme,
                 derivedDataURL: derivedDataURL,
                 destinationID: destination.id
-            ),
+            ), derivedDataURL: derivedDataURL),
             currentDirectoryURL: rootURL,
-            environment: environment
+            environment: isolatedEnvironment(environment, derivedDataURL: derivedDataURL)
         )
-        let context = "[Local Factory] \(destination.name)（\(destination.runtimeName)）でテスト"
+        let context = "[Local Factory] \(destination.name)（\(destination.runtimeName)）でテスト(隔離・通信なし)"
         return ProjectValidationCheck(
             kind: .xcodeTest,
             succeeded: result.exitCode == 0,

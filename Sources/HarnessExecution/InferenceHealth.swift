@@ -105,7 +105,13 @@ public enum InferenceHealth {
     /// Counting pieces alone misjudged Japanese and grammar-constrained output, which arrives in fewer, larger pieces:
     /// on 2026-10-11/12 plans with Japanese examples (#40) were cut off as decodeStalled at 6 pieces/s while the server
     /// generated 15 tokens/s (1 → 1 → 2 of 22 C2 runs).
-    public static func decodeUnits(_ piece: String) -> Int { max(1, (piece.utf8.count + 3) / 4) }
+    /// A character outside ASCII (Japanese) is about one token by itself, so it counts as one unit; ASCII text counts one
+    /// unit per 4 bytes (2026-10-12: with 4 bytes for everything, a Japanese plan at 15 tokens/s still read as 9.3 units/s
+    /// against a reference of 40 and was cut off once more).
+    public static func decodeUnits(_ piece: String) -> Int {
+        let ascii = piece.unicodeScalars.filter(\.isASCII).count
+        return max(1, (ascii + 3) / 4 + piece.unicodeScalars.count - ascii)
+    }
 
     public struct Progress: Sendable, Equatable {
         public var firstTokenAt: Double?

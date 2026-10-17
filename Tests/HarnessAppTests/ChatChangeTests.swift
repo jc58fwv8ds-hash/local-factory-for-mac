@@ -71,6 +71,33 @@ struct ChatChangeTests {
         #expect(!FileManager.default.fileExists(atPath: package.appendingPathComponent("Sources/Meter/Limits.swift").path))
     }
 
+    /// A file edited after 適用 cannot be reverted safely: 取り消す must not say the project is back, must keep the card
+    /// applied, and a second 取り消す reverts only that file (2026-10-12 review: a failed revert was reported as done).
+    @Test func aRevertThatFailsIsReportedAndCanBeRetried() async throws {
+        let (store, package, _) = try makeStore()
+        defer { try? FileManager.default.removeItem(at: package.deletingLastPathComponent()) }
+        store.instruction = "レベルは10を上限にして直して"
+        store.submitInstruction()
+        let change = try await waitForProposal(store)
+        await store.applyChatChange(change)
+        let meter = package.appendingPathComponent("Sources/Meter/Meter.swift")
+        let applied = try String(contentsOf: meter, encoding: .utf8)
+        try (applied + "// 手で足した行\n").write(to: meter, atomically: true, encoding: .utf8)
+
+        await store.revertChatChange(change)
+        #expect(change.status == .applied)
+        #expect(change.applied.map(\.0.relativePath) == ["Sources/Meter/Meter.swift"])
+        #expect(!FileManager.default.fileExists(atPath: package.appendingPathComponent("Sources/Meter/Limits.swift").path))
+        let note = try #require(store.project.conversation.last?.content)
+        #expect(note.contains("元に戻せませんでした") && note.contains("Sources/Meter/Meter.swift") && !note.contains("修正前の状態です"))
+
+        try applied.write(to: meter, atomically: true, encoding: .utf8)   // the user takes the hand edit back out
+        await store.revertChatChange(change)
+        #expect(change.status == .ready)
+        #expect(try String(contentsOf: meter, encoding: .utf8) == Self.source)
+        #expect(store.project.conversation.last?.content.contains("修正前の状態です") == true)
+    }
+
     @Test func followUpRefinesThePendingProposalWithBothInstructions() async throws {
         let (store, package, fake) = try makeStore()
         defer { try? FileManager.default.removeItem(at: package.deletingLastPathComponent()) }

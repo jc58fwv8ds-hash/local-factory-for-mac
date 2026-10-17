@@ -5,6 +5,7 @@ struct AppleAppLibraryView: View {
     @Bindable var store: WorkspaceStore
     @State private var session: AppleAppLibrarySession
     @State private var isConfirmingInstall = false
+    @State private var installRecords = DeviceInstallRecordStore.standard.load()
 
     init(store: WorkspaceStore) {
         self.store = store
@@ -34,6 +35,7 @@ struct AppleAppLibraryView: View {
                 endPoint: .bottomTrailing
             )
         }
+        .onChange(of: session.reports.count) { _, _ in installRecords = DeviceInstallRecordStore.standard.load() }
         .task {
             session.updateSources(store.appleAppSources)
             if session.apps.isEmpty && !session.isBusy {
@@ -60,11 +62,41 @@ struct AppleAppLibraryView: View {
             LazyVStack(alignment: .leading, spacing: 24) {
                 header
                 feedback
+                expiringInstalls
                 content
             }
             .padding(32)
         }
         .accessibilityIdentifier(HarnessAccessibilityID.appLibrary)
+    }
+
+    /// Apps on a device whose signature runs out (free account: weekly), each with one 入れ直す button.
+    @ViewBuilder
+    private var expiringInstalls: some View {
+        let due = installRecords.filter { $0.expiryNote() != nil }.sorted { ($0.daysLeft() ?? 0) < ($1.daysLeft() ?? 0) }
+        if !due.isEmpty {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("署名の期限").font(.harness(.headline))
+                ForEach(due) { record in
+                    HStack(spacing: 10) {
+                        Image(systemName: record.needsReinstall() ? "exclamationmark.triangle.fill" : "clock")
+                            .foregroundStyle(record.needsReinstall() ? Color.red : Color.secondary)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(record.appName).font(.harness(.subheadline, weight: .semibold))
+                            Text(record.expiryNote() ?? "").font(.harness(.caption)).foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        Button("入れ直す") {
+                            if let problem = session.reinstall(record) { session.errorMessage = problem }
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(session.isBusy)
+                    }
+                    .padding(10)
+                    .background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 10))
+                }
+            }
+        }
     }
 
     private var header: some View {
@@ -153,7 +185,10 @@ struct AppleAppLibraryView: View {
                 ForEach(session.apps) { app in
                     AppleAppTile(
                         app: app,
-                        isSelected: app.id == session.selectedAppID
+                        isSelected: app.id == session.selectedAppID,
+                        expiryNotes: installRecords.filter { $0.appKey == app.source.rootPath }.compactMap { record in
+                            record.expiryNote().map { ($0, record.needsReinstall()) }
+                        }
                     ) {
                         session.selectApp(app.id)
                     }

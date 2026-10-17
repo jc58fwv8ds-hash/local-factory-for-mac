@@ -38,4 +38,16 @@ struct WordEditorTests {
         #expect(throws: WordEditor.Failure.self) { try WordEditor.apply([.init(find: "存在しない文", replace: "x")], to: source,
                                                                          output: folder.appendingPathComponent("x.docx")) }
     }
+
+    /// 2026-10-12 review: a text box's paragraphs sit inside a body paragraph. Each is found and edited on its own, and the
+    /// body paragraph around it keeps its own text.
+    @Test func paragraphsInsideATextBoxAreEditedOnTheirOwn() {
+        let xml = #"<w:body><w:p><w:r><w:t>本文の前</w:t></w:r><w:r><w:pict><w:txbxContent><w:p><w:r><w:t>箱の中の 10 月</w:t></w:r></w:p></w:txbxContent></w:pict></w:r><w:r><w:t>本文の後</w:t></w:r></w:p><w:p><w:pPr/><w:r><w:t>次の段落</w:t></w:r></w:p></w:body>"#
+        let texts = WordEditor.paragraphRanges(in: xml).map { WordEditor.text(of: String(xml[$0])) }
+        #expect(texts == ["箱の中の 10 月", "次の段落"])
+        let box = WordEditor.paragraphRanges(in: xml)[0]
+        var edited = xml
+        edited.replaceSubrange(box, with: WordEditor.replacing("10 月", with: "11 月", in: String(xml[box])))
+        #expect(edited.contains("箱の中の 11 月") && edited.contains("<w:t>本文の前</w:t>") && edited.contains("<w:t>本文の後</w:t>"))
+    }
 }

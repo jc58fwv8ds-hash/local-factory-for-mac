@@ -22,6 +22,13 @@ struct HarnessApp: App {
                     ModelCallLog.prune(LoggingInferenceProvider.folder)   // keep 14 days of the App's model-call log
                     store.fileOperationHooks.append(FileOperationJournal.standard)   // what the app did to files (#42)
                     ModelCallLog.prune(FileOperationJournal.standard.folder, keepingDays: 90)
+                    // Apps on a device whose free-account signature runs out by tomorrow: say so once at launch.
+                    let expiring = DeviceInstallRecordStore.standard.load().filter { $0.needsReinstall() }
+                    if !expiring.isEmpty {
+                        store.presentNotice(expiring.compactMap { $0.expiryNote().map { "\($0)" } }
+                            .enumerated().map { "\(expiring[$0.offset].appName)(\($0.element))" }.joined(separator: "、")
+                            + "。作成アプリの画面から入れ直してください。", kind: .information)
+                    }
                     // Booked instructions (#43): checked once a minute while the app is open.
                     while !Task.isCancelled {
                         store.runDueScheduledInstructions()
