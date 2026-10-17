@@ -7,40 +7,7 @@ import HarnessKernel
 /// Source context comes from ContextSelector. Without `allowedFiles` (D2), write permission
 /// is exactly the selected non-test, non-protected files: no task-specific allowlist.
 package enum TaskOrchestrator {
-    struct Task: Codable {
-        let objective: String
-        let allowedFiles: [String]?
-        let protectedFiles: [String]
-        let appendOnly: [String]
-        let maxEdits: Int
-        let maxLines: Int
-        /// "package" (default since 2026-10-05, plan 0005): every `Sources/` file is editable from the start when the package
-        /// fits the prompt budget; "selector": the ContextSelector scope with target discovery and promotion.
-        var scopeMode: String?
-        /// Examiner check after the tests pass (BatchExaminerStage). Off by default since 2026-10-08: on C2 and suite-b5 it added
-        /// 45-65% time without a net gain; opt in with true (runner `--examiner`).
-        var examinerCheck: Bool?
-        /// Example check for the user after the tests pass (ExampleCheckStage, 2026-10-09; the app turns it on).
-        var exampleCheck: Bool?
-        /// true: the examiner and the example check run only when RiskSignals flag the change (about a third of the changes,
-        /// half of the false successes). The measured suites leave it off so `--examiner` keeps checking every task.
-        var gatedChecks: Bool?
-        /// Output-token limit of the proposal call (default 2048); larger edits from verbose models are not truncated.
-        var proposalOutputTokens: Int?
-    }
-    /// Package scope applies only while the whole production source fits the prompt budget.
-    static let packageScopeLimitBytes = 40 * 1024
-    package enum Failure: Error { case scope, alreadyStarted, context, testDiff, environmentInvalid }
-    /// The pipeline body for one task. `root` must lie inside `candidate/work/` (isolation requirement);
-    /// `output` receives the run record and evidence. Behaviour is identical for the CLI and for tests.
-    /// Every model call of the run is appended to `output/model-calls.jsonl` (ModelCallLog, backlog #41).
-    package static func runTask(candidate: URL, root: URL, key: String, model: String, output: URL) async throws {
-        try await ModelCallLog.$destination.withValue(output.appendingPathComponent("model-calls.jsonl")) {
-            try await runTaskLogged(candidate: candidate, root: root, key: key, model: model, output: output)
-        }
-    }
-
-    private static func runTaskLogged(candidate: URL, root: URL, key: String, model: String, output: URL) async throws {
+    static func runTaskLogged(candidate: URL, root: URL, key: String, model: String, output: URL) async throws {
         guard root.path.hasPrefix(candidate.path + "/work/") else { throw Failure.scope }
         let task = try JSONDecoder().decode(Task.self, from: Data(contentsOf: root.appendingPathComponent("task.json")))
         try FileManager.default.createDirectory(at: output, withIntermediateDirectories: true)
@@ -194,17 +161,7 @@ package enum TaskOrchestrator {
             }
         }
         func fail(_ stage: String, _ error: Error, rollback: String = "NOT_NEEDED") throws {
-            record["phase"] = "failed:\(stage)"; record["error"] = String(describing: error)
-            record["failureClass"] = record["failureClass"] ?? stage
-            record["modelResult"] = "UNVERIFIED"; record["harnessResult"] = "HARNESS_FAIL"
-            Self.noteRollback(record, rollback); record["promotionEligible"] = false
-            record["recoveryBudgetUsed"] = budget.used.map(\.rawValue)
-            Self.classifyEnvironment(record); try record.save()
-        }
-        func rollback(_ tx: RecoverableFileBatch, _ repairTx: RecoverableFileBatch, _ repairState: URL) async -> String {
-            if FileManager.default.fileExists(atPath: repairState.path),
-               (try? await repairTx.run(root: root, direction: .rollback)) == nil { return "REPAIR_ROLLBACK_FAILED" }
-            return (try? await tx.run(root: root, direction: .rollback)) == nil ? "FAILED" : "PASS"
+            try Self.recordFailure(stage, error, rollback: rollback, record: record, budget: budget)
         }
 
         attempts: for attempt in 1...2 {
@@ -354,7 +311,7 @@ package enum TaskOrchestrator {
                     attemptRecord["verificationFailureClass"] = verdict.kind.rawValue
                     attemptRecord["verification"] = "FAIL (requirements not met; details withheld from model)"
                     record.append("attempts", attemptRecord); label(attempt, repaired: repaired, pass: false)
-                    let rolled = await rollback(tx, repairTx, repairState)
+                    let rolled = await Self.rollback(tx, repairTx, repairState, root: root)
                     guard rolled == "PASS" else { try fail("verification", Failure.scope, rollback: rolled); break attempts }
                     Self.noteRollback(record, rolled)
                     if verdict.runtimeRepairEligible && attempt == 1 && budget.consume(.runtimeRepair) {
@@ -375,7 +332,7 @@ package enum TaskOrchestrator {
                 }
             } catch {
                 record.append("attempts", attemptRecord); label(attempt, repaired: repaired, pass: false)
-                let rolled = await rollback(tx, repairTx, repairState)
+                let rolled = await Self.rollback(tx, repairTx, repairState, root: root)
                 // After a passing build, an exception comes from the test run itself (timeout / interruption).
                 let testStage = attemptRecord["isolatedBuild"] as? String == "PASS"
                 record["failureClass"] = record["failureClass"] ?? (testStage ? "Test execution did not finish (timeout or interruption)" : "Compile")

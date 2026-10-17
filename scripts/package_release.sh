@@ -6,7 +6,15 @@ readonly project_root="${0:A:h:h}"
 readonly version="${1:-}"
 readonly build_number="${2:-}"
 readonly output_root="${3:-${project_root}/outputs}"
-readonly signing_identity="${HARNESS_SIGNING_IDENTITY:--}"
+# The Mac's own stable signature when it exists (scripts/create_local_signing_identity.sh): macOS keeps the app's permissions
+# (Accessibility…) across rebuilds only when the signature does not change; "-" (ad-hoc) changes with every build.
+if [[ -n "${HARNESS_SIGNING_IDENTITY:-}" ]]; then
+    readonly signing_identity="${HARNESS_SIGNING_IDENTITY}"
+elif security find-identity -v -p codesigning 2>/dev/null | grep -q "Local Factory Local Signing"; then
+    readonly signing_identity="Local Factory Local Signing"
+else
+    readonly signing_identity="-"
+fi
 
 if [[ ! "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
     print -u2 "Usage: scripts/package_release.sh <version> <build-number> [output-directory]"
@@ -90,6 +98,7 @@ build_release_slice() {
         CLANG_MODULE_CACHE_PATH="${scratch_path}/clang-module-cache" \
         SWIFTPM_MODULECACHE_OVERRIDE="${scratch_path}/swiftpm-module-cache" \
         /usr/bin/xcrun swift build \
+            --build-system native \
             -c release \
             --product Harness \
             --triple "${architecture}-apple-macosx14.0" \
@@ -119,7 +128,9 @@ ditto "${resource_bundle_source}" "${staged_contents}/Resources/${resource_bundl
     "${project_root}/.build-release-arm64/arm64-apple-macosx/release/Harness" \
     "${project_root}/.build-release-x86_64/x86_64-apple-macosx/release/Harness" \
     -output "${staged_contents}/MacOS/Harness"
-/usr/bin/lipo "${staged_contents}/MacOS/Harness" -verify_arch arm64 x86_64
+# Xcode 27 の lipo は -verify_arch に CPU を 1 つずつしか取らない
+/usr/bin/lipo "${staged_contents}/MacOS/Harness" -verify_arch arm64
+/usr/bin/lipo "${staged_contents}/MacOS/Harness" -verify_arch x86_64
 chmod 755 "${staged_contents}/MacOS/Harness"
 cp "${template_plist}" "${staged_contents}/Info.plist"
 plutil -replace CFBundleShortVersionString -string "${version}" "${staged_contents}/Info.plist"
@@ -133,8 +144,9 @@ env \
         "${staged_contents}/Resources" \
         "${swift_executable}"
 
-if [[ "${signing_identity}" == "-" ]]; then
-    codesign --force --deep --sign - "${staged_app}"
+if [[ "${signing_identity}" == "-" || "${signing_identity}" == "Local Factory Local Signing" ]]; then
+    # Ad-hoc or the Mac's own signature: no Apple timestamp or notarization-style hardened runtime (local use only).
+    codesign --force --deep --sign "${signing_identity}" "${staged_app}"
 else
     codesign \
         --force \
@@ -156,9 +168,9 @@ codesign --verify \
     --strict \
     --verbose=2 \
     "${verification_root}/Harness-v${version}.app"
-/usr/bin/lipo \
-    "${verification_root}/Harness-v${version}.app/Contents/MacOS/Harness" \
-    -verify_arch arm64 x86_64
+for arch in arm64 x86_64; do
+    /usr/bin/lipo "${verification_root}/Harness-v${version}.app/Contents/MacOS/Harness" -verify_arch "${arch}"
+done
 
 verified_version=$(plutil -extract CFBundleShortVersionString raw \
     "${verification_root}/Harness-v${version}.app/Contents/Info.plist")

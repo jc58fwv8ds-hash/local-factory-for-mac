@@ -32,7 +32,7 @@ public enum XcodeIsolation {
         guard length > 0 else { return nil }
         var buffer = [CChar](repeating: 0, count: length)
         confstr(name, &buffer, length)
-        let path = String(cString: buffer)
+        let path = String(decoding: buffer.prefix { $0 != 0 }.map { UInt8(bitPattern: $0) }, as: UTF8.self)
         return path.isEmpty ? nil : path
     }
 

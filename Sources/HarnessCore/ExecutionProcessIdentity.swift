@@ -34,7 +34,7 @@ public struct ExecutionProcessIdentity: Codable, Equatable, Sendable {
         return pids.prefix(Int(count)).filter { pid in
             guard pid > 1, pid != getpid(), let identity = read(pid), identity.uid == getuid(),
                   proc_pidpath(pid, &path, UInt32(path.count)) > 0 else { return false }
-            return String(cString: path).hasPrefix(prefix)
+            return String(decoding: path.prefix { $0 != 0 }.map { UInt8(bitPattern: $0) }, as: UTF8.self).hasPrefix(prefix)
         }
     }
 }

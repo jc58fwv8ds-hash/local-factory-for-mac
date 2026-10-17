@@ -41,6 +41,10 @@ final class MacComputerController {
     var hasAccessibilityPermission: Bool { AXIsProcessTrusted() }
 
     func openAccessibilitySettings() {
+        // Asking first puts this app in the Accessibility list and shows macOS's own dialog with a button to the setting
+        // (2026-10-18: without it the app was not in the list to switch on). The user switches it on; nothing here does.
+        let options = ["AXTrustedCheckOptionPrompt": true] as CFDictionary
+        if AXIsProcessTrustedWithOptions(options) { return }
         guard let url = URL(
             string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
         ) else { return }

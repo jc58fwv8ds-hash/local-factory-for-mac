@@ -19,9 +19,11 @@ final class ComputerUseSession {
     @ObservationIgnored private var task: Task<Void, Never>?
     @ObservationIgnored private var approvalContinuation: CheckedContinuation<Bool, Never>?
     @ObservationIgnored let controller: any ComputerUseControlling
+    @ObservationIgnored let journal: ComputerUseJournal
 
-    init(controller: any ComputerUseControlling = AccessibilityComputerUse()) {
+    init(controller: any ComputerUseControlling = AccessibilityComputerUse(), journal: ComputerUseJournal = .standard) {
         self.controller = controller
+        self.journal = journal
     }
 
     func start(model: ModelSelection, provider: any ModelInferenceProvider) {
@@ -30,20 +32,29 @@ final class ComputerUseSession {
         steps = []
         outcome = nil
         isRunning = true
-        let controller = self.controller
+        let controller = self.controller, journal = self.journal
         task = Task { [weak self] in
             weak let session = self
             let result = await ComputerUseAgent.run(
                 goal: goal, controller: controller,
-                decide: { messages in
+                decide: { messages, screenshot in
                     var reply = ""
                     let request = InferenceRequest(runtime: model.runtime, modelIdentifier: model.identifier, messages: messages,
-                                                   maximumOutputTokens: 400, temperature: 0)
+                                                   maximumOutputTokens: 400,
+                                                   images: await ComputerUseScreenshot.inferenceImages(screenshot), temperature: 0)
                     for try await piece in await provider.events(for: request) { reply += piece }
                     return reply
                 },
-                approve: { action, reason in await session?.askApproval(action: action, reason: reason) ?? false },
-                onStep: { step in await session?.append(step) })
+                approve: { action, reason in
+                    let allowed = await session?.askApproval(action: action, reason: reason) ?? false
+                    journal.record(goal: goal, approval: (action, reason, allowed))
+                    return allowed
+                },
+                onStep: { step in
+                    journal.record(goal: goal, step: step)
+                    await session?.append(step)
+                })
+            journal.record(goal: goal, outcome: "\(result)")
             self?.finish(result)
         }
     }

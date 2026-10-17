@@ -23,6 +23,14 @@ final class AccessibilityComputerUse: ComputerUseControlling, @unchecked Sendabl
     private let lock = NSLock()
     private var elementsByID: [Int: AXUIElement] = [:]
     private var target: NSRunningApplication?
+    private var windowFrame: CGRect?
+
+    /// Brings a running app to the front and makes it the one to operate (the self-test's --target).
+    @MainActor
+    func focus(on app: NSRunningApplication) {
+        app.activate()
+        lock.withLock { target = app }
+    }
 
     func observe() async throws -> ComputerUseObservation {
         guard AXIsProcessTrusted() else { throw Failure.permission }
@@ -56,7 +64,15 @@ final class AccessibilityComputerUse: ComputerUseControlling, @unchecked Sendabl
             queue.append(contentsOf: children(element).prefix(80).map { ($0, depth + 1) })
         }
         lock.withLock { elementsByID = Dictionary(uniqueKeysWithValues: found.map { ($0.1.id, $0.0) }) }
-        return ComputerUseObservation(application: app.localizedName ?? "アプリ", window: window, elements: found.map(\.1))
+        // Too few elements to act on (a game, a canvas, a web view without accessibility): add the window's picture.
+        let actionable = found.filter { $0.1.role != "AXStaticText" }.count
+        var screenshot: Data?
+        if actionable < 5, let capture = await ComputerUseScreenshot.capture(processIdentifier: app.processIdentifier) {
+            screenshot = capture.png
+            lock.withLock { windowFrame = capture.frame }
+        }
+        return ComputerUseObservation(application: app.localizedName ?? "アプリ", window: window, elements: found.map(\.1),
+                                      screenshot: screenshot)
     }
 
     func perform(_ action: ComputerUseAction, in observation: ComputerUseObservation) async throws -> String {
@@ -68,15 +84,7 @@ final class AccessibilityComputerUse: ComputerUseControlling, @unchecked Sendabl
     private func act(_ action: ComputerUseAction) async throws -> String {
         switch action {
         case .openApplication(let name):
-            let url = try await MainActor.run { () throws -> URL in
-                let folders = ["/Applications", "/System/Applications", "/System/Applications/Utilities", "/Applications/Utilities",
-                               NSHomeDirectory() + "/Applications"]
-                for folder in folders {
-                    let candidate = URL(fileURLWithPath: folder).appendingPathComponent(name.hasSuffix(".app") ? name : name + ".app")
-                    if FileManager.default.fileExists(atPath: candidate.path) { return candidate }
-                }
-                throw Failure.appNotFound(name)
-            }
+            let url = try await MainActor.run { () throws -> URL in try Self.applicationURL(named: name) }
             let configuration = NSWorkspace.OpenConfiguration()
             configuration.activates = true
             let app = try await NSWorkspace.shared.openApplication(at: url, configuration: configuration)
@@ -112,12 +120,58 @@ final class AccessibilityComputerUse: ComputerUseControlling, @unchecked Sendabl
         case .key(let key):
             try press(key: key)
             return "押した"
+        case .click(let x, let y, _):
+            guard let frame = lock.withLock({ windowFrame }) else { throw Failure.action("ウィンドウの位置が分かりません") }
+            ComputerUseScreenshot.click(at: CGPoint(x: frame.minX + x * frame.width, y: frame.minY + y * frame.height))
+            return "押した"
+        case .write(let text):
+            typeCharacters(text)
+            return "書いた"
         case .done, .askUser:
             return ""
         }
     }
 
     // MARK: helpers
+
+    /// An app by its file name ("Notes"), the name shown in the user's language ("メモ") or its bundle id (2026-10-18: the
+    /// model asked for 「メモ」 and only Notes.app exists on disk).
+    @MainActor
+    static func applicationURL(named name: String) throws -> URL {
+        let wanted = name.replacingOccurrences(of: ".app", with: "").trimmingCharacters(in: .whitespaces)
+        if wanted.contains("."), let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: wanted) { return url }
+        let folders = ["/Applications", "/System/Applications", "/System/Applications/Utilities", "/Applications/Utilities",
+                       NSHomeDirectory() + "/Applications"]
+        for folder in folders {
+            let apps = ((try? FileManager.default.contentsOfDirectory(atPath: folder)) ?? []).filter { $0.hasSuffix(".app") }
+            for app in apps {
+                let path = folder + "/" + app
+                let names = [String(app.dropLast(4)), FileManager.default.displayName(atPath: path)
+                    .replacingOccurrences(of: ".app", with: "")] + localizedNames(ofAppAt: path)
+                if names.contains(where: { $0.compare(wanted, options: [.caseInsensitive, .widthInsensitive]) == .orderedSame }) {
+                    return URL(fileURLWithPath: path)
+                }
+            }
+        }
+        throw Failure.appNotFound(name)
+    }
+
+    /// The app's display names in every language it ships (InfoPlist.loctable, or <lang>.lproj/InfoPlist.strings), so
+    /// 「メモ」 finds Notes.app even when this process runs in English.
+    private static func localizedNames(ofAppAt path: String) -> [String] {
+        let resources = URL(fileURLWithPath: path).appendingPathComponent("Contents/Resources")
+        var names: [String] = []
+        if let table = NSDictionary(contentsOf: resources.appendingPathComponent("InfoPlist.loctable")) as? [String: [String: Any]] {
+            names += table.values.flatMap { [$0["CFBundleDisplayName"], $0["CFBundleName"]].compactMap { $0 as? String } }
+        }
+        for language in ["ja", "Japanese", "en"] {
+            let strings = resources.appendingPathComponent("\(language).lproj/InfoPlist.strings")
+            if let table = NSDictionary(contentsOf: strings) as? [String: String] {
+                names += [table["CFBundleDisplayName"], table["CFBundleName"]].compactMap { $0 }
+            }
+        }
+        return names
+    }
 
     private func element(_ id: Int) throws -> AXUIElement {
         guard let element = lock.withLock({ elementsByID[id] }) else { throw Failure.element(id) }

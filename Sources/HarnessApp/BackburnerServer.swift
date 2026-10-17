@@ -81,6 +81,9 @@ actor BackburnerServer {
         let venv = directory.appendingPathComponent(".venv/bin").path
         environment["PATH"] = venv + ":/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
         environment["PY"] = venv + "/python3"
+        // The 27B's image encoder (the projector of the same model, 2026-10-18): Computer Use reads window pictures with it.
+        let projector = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Models/Qwen3.8-27B-mmproj.gguf")
+        if model == nil, FileManager.default.fileExists(atPath: projector.path) { environment["LLAMA_ARG_MMPROJ"] = projector.path }
         if let model {
             // Another GGUF than the default 27B: the DFlash drafter is trained for that 27B and slows a fine-tune down
             // (a 27B fine-tune: 8.1 tokens/s with it, 10.4 without, measured 2026-10-10), so it runs without speculation.

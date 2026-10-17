@@ -22,6 +22,7 @@ struct HarnessApp: App {
                     ModelCallLog.prune(LoggingInferenceProvider.folder)   // keep 14 days of the App's model-call log
                     store.fileOperationHooks.append(FileOperationJournal.standard)   // what the app did to files (#42)
                     ModelCallLog.prune(FileOperationJournal.standard.folder, keepingDays: 90)
+                    ModelCallLog.prune(ComputerUseJournal.standard.folder, keepingDays: 90)
                     // Apps on a device whose free-account signature runs out by tomorrow: say so once at launch.
                     let expiring = DeviceInstallRecordStore.standard.load().filter { $0.needsReinstall() }
                     if !expiring.isEmpty {

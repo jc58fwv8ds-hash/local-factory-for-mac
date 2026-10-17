@@ -80,8 +80,7 @@ final class WorkspaceStore {
     let modelManager: ModelManagerStore
     let remoteControl: RemoteControlStore
     let computerOperator: ComputerOperatorSession
-    /// Computer Use stage 1: one action at a time, approval before anything that cannot be undone.
-    let computerUse = ComputerUseSession()
+    let computerUse = ComputerUseSession()   // Computer Use stage 1: one action at a time, approval before the irreversible
     let permissionPolicy = PermissionPolicy()
     let inferenceProvider: any ModelInferenceProvider
     let termExplanationService: any TermExplanationProviding

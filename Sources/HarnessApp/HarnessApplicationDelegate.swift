@@ -3,6 +3,7 @@ import AppKit
 @MainActor
 final class HarnessApplicationDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
+        if MainActor.assumeIsolated({ ComputerUseSelfTest.runIfRequested() }) { return }
         let current = NSRunningApplication.current
         guard let bundleIdentifier = current.bundleIdentifier else { return }
         let peers = NSWorkspace.shared.runningApplications.filter {
