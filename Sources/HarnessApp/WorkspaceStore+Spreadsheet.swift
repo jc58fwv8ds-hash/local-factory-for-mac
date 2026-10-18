@@ -82,7 +82,7 @@ extension WorkspaceStore {
                 InferenceMessage(role: .user, content: SpreadsheetIntent.prompt(instruction: change.instruction,
                     name: change.source.lastPathComponent, cells: cells))], maximumOutputTokens: 1500, temperature: 0)
             var response = ""
-            for try await piece in await inferenceProvider.events(for: request) { response += piece }
+            for try await piece in await lightJobEvents(request) { response += piece }
             guard let edits = SpreadsheetIntent.edits(from: response), !edits.isEmpty else {
                 change.status = .failed("書き換えるセルを読み取れませんでした。セルや列を具体的に書いて、もう一度頼んでください。"); return
             }
@@ -182,7 +182,7 @@ extension WorkspaceStore {
                                                                                      previousError: previousError))],
                     maximumOutputTokens: 800, temperature: 0)
                 var response = ""
-                for try await piece in await inferenceProvider.events(for: request) { response += piece }
+                for try await piece in await lightJobEvents(request) { response += piece }
                 guard let query = SpreadsheetAnalysis.sql(from: response) else {
                     previousError = "SELECT 文が見つかりません"; continue
                 }

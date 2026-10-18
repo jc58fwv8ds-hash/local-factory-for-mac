@@ -64,7 +64,7 @@ extension WorkspaceStore {
                 InferenceMessage(role: .user, content: WordIntent.prompt(instruction: change.instruction,
                     name: change.source.lastPathComponent, paragraphs: paragraphs))], maximumOutputTokens: 1500, temperature: 0)
             var response = ""
-            for try await piece in await inferenceProvider.events(for: request) { response += piece }
+            for try await piece in await lightJobEvents(request) { response += piece }
             guard let edits = WordIntent.edits(from: response), !edits.isEmpty else {
                 change.status = .failed("直す部分を読み取れませんでした。どの文をどう直すか具体的に書いて、もう一度頼んでください。"); return
             }

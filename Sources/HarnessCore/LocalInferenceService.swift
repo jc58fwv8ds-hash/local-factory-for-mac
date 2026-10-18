@@ -76,6 +76,8 @@ public actor LocalInferenceService: ModelInferenceProvider {
     }
 
     public static let backburnerChatURL = "http://127.0.0.1:8080/v1/chat/completions"
+    /// The light-job helper Mac's small model, forwarded to this port over SSH by the app (HelperNode, 2026-10-18).
+    public static let helperChatURL = "http://127.0.0.1:18081/v1/chat/completions"
 
     private static func makeURLRequest(for request: InferenceRequest) throws -> URLRequest {
         let url: URL
@@ -89,7 +91,7 @@ public actor LocalInferenceService: ModelInferenceProvider {
             url = ProcessInfo.processInfo.environment["HARNESS_OPENAI_COMPATIBLE_URL"].flatMap(URL.init(string:))
                 ?? URL(string: "http://127.0.0.1:1234/v1/chat/completions")!
         case .backburner:
-            url = URL(string: Self.backburnerChatURL)!
+            url = URL(string: request.modelIdentifier.hasPrefix("helper:") ? Self.helperChatURL : Self.backburnerChatURL)!
         case .harness:
             throw InferenceError.unsupportedRuntime(.harness)
         }

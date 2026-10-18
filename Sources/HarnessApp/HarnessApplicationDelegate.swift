@@ -33,9 +33,11 @@ final class HarnessApplicationDelegate: NSObject, NSApplicationDelegate {
 
     /// A Backburner server started by this App goes away with it (one started in Terminal is left running).
     func applicationWillTerminate(_ notification: Notification) {
+        // The helper Mac's model is stopped too (it runs on someone else's Mac).
         let done = DispatchSemaphore(value: 0)
         Task.detached {
             await BackburnerServer.shared.stop()
+            await HelperNode.shared.stop()
             done.signal()
         }
         _ = done.wait(timeout: .now() + 3)

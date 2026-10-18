@@ -58,6 +58,7 @@ final class WorkspaceStore {
     var pdfChanges: [UUID: PDFChange] = [:]
     var wordChanges: [UUID: WordChange] = [:]
     var appInstallChanges: [UUID: AppInstallChange] = [:]
+    var lastLightJobRoute: String?   // where the last light job ran (HelperNode): 補助の Mac / この Mac
     /// Checks before and records after every file operation from the chat (backlog #42). The app adds the journal at launch.
     var fileOperationHooks: [any FileOperationHook] = [OriginalProtectionHook()]
     /// What the next message is for (会話 / 文章を書く / 画像を作る), image cards, and a request waiting for consent.
@@ -238,7 +239,6 @@ final class WorkspaceStore {
         Task { await configuredVoiceCapsules.refresh() }
         Task { await configuredVoiceEngine.refresh() }
     }
-
     var project: HarnessProject { library.selectedRecord?.project ?? .starter }
 
     var hasSelectedProject: Bool { library.selectedRecord != nil }

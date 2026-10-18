@@ -20,6 +20,7 @@ struct ModelManagerView: View {
                     recommendedSection
                     installedSection
                     PurposeModelSection()
+                    HelperNodeSection()
                     customSection
                     runtimeSection
                 }

@@ -93,7 +93,7 @@ extension WorkspaceStore {
                     instruction: change.instruction, folderName: change.folder.lastPathComponent, files: files))],
                 maximumOutputTokens: 600, temperature: 0)
             var response = ""
-            for try await piece in await inferenceProvider.events(for: request) { response += piece }
+            for try await piece in await lightJobEvents(request) { response += piece }
             guard change.status == .running else { return }
             guard let rule = BulkRenameIntent.rule(from: response) else {
                 change.status = .failed("名前の付け方の規則を読み取れませんでした。言い方を変えてもう一度頼んでください。")

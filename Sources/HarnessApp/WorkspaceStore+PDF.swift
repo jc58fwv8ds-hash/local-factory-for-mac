@@ -86,7 +86,7 @@ extension WorkspaceStore {
                 InferenceMessage(role: .user, content: PDFIntent.prompt(instruction: change.instruction, files: change.files))],
                 maximumOutputTokens: 800, temperature: 0)
             var response = ""
-            for try await piece in await inferenceProvider.events(for: request) { response += piece }
+            for try await piece in await lightJobEvents(request) { response += piece }
             guard let operations = PDFIntent.operations(from: response), !operations.isEmpty else {
                 change.status = .failed("PDF の操作を読み取れませんでした。ページや操作を具体的に書いて、もう一度頼んでください。"); return
             }
