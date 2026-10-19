@@ -6,7 +6,7 @@ import os
 import sys
 
 
-ENGINE_ID = "qwen3-tts.mlx.0.6b-base"
+ENGINE_IDS = {"qwen3-tts.mlx.0.6b-base", "qwen3-tts.mlx.1.7b-base"}
 MAX_TEXT_CHARACTERS = 1200
 
 
@@ -18,7 +18,7 @@ def require_private_request(path):
         request = json.load(handle)
     if request.get("schemaVersion") != 1:
         raise ValueError("unsupported request")
-    if request.get("engineIdentifier") != ENGINE_ID:
+    if request.get("engineIdentifier") not in ENGINE_IDS:
         raise ValueError("wrong engine")
     return absolute, request
 

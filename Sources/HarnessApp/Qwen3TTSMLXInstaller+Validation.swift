@@ -29,14 +29,9 @@ extension Qwen3TTSMLXInstaller {
     }
 
     func modelLooksComplete() -> Bool {
-        let files = [
-            ("model.safetensors", 1_829_344_448),
-            ("speech_tokenizer/model.safetensors", 682_293_092)
-        ]
-        return files.allSatisfy { relativePath, expectedSize in
-            let url = stagingModelURL.appendingPathComponent(relativePath)
-            return (try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize)
-                == expectedSize
+        VoiceEngineCatalog.qwen3TTSMLXVariant.expectedFiles.allSatisfy { file in
+            let url = stagingModelURL.appendingPathComponent(file.path)
+            return (try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize) == file.bytes
         }
     }
 

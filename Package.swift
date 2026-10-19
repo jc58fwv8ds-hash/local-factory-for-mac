@@ -32,6 +32,7 @@ let package = Package(
             dependencies: ["HarnessCore", "HarnessExecution", "TaskOrchestrator"],
             resources: [
                 .copy("Resources/qwen3_tts_worker.py"),
+                .copy("Resources/qwen3_tts_server.py"),
                 .copy("Resources/voice_engine_install_worker.py"),
                 .copy("Resources/VoiceEngineRuntime")
             ]

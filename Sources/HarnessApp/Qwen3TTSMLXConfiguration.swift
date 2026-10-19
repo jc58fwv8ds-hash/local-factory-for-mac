@@ -7,6 +7,8 @@ struct Qwen3TTSMLXConfiguration: Equatable, Sendable {
     let stagingURL: URL
     let pythonExecutableURL: URL
     let workerURL: URL
+    /// The resident speaker (model loaded once, pieces streamed): `qwen3_tts_server.py` next to the worker.
+    var serverURL: URL { workerURL.deletingLastPathComponent().appendingPathComponent("qwen3_tts_server.py") }
     let installationWorkerURL: URL
     let runtimeProjectURL: URL
     let modelURL: URL
@@ -42,7 +44,7 @@ struct Qwen3TTSMLXConfiguration: Equatable, Sendable {
             ?? URL(fileURLWithPath: "/nonexistent/harness-voice-engine-runtime")
         self.modelURL = activeURL
             .appendingPathComponent("models", isDirectory: true)
-            .appendingPathComponent("Qwen3-TTS-12Hz-0.6B-Base-bf16", isDirectory: true)
+            .appendingPathComponent(VoiceEngineCatalog.qwen3TTSMLXVariant.folderName, isDirectory: true)
         self.receiptURL = activeURL.appendingPathComponent("installation.json")
         self.bootstrapArchiveURL = rootURL
             .appendingPathComponent("bootstrap", isDirectory: true)

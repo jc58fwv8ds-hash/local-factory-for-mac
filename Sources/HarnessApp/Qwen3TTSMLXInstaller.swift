@@ -107,7 +107,7 @@ actor Qwen3TTSMLXInstaller: VoiceEngineInstalling {
     var stagingModelURL: URL {
         configuration.stagingURL
             .appendingPathComponent("models", isDirectory: true)
-            .appendingPathComponent("Qwen3-TTS-12Hz-0.6B-Base-bf16", isDirectory: true)
+            .appendingPathComponent(VoiceEngineCatalog.qwen3TTSMLXVariant.folderName, isDirectory: true)
     }
 
     var partialReceiptURL: URL {
@@ -217,8 +217,11 @@ actor Qwen3TTSMLXInstaller: VoiceEngineInstalling {
     ) async throws {
         await onProgress(VoiceEngineInstallationProgress(
             phase: .downloadingModel,
-            status: "約2.52GBの音声モデルを取得しています"
+            status: "約\(VoiceEngineCatalog.qwen3TTSMLXVariant.estimatedDownloadGB)GBの音声モデルを取得しています"
         ))
+        let variant = VoiceEngineCatalog.qwen3TTSMLXVariant
+        let expected = variant.expectedFiles.map { ["path": $0.path, "bytes": $0.bytes, "sha256": $0.sha256] as [String: Any] }
+        let expectedJSON = String(decoding: try JSONSerialization.data(withJSONObject: expected, options: [.sortedKeys]), as: UTF8.self)
         let observer: @Sendable (String) async -> Void = { output in
             for line in output.split(whereSeparator: \Character.isNewline) {
                 if let progress = VoiceEngineInstallationProgressParser.parse(String(line)) {
@@ -231,7 +234,10 @@ actor Qwen3TTSMLXInstaller: VoiceEngineInstalling {
             arguments: [
                 configuration.installationWorkerURL.path,
                 "--model-root", stagingModelURL.path,
-                "--cache-root", cacheURL.appendingPathComponent("huggingface").path
+                "--cache-root", cacheURL.appendingPathComponent("huggingface").path,
+                "--model-id", variant.modelIdentifier,
+                "--revision", variant.revision,
+                "--expected", expectedJSON
             ],
             environment: [
                 "HF_HUB_DISABLE_TELEMETRY": "1",

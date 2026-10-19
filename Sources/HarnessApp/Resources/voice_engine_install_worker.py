@@ -5,18 +5,11 @@ import os
 import sys
 
 
-MODEL_ID = "mlx-community/Qwen3-TTS-12Hz-0.6B-Base-bf16"
-MODEL_REVISION = "1eccf1cb2519b5a4e8a95b5f0544f3303568164f"
-EXPECTED_FILES = {
-    "model.safetensors": (
-        1829344448,
-        "d7c7ed3e3464e3e59de0f955b3755891fa8319ff061c3f0307fe2e1343bc122d",
-    ),
-    "speech_tokenizer/model.safetensors": (
-        682293092,
-        "836b7b357f5ea43e889936a3709af68dfe3751881acefe4ecf0dbd30ba571258",
-    ),
-}
+# The model, its pinned revision and the exact weight files come from the app (Qwen3TTSModelVariant), so one worker
+# installs any variant the app knows; nothing is downloaded without a revision and every listed file is hash-checked.
+MODEL_ID = None
+MODEL_REVISION = None
+EXPECTED_FILES = {}
 
 
 def emit(phase, status, fraction=None):
@@ -54,7 +47,7 @@ def verify_model(model_root):
 def download(model_root, cache_root):
     from huggingface_hub import snapshot_download
 
-    emit("downloadingModel", "約2.52GBの音声モデルを取得しています")
+    emit("downloadingModel", "音声モデルを取得しています")
     snapshot_download(
         repo_id=MODEL_ID,
         revision=MODEL_REVISION,
@@ -67,7 +60,18 @@ def main():
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("--model-root", required=True)
     parser.add_argument("--cache-root", required=True)
+    parser.add_argument("--model-id", required=True)
+    parser.add_argument("--revision", required=True)
+    parser.add_argument("--expected", required=True)
     arguments = parser.parse_args()
+    global MODEL_ID, MODEL_REVISION, EXPECTED_FILES
+    if not arguments.model_id.startswith("mlx-community/Qwen3-TTS-") or len(arguments.revision) != 40:
+        raise ValueError("unexpected model")
+    MODEL_ID = arguments.model_id
+    MODEL_REVISION = arguments.revision
+    EXPECTED_FILES = {item["path"]: (int(item["bytes"]), item["sha256"]) for item in json.loads(arguments.expected)}
+    if not EXPECTED_FILES:
+        raise ValueError("no expected files")
     model_root = os.path.realpath(arguments.model_root)
     cache_root = os.path.realpath(arguments.cache_root)
     os.makedirs(model_root, mode=0o700, exist_ok=True)

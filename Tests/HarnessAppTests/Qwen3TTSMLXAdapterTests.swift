@@ -19,8 +19,12 @@ struct Qwen3TTSMLXAdapterTests {
         #expect(lock.contains("name = \"mlx-audio\""))
         #expect(lock.contains("version = \"0.5.1\""))
         #expect(lock.contains("55ff0949d8c5750b9d779872dbaa874cf30ca21a04d282f7a4c3acc66962e45c"))
-        #expect(worker.contains(VoiceEngineCatalog.qwen3TTSMLXModelRevision))
-        #expect(worker.contains("d7c7ed3e3464e3e59de0f955b3755891fa8319ff061c3f0307fe2e1343bc122d"))
+        // The worker takes the model, revision and hashes from the app (2026-10-19): it refuses to run without them and
+        // checks every listed file; the pinned values live in Qwen3TTSModelVariant.
+        #expect(worker.contains("--revision") && worker.contains("--expected") && worker.contains("hash mismatch"))
+        let variant = VoiceEngineCatalog.qwen3TTSMLXVariant
+        #expect(variant.revision.count == 40)
+        #expect(!variant.expectedFiles.isEmpty && variant.expectedFiles.allSatisfy { $0.sha256.count == 64 && $0.bytes > 0 })
         #expect(Qwen3TTSMLXConfiguration.defaultUVArchiveSHA256.count == 64)
     }
 
@@ -250,4 +254,13 @@ private extension Data {
         var encoded = value.littleEndian
         Swift.withUnsafeBytes(of: &encoded) { append(contentsOf: $0) }
     }
+}
+
+/// The resident speaker refuses to start without an installed runtime and says so (2026-10-19).
+@Test func residentSpeakerWithoutAnEngineSaysItIsNotInstalled() async {
+    let root = FileManager.default.temporaryDirectory.appendingPathComponent("speaker-\(UUID().uuidString)")
+    let speaker = Qwen3TTSResidentSpeaker(configuration: Qwen3TTSMLXConfiguration(
+        rootURL: root, workerURL: root.appendingPathComponent("qwen3_tts_worker.py")))
+    await #expect(throws: Qwen3TTSResidentSpeaker.Failure.notInstalled) { try await speaker.start() }
+    #expect(await speaker.isRunning == false)
 }
