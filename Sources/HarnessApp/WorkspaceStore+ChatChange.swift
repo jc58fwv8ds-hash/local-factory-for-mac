@@ -8,6 +8,8 @@ import TaskOrchestrator
 @Observable
 final class ChatChange: Identifiable {
     enum Status: Equatable {
+        /// Before building: writing the questions, then waiting for the user's answers (ChatQuestions).
+        case asking
         case running
         case ready
         case applied
@@ -28,6 +30,8 @@ final class ChatChange: Identifiable {
     /// The previous proposal's cases answered 違う: run again on this one and offered as a protected test.
     var seeds: [ChatExample] = []
     var runRecord: URL?
+    /// Up to three points to settle before building, with the user's answers (empty answer = おまかせ).
+    var questions: [ClarifyQuestions.Point] = []
     @ObservationIgnored var applied: [(FileChangeProposal, GitFileCheckpoint?)] = []
 
     init(id: UUID, instruction: String) {
@@ -105,11 +109,17 @@ extension WorkspaceStore {
         let change = ChatChange(id: message.id, instruction: instruction)
         change.seeds = seeds
         chatChanges[message.id] = change
-        Task { await runChatChange(change, context: context) }
+        // A new request is asked about first; a follow-up refines a proposal and is built at once.
+        if seeds.isEmpty, !instruction.contains("\n\n追加の指示: ") {
+            change.status = .asking
+            Task { await askBeforeBuilding(change, context: context) }
+        } else {
+            Task { await runChatChange(change, context: context) }
+        }
         return true
     }
 
-    private func runChatChange(_ change: ChatChange,
+    func runChatChange(_ change: ChatChange,
                                context: (service: any OrchestratedEditing, root: String, model: ModelSelection)) async {
         do {
             let outcome = try await context.service.proposeEdit(rootPath: context.root, relativePath: "",
@@ -265,7 +275,7 @@ extension WorkspaceStore {
     }
 
     func discardChatChange(_ change: ChatChange) {
-        guard change.status == .ready || change.status == .running else { return }
+        guard change.status == .ready || change.status == .running || change.status == .asking else { return }
         change.status = .discarded
     }
 

@@ -53,6 +53,10 @@ struct LocalAppleAppInstaller: Sendable {
             rootURL: rootURL,
             environment: environment
         )
+        // xcodebuild waits for a locked iPhone and then gives up on the destination (2026-10-18): say so plainly.
+        if settings.exitCode != 0, settings.output.contains("needs to be unlocked") {
+            throw AppleAppLibraryError.deviceLocked
+        }
         guard settings.exitCode == 0,
               let current = AppleAppBuildSettingsParser.configuration(
                 from: settings.output,
@@ -117,15 +121,13 @@ struct LocalAppleAppInstaller: Sendable {
             rootURL: nil,
             environment: deviceEnvironment
         )
-        guard launched.exitCode == 0 else {
-            throw AppleAppLibraryError.launchFailed(device.platform)
-        }
         return AppleAppInstallReport(
             appName: app.displayName,
             deviceName: device.name,
             platform: device.platform,
             deviceIdentifier: device.deviceIdentifier,
-            profile: ProvisioningProfileReader.read(appURL: appURL)
+            profile: ProvisioningProfileReader.read(appURL: appURL),
+            launchProblem: launched.exitCode == 0 ? nil : Self.launchProblem(launched.output, platform: device.platform)
         )
     }
 
@@ -251,5 +253,15 @@ struct LocalAppleAppInstaller: Sendable {
         } catch {
             throw AppleAppLibraryError.xcodeUnavailable
         }
+    }
+
+    /// Why an installed app did not open. A free account's first install on an iPhone is refused until the user trusts the
+    /// developer on the device (2026-10-18: "its profile has not been explicitly trusted by the user").
+    static func launchProblem(_ output: String, platform: AppleAppPlatform) -> String {
+        if output.contains("explicitly trusted") || output.contains("invalid code signature") {
+            return "\(platform.displayName)に入りましたが、まだ開けません。\(platform.displayName)の「設定」→「一般」→「VPNとデバイス管理」で、"
+                + "デベロッパAppの「Apple Development」を選んで「信頼」を押してください(初めの 1 回だけ)。"
+        }
+        return AppleAppLibraryError.launchFailed(platform).localizedDescription
     }
 }

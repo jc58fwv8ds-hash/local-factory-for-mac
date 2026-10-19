@@ -35,6 +35,7 @@ def main():
     ap.add_argument("--secondary", help="gated fallback model, e.g. openai:qwen@t0.7")
     ap.add_argument("--examiner", action="store_true", help="independent examiner check after tests pass (off by default)")
     ap.add_argument("--examples", action="store_true", help="example check for the user after tests pass (off by default)")
+    ap.add_argument("--clarify", choices=["self", "oracle"], help="settle ambiguous points before building (candidate 3)")
     ap.add_argument("--gated", action="store_true", help="examiner / example check only when a risk signal flags the change")
     a = ap.parse_args()
     endpoint = require_openai_endpoint([a.model, a.secondary])
@@ -61,7 +62,8 @@ def main():
                                + ([f"proposalTokens={a.proposal_tokens}"] if a.proposal_tokens != 2048 else [])
                                + ([f"secondary={a.secondary}"] if a.secondary else [])
                                + (["examiner=on"] if a.examiner else [])
-                               + (["examples=on"] if a.examples else []) + (["gated=on"] if a.gated else []),
+                               + (["examples=on"] if a.examples else []) + (["gated=on"] if a.gated else [])
+                               + ([f"clarify={a.clarify}"] if a.clarify else []),
                                capture_output=True, text=True, timeout=a.timeout,
                                env={**os.environ, "DEVELOPER_DIR": "/Applications/Xcode.app/Contents/Developer",
                                     **({"HARNESS_OPENAI_COMPATIBLE_URL": endpoint} if endpoint else {})})

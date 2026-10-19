@@ -17,6 +17,8 @@ struct ChatChangeCard: View {
                 statusLabel
             }
             switch change.status {
+            case .asking:
+                ChatQuestionsSection(change: change, store: store)
             case .running:
                 HStack(spacing: 8) {
                     ProgressView().controlSize(.small)
@@ -50,6 +52,7 @@ struct ChatChangeCard: View {
 
     private var statusLabel: some View {
         let (text, color): (String, Color) = switch change.status {
+        case .asking: ("作る前の確認", .accentColor)
         case .running: ("作業中", .secondary)
         case .ready: ("テスト合格・まだ確かめていません", .green)
         case .applied: ("適用済み", .accentColor)

@@ -2,6 +2,7 @@ import Foundation
 
 /// Consumes only the supported JSON interface. Unknown versions/values never imply readiness.
 enum DevicePreparationParser {
+    static let supportedVersions: ClosedRange<Int> = 3...5
     static func details(_ data: Data, identifier: String, observedAt: Date) throws -> DevicePreparationSnapshot {
         let value: Response<Details> = try decode(data, command: "details")
         guard value.result.identifier.caseInsensitiveCompare(identifier) == .orderedSame else {
@@ -30,7 +31,8 @@ enum DevicePreparationParser {
     private static func decode<T: Decodable>(_ data: Data, command: String) throws -> Response<T> {
         guard data.count <= 2_000_000,
               let response = try? JSONDecoder().decode(Response<T>.self, from: data),
-              response.info.jsonVersion == 3,
+              // Xcode 27's devicectl writes version 5 with the same fields (checked on a real iPhone, 2026-10-18).
+              Self.supportedVersions.contains(response.info.jsonVersion),
               response.info.commandType == "devicectl.device.info.\(command)",
               response.info.outcome == "success" else { throw DevicePreparationFailure.invalidResponse }
         return response

@@ -31,7 +31,8 @@ enum SuiteTaskRunner {
             let parts = arg.split(separator: "=", maxSplits: 1).map(String.init); return parts.count == 2 ? (parts[0], parts[1]) : nil },
             uniquingKeysWith: { _, last in last })
         guard arguments.count >= 6, options.count == arguments.count - 6,
-              Set(options.keys).isSubset(of: ["scope", "proposalTokens", "secondary", "examiner", "examples", "gated"]),
+              Set(options.keys).isSubset(of: ["scope", "proposalTokens", "secondary", "examiner", "examples", "gated", "clarify"]),
+              options["clarify"].map({ ["self", "oracle"].contains($0) }) ?? true,
               ["examiner", "examples", "gated"].allSatisfy({ options[$0].map { ["on", "off"].contains($0) } ?? true }),
               options["scope"].map({ ["package", "selector"].contains($0) }) ?? true,
               options["proposalTokens"].map({ Int($0) != nil }) ?? true else { throw Failure.arguments }
@@ -45,8 +46,27 @@ enum SuiteTaskRunner {
         let root = candidate.appendingPathComponent("work/\(key)")
         let output = URL(fileURLWithPath: arguments[5]).appendingPathComponent("\(task.id)-\(stamp)")
         try write(task.initialFiles, to: root)
+        // Candidate 3: points settled before building. Only `clarify=oracle` reads the reference, and only to let the
+        // stand-in user answer the builder's questions; the builder itself never sees it.
+        var objective = task.objective, clarified: [ClarifyStage.Point] = [], clarifyError: String?
+        let clarifyStart = Date()
+        if let mode = options["clarify"] {
+            struct Reference: Decodable { let reference: [String: String]; let rationale: String }
+            var reference: [String: String] = [:]
+            if mode == "oracle" {
+                let intended = try JSONDecoder().decode(Reference.self, from: Data(contentsOf: URL(fileURLWithPath: arguments[3])))
+                reference = intended.reference
+                reference["(作者のメモ)"] = intended.rationale
+            }
+            do {
+                clarified = try await ClarifyStage.clarify(objective: task.objective, files: task.initialFiles,
+                    protected: task.protectedTests, model: model, mode: mode, reference: reference)
+            } catch { clarifyError = String(describing: error) }
+            objective = ClarifyQuestions.objective(task.objective, with: clarified)
+        }
+        let clarifySeconds = Date().timeIntervalSince(clarifyStart)
         let budget = harnessMaxLines(suiteMaxLines: task.maxLines, maxEdits: task.maxEdits)
-        let manifest: [String: Any] = ["objective": task.objective, "protectedFiles": task.protectedTests,
+        let manifest: [String: Any] = ["objective": objective, "protectedFiles": task.protectedTests,
                                        "appendOnly": [String](), "maxEdits": task.maxEdits, "maxLines": budget,
                                        "scopeMode": packageScope ? "package" : "selector",
                                        "proposalOutputTokens": Int(options["proposalTokens"] ?? "2048") ?? 2048,
@@ -58,7 +78,9 @@ enum SuiteTaskRunner {
         let start = Date()
         var kpi: [String: Any] = ["id": task.id, "model": model, "startedAt": ISO8601DateFormatter().string(from: start),
                                   "root": root.path, "output": output.path,
-                                  "suiteMaxLines": task.maxLines, "harnessMaxLines": budget, "maxEdits": task.maxEdits]
+                                  "suiteMaxLines": task.maxLines, "harnessMaxLines": budget, "maxEdits": task.maxEdits,
+                                  "clarify": options["clarify"] ?? "off", "clarifySeconds": clarifySeconds, "clarifyError": clarifyError ?? "", "clarifyRaw": ClarifyStage.lastRaw,
+                                  "clarified": clarified.map { ["q": $0.question, "a": $0.answer] }]
         var selectedRoot = root, selectedOutput = output
         do {
             if let secondary = options["secondary"] {

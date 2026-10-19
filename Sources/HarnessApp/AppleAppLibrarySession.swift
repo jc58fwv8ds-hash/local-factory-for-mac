@@ -160,6 +160,7 @@ final class AppleAppLibrarySession {
                     }
                 }
                 statusMessage = completionMessage(app: app)
+                errorMessage = reports.compactMap(\.launchProblem).first
             } catch is CancellationError {
                 errorMessage = "インストールを停止しました。"
             } catch {
@@ -200,6 +201,7 @@ final class AppleAppLibrarySession {
                                                   deviceName: report.deviceName, profile: report.profile)
                 if report.profile != nil { installRecordStore.record(renewed) }
                 statusMessage = "\(app.displayName)を\(device.name)に入れ直しました" + (renewed.expiryNote().map { "(\($0))" } ?? "")
+                errorMessage = report.launchProblem
             } catch is CancellationError {
                 errorMessage = "インストールを停止しました。"
             } catch {
@@ -258,6 +260,8 @@ final class AppleAppLibrarySession {
 
     private func completionMessage(app: InstallableAppleApp) -> String {
         let targets = reports.map { $0.platform.displayName }.joined(separator: "と")
-        return "\(app.displayName)を\(targets)で起動しました"
+        // Installed but not opened (an untrusted developer on the iPhone): do not claim it was launched.
+        let opened = reports.allSatisfy { $0.launchProblem == nil }
+        return "\(app.displayName)を\(targets)" + (opened ? "で起動しました" : "に入れました")
     }
 }

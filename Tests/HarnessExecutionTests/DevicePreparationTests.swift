@@ -39,7 +39,7 @@ struct DevicePreparationTests {
     func rejectsUntrustedEnvelope(kind: String) {
         let data: Data
         switch kind {
-        case "version": data = details(version: 4)
+        case "version": data = details(version: 6)
         case "target": data = details(id: "22222222-2222-2222-2222-222222222222")
         case "outcome": data = details(outcome: "failure")
         case "type": data = details(properties: #"{"ddiServicesAvailable":"true"}"#)

@@ -23,7 +23,15 @@ struct ChatChangeTests {
         }
     }
 
-    func makeStore() throws -> (WorkspaceStore, URL, FakeRun) {
+    /// The builder's questions before building (ChatQuestions): "なし" builds at once.
+    struct QuestionModel: ModelInferenceProvider {
+        let reply: String
+        func events(for request: InferenceRequest) async -> AsyncThrowingStream<String, Error> {
+            AsyncThrowingStream { $0.yield(reply); $0.finish() }
+        }
+    }
+
+    func makeStore(questions: String = "なし") throws -> (WorkspaceStore, URL, FakeRun) {
         let base = FileManager.default.temporaryDirectory.appendingPathComponent("chat-change-\(UUID().uuidString)")
         let package = base.appendingPathComponent("package")
         try FileManager.default.createDirectory(at: package.appendingPathComponent("Sources/Meter"), withIntermediateDirectories: true)
@@ -34,7 +42,7 @@ struct ChatChangeTests {
         var project = HarnessProject.starter
         project.selectedModel = ModelSelection(identifier: "fixture", displayName: "Fixture", runtime: .ollama)
         try repository.saveLibrary(ProjectLibrary(records: [ProjectRecord(project: project, sourceLocation: package.path)]))
-        let store = WorkspaceStore(repository: repository)
+        let store = WorkspaceStore(repository: repository, inferenceProvider: QuestionModel(reply: questions))
         let fake = FakeRun()
         store.chatOrchestratorOverride = fake
         return (store, package, fake)
@@ -42,10 +50,33 @@ struct ChatChangeTests {
 
     func waitForProposal(_ store: WorkspaceStore) async throws -> ChatChange {
         for _ in 0..<200 {
-            if let change = store.chatChanges.values.first(where: { $0.status != .running && $0.status != .discarded }) { return change }
+            if let change = store.chatChanges.values.first(where: { ![.running, .discarded, .asking].contains($0.status) }) { return change }
             try await Task.sleep(for: .milliseconds(20))
         }
         throw CancellationError()
+    }
+
+    /// 2026-10-19: a new request is asked about first; only the answered points go to the builder, blank = おまかせ.
+    @Test func questionsComeBeforeBuildingAndOnlyAnsweredPointsAreSent() async throws {
+        let (store, package, fake) = try makeStore(questions: "Q: 10 ちょうどは上限に含めますか?\nQ: 負の値は 0 にしますか?\n")
+        defer { try? FileManager.default.removeItem(at: package.deletingLastPathComponent()) }
+        store.instruction = "レベルは10を上限にして直して"
+        store.submitInstruction()
+        var asking: ChatChange?
+        for _ in 0..<200 {
+            asking = store.chatChanges.values.first { $0.status == .asking && !$0.questions.isEmpty }
+            if asking != nil { break }
+            try await Task.sleep(for: .milliseconds(20))
+        }
+        let change = try #require(asking)
+        #expect(change.questions.map(\.question) == ["10 ちょうどは上限に含めますか?", "負の値は 0 にしますか?"])
+        #expect(await fake.instructions.isEmpty)   // nothing is built before the answers
+        store.buildWithAnswers(change, answers: ["はい、含めます", ""])
+        let built = try await waitForProposal(store)
+        #expect(built.status == .ready)
+        let sent = try #require(await fake.instructions.first)
+        #expect(sent.contains("確認済みの点:\n・10 ちょうどは上限に含めますか? → はい、含めます"))
+        #expect(!sent.contains("負の値"))
     }
 
     @Test func changeRequestBecomesACardAndAppliesAndRevertsAllFiles() async throws {

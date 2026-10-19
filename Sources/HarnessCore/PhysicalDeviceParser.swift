@@ -16,7 +16,9 @@ public enum PhysicalDeviceParser {
     private static func makeDevice(_ value: DeviceValue) -> PhysicalAppleDevice? {
         let hardware = value.hardwareProperties
         let properties = value.deviceProperties
-        guard hardware?.reality?.lowercased() == "physical",
+        // A real device whose connection tunnel is not up yet reports no `reality` and no model name (2026-10-18,
+        // iOS 27.0.1); simulators always say "simulated".
+        guard (hardware?.reality?.lowercased() ?? "physical") == "physical",
               let platform = platform(from: hardware),
               let identifier = validatedIdentifier(value.identifier),
               let destinationIdentifier = validatedIdentifier(hardware?.udid),

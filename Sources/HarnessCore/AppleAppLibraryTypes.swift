@@ -174,6 +174,9 @@ public struct AppleAppInstallReport: Equatable, Sendable {
     /// The device and the signing profile built into the installed app (nil for a Mac install), for the expiry reminder.
     public let deviceIdentifier: String
     public let profile: ProvisioningProfile?
+    /// Installed, but it did not open on the device (for example a free account's developer not yet trusted on the iPhone):
+    /// what the user should do. The install still counts, and its expiry is still recorded.
+    public let launchProblem: String?
 
     public init(
         appName: String,
@@ -181,7 +184,8 @@ public struct AppleAppInstallReport: Equatable, Sendable {
         platform: AppleAppPlatform,
         finishedAt: Date = .now,
         deviceIdentifier: String = "",
-        profile: ProvisioningProfile? = nil
+        profile: ProvisioningProfile? = nil,
+        launchProblem: String? = nil
     ) {
         self.appName = appName
         self.deviceName = deviceName
@@ -189,6 +193,7 @@ public struct AppleAppInstallReport: Equatable, Sendable {
         self.finishedAt = finishedAt
         self.deviceIdentifier = deviceIdentifier
         self.profile = profile
+        self.launchProblem = launchProblem
     }
 }
 

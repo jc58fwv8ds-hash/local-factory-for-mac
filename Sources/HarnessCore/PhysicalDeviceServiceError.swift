@@ -32,7 +32,9 @@ public enum PhysicalDeviceBuildFailure: String, Equatable, Sendable {
 public enum PhysicalDeviceBuildFailureClassifier {
     public static func classify(_ output: String) -> PhysicalDeviceBuildFailure {
         let value = output.lowercased()
-        if value.contains("no accounts") || value.contains("add an account") {
+        // Xcode 27: `No Account for Team "…". Add a new account in Accounts settings` (2026-10-18, a real iPhone).
+        if value.contains("no accounts") || value.contains("add an account") || value.contains("no account for team")
+            || value.contains("add a new account") {
             return .accountMissing
         }
         if value.contains("requires a development team")
