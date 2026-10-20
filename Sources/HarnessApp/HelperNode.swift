@@ -18,6 +18,9 @@ actor HelperNode {
         var key = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".ssh/lfnode_ed25519").path
         var hostKeyAlias = "lfnode-m4"
         var modelPath = "lfnode/models/qwen3-8b.gguf"
+        /// The 27B's layers 52-63 for split reading, cut from the same IQ4_XS file Backburner serves (scripts/split-gguf.py
+        /// -L 52 --no-head), with the llama-split-prefill build of that Backburner beside it.
+        var splitTail = "lfnode/split/tail-L52.gguf"
 
         static let enabledKey = "helperNode.enabled", hostKey = "helperNode.hostName"
         static var saved: Configuration {
@@ -30,6 +33,8 @@ actor HelperNode {
     static let localPort = 18081
 
     private var tunnel: Process?
+    private var splitTunnel: Process?
+    static let splitLocalPort = 50061
     private var lastFailure: Date?
     /// Why the helper is not used, for the settings and the log.
     private(set) var problem: String?
@@ -71,14 +76,50 @@ actor HelperNode {
         return false
     }
 
+    /// Split reading with the helper (2026-10-21): the helper runs the 27B's last 12 layers of every 256-token chunk while
+    /// this Mac runs the next chunk. Measured on the M5 + M4 Air: reading 12k-34k tokens 25-43% faster (125 -> 157,
+    /// 101 -> 145, 101 -> 129 tokens/s), the first 60 tokens written identical. The worker accepts loopback only and is
+    /// reached through an SSH forward; when it goes away Backburner reads alone again by itself (60 s, then retries).
+    /// Returns the value for LLAMA_SPLIT_TAIL, or nil when the helper is off or cannot take part.
+    func prepareSplitTail(_ configuration: Configuration = .saved) async -> String? {
+        guard configuration.enabled, !configuration.hostName.isEmpty,
+              FileManager.default.fileExists(atPath: configuration.key),
+              let address = Self.thunderboltAddress(of: configuration.hostName) else { return nil }
+        let ssh = ["-i", configuration.key, "-o", "BatchMode=yes", "-o", "IdentitiesOnly=yes", "-o", "ConnectTimeout=5",
+                   "-o", "HostKeyAlias=\(configuration.hostKeyAlias)", "\(configuration.user)@\(address)"]
+        let start = """
+        test -f $HOME/\(configuration.splitTail) || exit 3; pgrep -x llama-split-prefill >/dev/null || (cd ~/lfnode/split && \
+        (DYLD_LIBRARY_PATH=$HOME/lfnode/split ./llama-split-prefill --serve-tail 50060 --tail-model $HOME/\(configuration.splitTail) \
+        > tail.log 2>&1 < /dev/null &); sleep 2; P=$(pgrep -x llama-split-prefill | head -1); (caffeinate -s -w $P > /dev/null 2>&1 < /dev/null &))
+        """
+        guard Self.run("/usr/bin/ssh", ssh + [start]) == 0 else { problem = "補助の Mac で分割の読み取りを始められません"; return nil }
+        splitTunnel?.terminate()
+        let forward = Process()
+        forward.executableURL = URL(fileURLWithPath: "/usr/bin/ssh")
+        forward.arguments = ["-N", "-o", "ExitOnForwardFailure=yes", "-L", "127.0.0.1:\(Self.splitLocalPort):127.0.0.1:50060"] + ssh
+        forward.standardOutput = FileHandle.nullDevice
+        forward.standardError = FileHandle.nullDevice
+        do { try forward.run() } catch { return nil }
+        splitTunnel = forward
+        for _ in 0..<40 {   // the tail loads in a few seconds
+            if Self.run("/usr/bin/nc", ["-z", "-G", "1", "127.0.0.1", String(Self.splitLocalPort)]) == 0 {
+                return "127.0.0.1:\(Self.splitLocalPort)"
+            }
+            try? await Task.sleep(for: .milliseconds(500))
+        }
+        return nil
+    }
+
     /// Closes the tunnel and stops the helper's model (called when the app quits: the helper is someone's Mac).
     func stop(_ configuration: Configuration = .saved) {
         tunnel?.terminate()
         tunnel = nil
+        splitTunnel?.terminate()
+        splitTunnel = nil
         guard configuration.enabled, let address = Self.thunderboltAddress(of: configuration.hostName) else { return }
         _ = Self.run("/usr/bin/ssh", ["-i", configuration.key, "-o", "BatchMode=yes", "-o", "IdentitiesOnly=yes",
                                       "-o", "ConnectTimeout=3", "-o", "HostKeyAlias=\(configuration.hostKeyAlias)",
-                                      "\(configuration.user)@\(address)", "pkill -x llama-server; pkill -x caffeinate"])
+                                      "\(configuration.user)@\(address)", "pkill -x llama-server; pkill -x llama-split-prefill; pkill -x caffeinate"])
     }
 
     private func healthy() async -> Bool {

@@ -4,6 +4,11 @@ import AppKit
 final class HarnessApplicationDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         if MainActor.assumeIsolated({ ComputerUseSelfTest.runIfRequested() }) { return }
+        // The helper Mac's small model is started in the background at launch (2026-10-21): the first light job then does
+        // not wait the ~25 s it takes to load.
+        if HelperNode.Configuration.saved.enabled {
+            Task.detached(priority: .utility) { _ = await HelperNode.shared.ensureReady() }
+        }
         let current = NSRunningApplication.current
         guard let bundleIdentifier = current.bundleIdentifier else { return }
         let peers = NSWorkspace.shared.runningApplications.filter {

@@ -46,3 +46,11 @@ struct HelperNodeTests {
         await node.stop(configuration)
     }
 }
+
+/// Split reading is offered only when the helper is on and named (2026-10-21); otherwise Backburner reads alone.
+@Test func splitReadingNeedsTheHelperSwitchedOn() async {
+    let off = HelperNode.Configuration(enabled: false, hostName: "example-air")
+    #expect(await HelperNode().prepareSplitTail(off) == nil)
+    let unnamed = HelperNode.Configuration(enabled: true, hostName: "")
+    #expect(await HelperNode().prepareSplitTail(unnamed) == nil)
+}
