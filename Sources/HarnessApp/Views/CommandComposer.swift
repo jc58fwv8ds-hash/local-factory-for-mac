@@ -76,17 +76,21 @@ struct CommandComposer: View {
                 .photosPicker(isPresented: $isShowingPhotoLibrary, selection: $photoItems, maxSelectionCount: 4, matching: .images)
                 .onChange(of: photoItems) { _, items in importPhotos(items) }
 
-                Menu {
-                    ForEach(ComposerPurpose.allCases) { purpose in
-                        Button(purpose.title, systemImage: purpose.symbol) { store.composerPurpose = purpose }
+                // Purposes exist in chat mode only; code mode is always a conversation that may become a code change.
+                if store.workspaceMode == .chat {
+                    Menu {
+                        ForEach(store.availablePurposes) { purpose in
+                            Button(purpose.title, systemImage: purpose.symbol) { store.composerPurpose = purpose }
+                        }
+                    } label: {
+                        Label(store.composerPurpose.title, systemImage: store.composerPurpose.symbol)
+                            .font(.harness(.caption, weight: .medium))
                     }
-                } label: {
-                    Label(store.composerPurpose.title, systemImage: store.composerPurpose.symbol)
-                        .font(.harness(.caption, weight: .medium))
+                    .menuStyle(.borderlessButton)
+                    .fixedSize()
+                    .help("次のメッセージの用途。文章・画像・動画は「AIモデル」の「用途ごとのモデル」で選んだモデルを使います")
+                    PurposeModelChip(purpose: store.composerPurpose, settings: store.purposeSettings)
                 }
-                .menuStyle(.borderlessButton)
-                .fixedSize()
-                .help("次のメッセージの用途。文章を書く・画像を作るは「AIモデル」の「用途ごとのモデル」で選んだモデルを使います")
 
                 ContinuityCameraButton { data, name in
                     store.importVisualImageData(data, displayName: name, source: .continuityCamera)

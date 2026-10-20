@@ -116,6 +116,7 @@ enum HarnessAccessibilityID {
         "harness.voices.capsule.\(id.uuidString.lowercased())"
     }
 
+    static let sidebarMode = "harness.sidebar.mode"
     static let chatQuestionBuild = "harness.chat.question.build"
     static let chatQuestionSkip = "harness.chat.question.skip"
     static func chatQuestionAnswer(_ index: Int) -> String {

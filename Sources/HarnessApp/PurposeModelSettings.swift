@@ -32,16 +32,17 @@ struct PurposeModelSettings {
     }
 }
 
-/// What the next message is for, picked in the composer. Writing and image skip the code-change routing and the system
+/// What the next message is for, picked in the composer (chat mode only; code mode is always conversation). Writing and image skip the code-change routing and the system
 /// model's intent check: the purpose is the user's own choice.
 enum ComposerPurpose: String, CaseIterable, Identifiable {
-    case conversation, writing, image
+    case conversation, writing, image, video
     var id: String { rawValue }
     var title: String {
         switch self {
         case .conversation: "会話"
         case .writing: "文章を書く"
         case .image: "画像を作る"
+        case .video: "動画を作る"
         }
     }
     var symbol: String {
@@ -49,6 +50,7 @@ enum ComposerPurpose: String, CaseIterable, Identifiable {
         case .conversation: "bubble.left.and.bubble.right"
         case .writing: "pencil.and.scribble"
         case .image: "photo.artframe"
+        case .video: "film"
         }
     }
 }

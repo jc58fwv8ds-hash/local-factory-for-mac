@@ -11,6 +11,13 @@ public enum ProjectOrigin: String, Codable, Sendable {
     case imported
 }
 
+/// Which side of the app a project belongs to (2026-10-19, the user's request): chats (conversation, writing, images,
+/// video) or code (building apps). Records saved before this have no kind and are code projects, as they were.
+public enum ProjectKind: String, Codable, CaseIterable, Sendable {
+    case chat
+    case code
+}
+
 public struct ProjectRecord: Identifiable, Codable, Equatable, Sendable {
     public var id: UUID { project.id }
     public var project: HarnessProject
@@ -21,6 +28,9 @@ public struct ProjectRecord: Identifiable, Codable, Equatable, Sendable {
     public var createdAt: Date
     public var updatedAt: Date
     public var lastOpenedAt: Date
+    /// nil for records saved before chats and code were separated: those are code projects.
+    public var kind: ProjectKind?
+    public var effectiveKind: ProjectKind { kind ?? .code }
 
     public init(
         project: HarnessProject,
@@ -30,7 +40,8 @@ public struct ProjectRecord: Identifiable, Codable, Equatable, Sendable {
         sourceInspection: SourceInspection? = nil,
         createdAt: Date = .now,
         updatedAt: Date = .now,
-        lastOpenedAt: Date = .now
+        lastOpenedAt: Date = .now,
+        kind: ProjectKind? = nil
     ) {
         self.project = project
         self.lifecycle = lifecycle
@@ -40,6 +51,7 @@ public struct ProjectRecord: Identifiable, Codable, Equatable, Sendable {
         self.createdAt = createdAt
         self.updatedAt = updatedAt
         self.lastOpenedAt = lastOpenedAt
+        self.kind = kind
     }
 }
 
@@ -63,6 +75,10 @@ public struct ProjectLibrary: Codable, Equatable, Sendable {
         records
             .filter { $0.lifecycle == .active }
             .sorted { $0.lastOpenedAt > $1.lastOpenedAt }
+    }
+
+    public func activeRecords(of kind: ProjectKind) -> [ProjectRecord] {
+        activeRecords.filter { $0.effectiveKind == kind }
     }
 
     public var archivedRecords: [ProjectRecord] {

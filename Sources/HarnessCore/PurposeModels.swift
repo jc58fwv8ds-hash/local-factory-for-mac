@@ -6,11 +6,13 @@ import Foundation
 public enum ModelPurpose: String, Codable, CaseIterable, Sendable {
     case writing
     case image
+    case video
 
     public var title: String {
         switch self {
         case .writing: "文章を書く"
         case .image: "画像を作る"
+        case .video: "動画を作る"
         }
     }
 }
@@ -24,10 +26,14 @@ public struct PurposeModelOption: Codable, Equatable, Identifiable, Sendable {
     public var model: String?
     /// Image: the command line; {prompt}, {output}, {seed}, {width}, {height}, {home} are filled in.
     public var command: [String]?
+    /// A short mark shown wherever this option is picked or in use (2026-10-19, the user's request: options with fewer
+    /// safety limits must be easy to tell apart). The words come from the local catalog, not from the app.
+    public var badge: String?
 
     public init(id: String, label: String, note: String? = nil, runtime: RuntimeKind? = nil, model: String? = nil,
-                command: [String]? = nil) {
+                command: [String]? = nil, badge: String? = nil) {
         self.id = id; self.label = label; self.note = note; self.runtime = runtime; self.model = model; self.command = command
+        self.badge = badge
     }
 
     public var selection: ModelSelection? {
@@ -39,15 +45,18 @@ public struct PurposeModelOption: Codable, Equatable, Identifiable, Sendable {
 public struct PurposeModelCatalog: Codable, Equatable, Sendable {
     public var writing: [PurposeModelOption]
     public var image: [PurposeModelOption]
+    /// Video generation (2026-10-19): command-line options like image; absent in older catalog files.
+    public var video: [PurposeModelOption]?
     /// When a writing option is chosen, every model role in that flow follows it: the "large" role (the project's 27B-class
     /// model) and the "checker" role (the second model that rechecks). Ids of writing options.
     public var roles: [String: String]?
     /// A code change the normal model refuses is retried once with this writing option (id).
     public var codeRefusalFallback: String?
 
-    public init(writing: [PurposeModelOption] = [], image: [PurposeModelOption] = [], roles: [String: String]? = nil,
-                codeRefusalFallback: String? = nil) {
-        self.writing = writing; self.image = image; self.roles = roles; self.codeRefusalFallback = codeRefusalFallback
+    public init(writing: [PurposeModelOption] = [], image: [PurposeModelOption] = [], video: [PurposeModelOption]? = nil,
+                roles: [String: String]? = nil, codeRefusalFallback: String? = nil) {
+        self.writing = writing; self.image = image; self.video = video; self.roles = roles
+        self.codeRefusalFallback = codeRefusalFallback
     }
 
     public static let empty = PurposeModelCatalog()
@@ -59,7 +68,11 @@ public struct PurposeModelCatalog: Codable, Equatable, Sendable {
     }
 
     public func options(for purpose: ModelPurpose) -> [PurposeModelOption] {
-        purpose == .writing ? writing : image
+        switch purpose {
+        case .writing: writing
+        case .image: image
+        case .video: video ?? []
+        }
     }
 
     public func option(id: String?, for purpose: ModelPurpose) -> PurposeModelOption? {

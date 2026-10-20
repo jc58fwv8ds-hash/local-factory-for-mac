@@ -47,7 +47,7 @@ package enum TaskOrchestrator {
         for file in all where file.relativePath.hasSuffix(".swift") && file.relativePath.contains("Tests/") && !task.protectedFiles.contains(file.relativePath) {
             tests[file.relativePath] = try await editor.load(rootPath: root.path, relativePath: file.relativePath).content
         }
-        let clauses = ObjectiveClauses.segment(task.objective)
+        let clauses = ObjectiveClauses.segment(ClarifyQuestions.request(of: task.objective))   // not the answered points
         var sources = Dictionary(evidence.map { ($0.path, $0.source) }, uniquingKeysWith: { first, _ in first })
         let sourcesAtStart = sources
         let selection = ContextSelector.select(objective: task.objective, paths: evidence.map(\.path), evidence: evidence)

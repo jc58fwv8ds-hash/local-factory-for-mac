@@ -59,9 +59,9 @@ final class WorkspaceStore {
     var wordChanges: [UUID: WordChange] = [:]
     var appInstallChanges: [UUID: AppInstallChange] = [:]
     var lastLightJobRoute: String?   // where the last light job ran (HelperNode): 補助の Mac / この Mac
-    /// Checks before and records after every file operation from the chat (backlog #42). The app adds the journal at launch.
-    var fileOperationHooks: [any FileOperationHook] = [OriginalProtectionHook()]
-    /// What the next message is for (会話 / 文章を書く / 画像を作る), image cards, and a request waiting for consent.
+    var fileOperationHooks: [any FileOperationHook] = [OriginalProtectionHook()]   // checks / records per file operation (#42)
+    /// Chat or code (WorkspaceStore+Mode), what the next message is for, image / video cards, a request awaiting consent.
+    var workspaceMode: WorkspaceMode = .saved
     var composerPurpose: ComposerPurpose = .conversation
     var imageChanges: [UUID: ImageChange] = [:]
     var pendingConsent: PendingConsent?

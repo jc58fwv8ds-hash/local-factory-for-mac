@@ -34,7 +34,7 @@ struct RootView: View {
             } else if store.selectedSection == .projects {
                 ProjectLibraryView(store: store)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else if store.hasSelectedProject {
+            } else if store.hasSelectedProject && store.selectedProjectIsInMode {
                 StudioView(store: store)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
 
@@ -103,6 +103,16 @@ private struct SidebarView: View {
             .padding(.horizontal, 16)
             .padding(.top, 18)
 
+            Picker("モード", selection: Binding(get: { store.workspaceMode }, set: { store.switchMode($0) })) {
+                ForEach(WorkspaceMode.allCases) { mode in
+                    Label(mode.title, systemImage: mode.symbol).tag(mode)
+                }
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+            .padding(.horizontal, 14)
+            .accessibilityIdentifier(HarnessAccessibilityID.sidebarMode)
+
             VStack(spacing: 5) {
                 SidebarButton(
                     title: "ホーム",
@@ -111,6 +121,7 @@ private struct SidebarView: View {
                     isSelected: store.selectedSection == .home
                 ) { store.selectedSection = .home }
 
+                if store.workspaceMode == .code {
                 SidebarButton(
                     title: "プロジェクト",
                     systemImage: "folder",
@@ -124,6 +135,7 @@ private struct SidebarView: View {
                     accessibilityID: HarnessAccessibilityID.sidebarApps,
                     isSelected: store.selectedSection == .apps
                 ) { store.selectedSection = .apps }
+                }
 
                 SidebarButton(
                     title: "AIモデル",
@@ -135,6 +147,7 @@ private struct SidebarView: View {
                     store.isShowingModelManager = true
                 }
 
+                if store.workspaceMode == .chat {
                 SidebarButton(
                     title: "声",
                     systemImage: "waveform",
@@ -143,36 +156,39 @@ private struct SidebarView: View {
                 ) {
                     store.openVoiceLibrary()
                 }
+                }
 #if DEBUG
+                if store.workspaceMode == .code {
                 SidebarButton(
                     title: "開発",
                     systemImage: "hammer",
                     accessibilityID: "sidebar-developer",
                     isSelected: store.selectedSection == .developer
                 ) { store.selectedSection = .developer }
+                }
 #endif
             }
             .padding(.horizontal, 10)
 
             HStack {
-                Text("制作中")
+                Text(store.workspaceMode == .chat ? "チャット" : "制作中")
                     .font(.harness(.caption, weight: .semibold))
                     .foregroundStyle(.secondary)
                 Spacer()
                 Button {
-                    store.isShowingNewProject = true
+                    if store.workspaceMode == .chat { store.startNewChat() } else { store.isShowingNewProject = true }
                 } label: {
                     Image(systemName: "plus")
                 }
                 .buttonStyle(.plain)
-                .help("新規プロジェクト")
+                .help(store.workspaceMode == .chat ? "新しいチャット" : "新規プロジェクト")
                 .accessibilityIdentifier(HarnessAccessibilityID.sidebarNewProject)
             }
             .padding(.horizontal, 16)
 
             ScrollView {
                 VStack(spacing: 5) {
-                    ForEach(store.library.activeRecords) { record in
+                    ForEach(store.modeRecords) { record in
                         ProjectSidebarRow(
                             record: record,
                             isSelected: store.library.selectedProjectID == record.id
@@ -182,8 +198,8 @@ private struct SidebarView: View {
                         }
                     }
 
-                    if store.library.activeRecords.isEmpty {
-                        Text("プロジェクトはありません")
+                    if store.modeRecords.isEmpty {
+                        Text(store.workspaceMode == .chat ? "チャットはありません(+ で始めます)" : "プロジェクトはありません")
                             .font(.harness(.caption))
                             .foregroundStyle(.tertiary)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -269,34 +285,6 @@ private struct ProjectSidebarRow: View {
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier(HarnessAccessibilityID.sidebarProject(record.id))
-    }
-}
-
-private struct EmptyProjectView: View {
-    @Bindable var store: WorkspaceStore
-
-    var body: some View {
-        VStack(spacing: 15) {
-            Image(systemName: "folder.badge.plus")
-                .font(.harness(size: 44, weight: .light))
-                .foregroundStyle(Color.accentColor)
-            Text("プロジェクトを始めましょう")
-                .font(.harness(.title2, weight: .bold))
-            Text("新しく作るか、既存のソースフォルダをLocal Factoryへ追加できます。")
-                .font(.harness(.subheadline))
-                .foregroundStyle(.secondary)
-            HStack {
-                Button("プロジェクトを見る") {
-                    store.selectedSection = .projects
-                }
-                .buttonStyle(.bordered)
-                Button("新規プロジェクト") {
-                    store.isShowingNewProject = true
-                }
-                .buttonStyle(.borderedProminent)
-            }
-        }
-        .padding(40)
     }
 }
 

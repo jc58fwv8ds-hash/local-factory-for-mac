@@ -64,7 +64,7 @@ struct ChatExample: Identifiable, Equatable {
 extension WorkspaceStore {
     /// A chat message can change code when the project is connected to a Swift package and the orchestrated run is on.
     var chatCodeChangeContext: (service: any OrchestratedEditing, root: String, model: ModelSelection)? {
-        guard let service = chatOrchestratorOverride ?? OrchestratedRunSettings().service,
+        guard workspaceMode == .code, let service = chatOrchestratorOverride ?? OrchestratedRunSettings().service,
               let root = library.selectedRecord?.sourceLocation,
               FileManager.default.fileExists(atPath: URL(fileURLWithPath: root).appendingPathComponent("Package.swift").path),
               let model = project.selectedModel, model.runtime == .ollama || model.runtime == .backburner else { return nil }

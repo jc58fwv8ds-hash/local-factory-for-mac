@@ -68,15 +68,21 @@ enum ClarifyStage {
         }
     }
 
-    /// The answers in the order written: the model sometimes numbers every answer 「A1」 (2026-10-18, c2-09).
+    /// The answers by their numbers when every number is different; in the order written when the model repeats one
+    /// (2026-10-18: all 「A1」; 2026-10-20 c3-08: answers out of order, so order alone mismatched them).
     static func answers(in text: String) -> [Int: String] {
-        var found: [Int: String] = [:]
+        var numbered: [(Int?, String)] = []
         for line in text.split(separator: "\n") {
             let trimmed = line.trimmingCharacters(in: .whitespaces)
-            guard let range = trimmed.range(of: #"^A\d*[:：]\s*"#, options: .regularExpression) else { continue }
+            guard let range = trimmed.range(of: #"^A(\d*)[:：]\s*"#, options: .regularExpression) else { continue }
             let answer = trimmed[range.upperBound...].trimmingCharacters(in: .whitespaces)
-            if !answer.isEmpty { found[found.count + 1] = answer }
+            guard !answer.isEmpty else { continue }
+            numbered.append((Int(trimmed[range].filter(\.isNumber)), answer))
         }
-        return found
+        let numbers = numbered.compactMap(\.0)
+        if numbers.count == numbered.count, Set(numbers).count == numbers.count {
+            return Dictionary(uniqueKeysWithValues: numbered.map { ($0.0!, $0.1) })
+        }
+        return Dictionary(uniqueKeysWithValues: numbered.enumerated().map { ($0.offset + 1, $0.element.1) })
     }
 }

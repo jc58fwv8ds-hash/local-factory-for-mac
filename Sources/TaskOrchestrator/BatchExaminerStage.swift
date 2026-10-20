@@ -113,8 +113,9 @@ enum BatchExaminerStage {
         declared API. You may call the helpers and fixtures of the existing tests directly (they are available to your tests); \
         do not copy or redefine them. Swift String has no integer subscript (use Array(s) or prefix/dropFirst).
         """
-        let compactPrompt = context + planExamples(record) + "\n\n" + compactFormat
-        let swiftPrompt = context + planExamples(record) + "\n\nWrite them as ONE new Swift Testing file (import Testing, @testable import \(module), "
+        let planned = planExamples(record)
+        let compactPrompt = context + planned + "\n\n" + compactFormat
+        let swiftPrompt = context + planned + "\n\nWrite them as ONE new Swift Testing file (import Testing, @testable import \(module), "
             + "@Test func ... with #expect). Give test functions new unique names. Return the Swift source only, in one ```swift block."
 
         // 2. Run on a copy of the final code; drop test functions that do not compile (one slip must not void the rest).

@@ -40,6 +40,7 @@ struct PurposeModelTests {
         try repository.saveLibrary(ProjectLibrary(records: [ProjectRecord(project: project)]))
         let recorder = Recorder(reply: reply)
         let store = WorkspaceStore(repository: repository, inferenceProvider: recorder)
+        store.workspaceMode = .chat   // purposes are chat-mode only (2026-10-19)
         let defaults = UserDefaults(suiteName: "purpose-\(UUID().uuidString)")!
         store.purposeSettingsOverride = PurposeModelSettings(defaults: defaults, catalog: Self.catalog)
         store.imageGenerator = FakeImages()

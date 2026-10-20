@@ -1,4 +1,5 @@
 import AppKit
+import AVKit
 import SwiftUI
 
 /// The card under an image request: progress, the finished picture (saved on this Mac), or why it failed.
@@ -8,8 +9,8 @@ struct ImageChangeCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
-                Image(systemName: "photo.artframe")
-                Text("画像").font(.harness(.subheadline, weight: .semibold))
+                Image(systemName: change.isVideo ? "film" : "photo.artframe")
+                Text(change.isVideo ? "動画" : "画像").font(.harness(.subheadline, weight: .semibold))
                 Spacer()
             }
             switch change.status {
@@ -21,7 +22,10 @@ struct ImageChangeCard: View {
             case .failed(let message):
                 Text(message).font(.harness(.caption)).foregroundStyle(.secondary)
             case .ready(let url):
-                if let image = NSImage(contentsOf: url) {
+                if change.isVideo {
+                    VideoPlayer(player: AVPlayer(url: url)).frame(height: 360)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                } else if let image = NSImage(contentsOf: url) {
                     Image(nsImage: image).resizable().scaledToFit().frame(maxHeight: 420)
                         .clipShape(RoundedRectangle(cornerRadius: 8))
                 }
@@ -32,7 +36,7 @@ struct ImageChangeCard: View {
                 .controlSize(.small)
             }
             if let prompt = change.prompt, prompt != change.instruction {
-                Text("画像モデルへの指示: " + prompt).font(.harness(.caption2)).foregroundStyle(.secondary).textSelection(.enabled)
+                Text((change.isVideo ? "動画モデルへの指示: " : "画像モデルへの指示: ") + prompt).font(.harness(.caption2)).foregroundStyle(.secondary).textSelection(.enabled)
             }
         }
         .padding(12)

@@ -45,6 +45,13 @@ public enum ClarifyQuestions {
         return objective + "\n\n確認済みの点:\n" + answered.map { "・\($0.question) → \($0.answer)" }.joined(separator: "\n")
     }
 
+    /// The user's own request without the appended points. Clause coverage is checked on this only (2026-10-20: counting
+    /// each answered point as a clause the plan must cover stopped C3 runs at the plan stage, OBJECTIVE_CLAUSE_UNCOVERED).
+    public static func request(of objective: String) -> String {
+        guard let range = objective.range(of: "\n\n確認済みの点:\n") else { return objective }
+        return String(objective[..<range.lowerBound])
+    }
+
     /// The package's own Swift sources (not tests, not build output), largest budget first come first, for the prompt.
     public static func sources(in root: URL, limitBytes: Int = 48_000) -> [(path: String, content: String)] {
         let sourcesFolder = root.appendingPathComponent("Sources")

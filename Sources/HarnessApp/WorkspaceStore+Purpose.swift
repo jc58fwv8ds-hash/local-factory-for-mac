@@ -11,10 +11,14 @@ final class ImageChange: Identifiable {
     let instruction: String
     var status: Status = .running("指示を画像用の言葉にしています")
     var prompt: String?
+    /// A video request (2026-10-19): the same flow with the 動画を作る model, saved as .mp4.
+    let isVideo: Bool
+    var purpose: ModelPurpose { isVideo ? .video : .image }
 
-    init(id: UUID, instruction: String) {
+    init(id: UUID, instruction: String, isVideo: Bool = false) {
         self.id = id
         self.instruction = instruction
+        self.isVideo = isVideo
     }
 }
 
@@ -35,7 +39,7 @@ extension WorkspaceStore {
     /// Writing and image messages: the two lines first (ContentGuard), then the purpose's own model. Returns false when the
     /// message is not for one of these purposes.
     func submitPurposeInstruction() -> Bool {
-        guard composerPurpose != .conversation else { return false }
+        guard workspaceMode == .chat, composerPurpose != .conversation else { return false }
         let text = instruction.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return true }
         switch ContentGuard.check(text, attachesPhoto: composerPurpose == .image && !visualAttachments.items.isEmpty) {
@@ -71,24 +75,31 @@ extension WorkspaceStore {
             startImage(text)
             instruction = ""
             visualAttachments.clear()
+        case .video:
+            startVideo(text)
+            instruction = ""
+            visualAttachments.clear()
         case .conversation:
             break
         }
     }
 
-    func startImage(_ text: String) {
+    func startVideo(_ text: String) { startImage(text, isVideo: true) }
+
+    func startImage(_ text: String, isVideo: Bool = false) {
         let message = ConversationMessage(role: .user, content: text, origin: .user)
         library.updateSelectedProject { $0.conversation.append(message) }
         persist()
-        let change = ImageChange(id: message.id, instruction: text)
+        let change = ImageChange(id: message.id, instruction: text, isVideo: isVideo)
         imageChanges[message.id] = change
         Task { await runImage(change) }
     }
 
     func runImage(_ change: ImageChange) async {
         let settings = purposeSettings
-        guard let option = settings.chosen(.image) else {
-            change.status = .failed("画像を作るモデルが選ばれていません。「AIモデル」の「用途ごとのモデル」で選んでください。")
+        let noun = change.isVideo ? "動画" : "画像"
+        guard let option = settings.chosen(change.purpose) else {
+            change.status = .failed("\(noun)を作るモデルが選ばれていません。「AIモデル」の「用途ごとのモデル」で選んでください。")
             return
         }
         // The prompt writer follows the writing choice's roles (the "large" role), else the project's model.
@@ -97,7 +108,7 @@ extension WorkspaceStore {
         if let writer {
             let request = InferenceRequest(runtime: writer.runtime, modelIdentifier: writer.identifier, messages: [
                 InferenceMessage(role: .user, content: """
-                Rewrite this request as one English prompt for an image model. Keep every detail the user gave (subject, \
+                Rewrite this request as one English prompt for \(change.isVideo ? "a video model (describe the motion too)" : "an image model"). Keep every detail the user gave (subject, \
                 style, composition, colors, mood); add nothing they did not ask for. Output only the prompt.
                 \(change.instruction)
                 """)], maximumOutputTokens: 300, temperature: 0)
@@ -109,12 +120,13 @@ extension WorkspaceStore {
             if !cleaned.isEmpty, !ModelRefusal.looksLikeRefusal(cleaned) { prompt = cleaned }
         }
         change.prompt = prompt
-        change.status = .running("画像を作っています(言語モデルをメモリから外しました。数分かかります)")
-        let output = Self.imageFolder.appendingPathComponent("\(change.id.uuidString.prefix(8))-\(option.id).png")
+        change.status = .running("\(noun)を作っています(言語モデルをメモリから外しました。数分かかります)")
+        let output = Self.imageFolder.appendingPathComponent(
+            "\(change.id.uuidString.prefix(8))-\(option.id).\(change.isVideo ? "mp4" : "png")")
         do {
             try await imageGenerator.generate(option: option, prompt: prompt, output: output)
             change.status = .ready(output)
-            appendAssistantNote("画像ができました(\(option.label))。保存先: \(output.path)")
+            appendAssistantNote("\(noun)ができました(\(option.label))。保存先: \(output.path)")
         } catch {
             change.status = .failed(error.localizedDescription)
         }
