@@ -54,3 +54,17 @@ struct HelperNodeTests {
     let unnamed = HelperNode.Configuration(enabled: true, hostName: "")
     #expect(await HelperNode().prepareSplitTail(unnamed) == nil)
 }
+
+/// The helper's memory and heat decide which roles it keeps (2026-10-21): the light model goes first, then the tail.
+@Test func helperRolesAreLetGoWhenMemoryRunsShortOrItRunsHot() throws {
+    let calm = "System-wide memory free percentage: 33%\nNote: No thermal warning level has been recorded\n"
+    let health = try #require(HelperResourcePolicy.health(from: calm))
+    #expect(health == .init(freePercent: 33, thermalWarning: false))
+    #expect(HelperResourcePolicy.rolesToRelease(health).isEmpty)
+    #expect(HelperResourcePolicy.rolesToRelease(.init(freePercent: 15, thermalWarning: false)) == [.lightModel])
+    #expect(HelperResourcePolicy.rolesToRelease(.init(freePercent: 50, thermalWarning: true)) == [.lightModel])
+    #expect(HelperResourcePolicy.rolesToRelease(.init(freePercent: 8, thermalWarning: false)) == [.lightModel, .splitTail])
+    let hot = "System-wide memory free percentage: 40%\nCPU_Scheduler_Limit \t= 100\nCPU_Available_CPUs \t= 8\nCPU_Speed_Limit \t= 70\n"
+    #expect(HelperResourcePolicy.health(from: hot)?.thermalWarning == true)
+    #expect(HelperResourcePolicy.health(from: "no numbers here") == nil)
+}

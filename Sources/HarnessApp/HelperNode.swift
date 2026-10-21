@@ -36,6 +36,9 @@ actor HelperNode {
     private var splitTunnel: Process?
     static let splitLocalPort = 50061
     private var lastFailure: Date?
+    private var lastHealthCheck: Date?
+    /// Roles let go because the helper ran short (HelperResourcePolicy), and until when they stay off.
+    private var released: [HelperResourcePolicy.Role: Date] = [:]
     /// Why the helper is not used, for the settings and the log.
     private(set) var problem: String?
 
@@ -43,6 +46,8 @@ actor HelperNode {
     func ensureReady(_ configuration: Configuration = .saved) async -> Bool {
         guard configuration.enabled, !configuration.hostName.isEmpty,
               FileManager.default.fileExists(atPath: configuration.key) else { return false }
+        await checkResources(configuration)
+        if let until = released[.lightModel], until > Date() { return false }
         if await healthy() { return true }
         // A helper that just failed is not retried for a minute (a light job must not wait on it each time).
         if let lastFailure, Date().timeIntervalSince(lastFailure) < 60 { return false }
@@ -85,6 +90,8 @@ actor HelperNode {
         guard configuration.enabled, !configuration.hostName.isEmpty,
               FileManager.default.fileExists(atPath: configuration.key),
               let address = Self.thunderboltAddress(of: configuration.hostName) else { return nil }
+        await checkResources(configuration)
+        if let until = released[.splitTail], until > Date() { return nil }
         let ssh = ["-i", configuration.key, "-o", "BatchMode=yes", "-o", "IdentitiesOnly=yes", "-o", "ConnectTimeout=5",
                    "-o", "HostKeyAlias=\(configuration.hostKeyAlias)", "\(configuration.user)@\(address)"]
         let start = """
@@ -108,6 +115,43 @@ actor HelperNode {
             try? await Task.sleep(for: .milliseconds(500))
         }
         return nil
+    }
+
+    /// At most once a minute: the helper's free memory and heat; a role is stopped there and kept off for 5 minutes when
+    /// HelperResourcePolicy says so.
+    private func checkResources(_ configuration: Configuration) async {
+        if let lastHealthCheck, Date().timeIntervalSince(lastHealthCheck) < 60 { return }
+        lastHealthCheck = Date()
+        guard let address = Self.thunderboltAddress(of: configuration.hostName) else { return }
+        let ssh = ["-i", configuration.key, "-o", "BatchMode=yes", "-o", "IdentitiesOnly=yes", "-o", "ConnectTimeout=5",
+                   "-o", "HostKeyAlias=\(configuration.hostKeyAlias)", "\(configuration.user)@\(address)"]
+        guard let report = Self.output("/usr/bin/ssh", ssh + ["memory_pressure -Q 2>/dev/null | tail -1; pmset -g therm"]),
+              let health = HelperResourcePolicy.health(from: report) else { return }
+        for role in HelperResourcePolicy.rolesToRelease(health) {
+            released[role] = Date().addingTimeInterval(300)
+            switch role {
+            case .lightModel:
+                tunnel?.terminate(); tunnel = nil
+                _ = Self.run("/usr/bin/ssh", ssh + ["pkill -x llama-server"])
+                problem = "補助の Mac の空きが少ない(\(health.freePercent)%)ため、軽い仕事はこの Mac で行います"
+            case .splitTail:
+                splitTunnel?.terminate(); splitTunnel = nil
+                _ = Self.run("/usr/bin/ssh", ssh + ["pkill -x llama-split-prefill"])
+                problem = "補助の Mac の空きが少ない(\(health.freePercent)%)ため、長い読み取りもこの Mac だけで行います"
+            }
+        }
+    }
+
+    private static func output(_ tool: String, _ arguments: [String]) -> String? {
+        let process = Process(), pipe = Pipe()
+        process.executableURL = URL(fileURLWithPath: tool)
+        process.arguments = arguments
+        process.standardOutput = pipe
+        process.standardError = FileHandle.nullDevice
+        guard (try? process.run()) != nil else { return nil }
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        process.waitUntilExit()
+        return process.terminationStatus == 0 ? String(decoding: data, as: UTF8.self) : nil
     }
 
     /// Closes the tunnel and stops the helper's model (called when the app quits: the helper is someone's Mac).
@@ -188,9 +232,16 @@ actor HelperNode {
 }
 
 extension WorkspaceStore {
-    /// A fixed-format light job: on the helper's small model when it is ready, else on the selected model here.
+    /// The model here is answering or making a code change: a light job sent here would wait for it.
+    var mainModelIsBusy: Bool {
+        isGenerating || chatChanges.values.contains { $0.status == .running || $0.status == .asking }
+    }
+
+    /// A fixed-format light job: on the helper's small model when this Mac's model is busy and the helper is ready, else
+    /// here. Measured 2026-10-21: with this Mac idle the 27B does the five light jobs faster (73.5 s, 26 tokens/s with its
+    /// draft model on short prompts) than the helper's 8B (98.5 s), so the helper only takes work this Mac would queue.
     func lightJobEvents(_ request: InferenceRequest) async -> AsyncThrowingStream<String, Error> {
-        if await HelperNode.shared.ensureReady() {
+        if mainModelIsBusy, await HelperNode.shared.ensureReady() {
             let routed = InferenceRequest(runtime: .backburner, modelIdentifier: "helper:qwen3-8b", messages: request.messages,
                                           maximumOutputTokens: request.maximumOutputTokens, temperature: request.temperature)
             lastLightJobRoute = "補助の Mac"

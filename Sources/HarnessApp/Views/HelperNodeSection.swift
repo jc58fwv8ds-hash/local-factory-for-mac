@@ -8,7 +8,7 @@ struct HelperNodeSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("補助の Mac").font(.harness(.headline))
-            Text("Thunderbolt でつないだもう 1 台の Mac の小さなモデルに、Word・Excel・PDF の直しの指示、集計の SQL、名前の付け方の規則づくりを任せます。この Mac のモデルはコードの修正に使えます。長い文章を読むときは、27B の後ろの層も補助の Mac が受け持ち、読み取りが 25〜43% 速くなります。つながっていないときや眠っているときは、この Mac だけで動きます。")
+            Text("Thunderbolt でつないだもう 1 台の Mac の小さなモデルに、Word・Excel・PDF の直しの指示、集計の SQL、名前の付け方の規則づくりを任せます(この Mac のモデルが回答やコードの修正で忙しいときだけ。空いているときはこの Mac のほうが速いので、この Mac で行います)。長い文章を読むときは、27B の後ろの層も補助の Mac が受け持ち、読み取りが 25〜43% 速くなります。つながっていないときや眠っているときは、この Mac だけで動きます。")
                 .font(.harness(.caption)).foregroundStyle(.secondary)
             Toggle("軽い仕事を補助の Mac に任せる", isOn: $enabled)
                 .onChange(of: enabled) { _, on in
