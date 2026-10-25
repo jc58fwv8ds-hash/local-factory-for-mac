@@ -28,10 +28,14 @@ struct ImageGenerationService: ImageGenerating {
     func generate(option: PurposeModelOption, prompt: String, output: URL) async throws {
         guard let template = option.command, let tool = template.first else { throw Failure.noCommand }
         guard let executable = Self.resolve(tool) else { throw Failure.notInstalled(tool) }
-        await Self.releaseLanguageModels()
-        let arguments = Self.arguments(template.dropFirst(), prompt: prompt, output: output)
-        try FileManager.default.createDirectory(at: output.deletingLastPathComponent(), withIntermediateDirectories: true)
-        let log = try await Self.run(executable, arguments)
+        // "No model" under a lease for the whole run: running language requests finish first, and a chat request that comes
+        // in meanwhile waits instead of loading the 27B beside the image model.
+        let log = try await ModelRuntimes.shared.withLease(.none) {
+            await Self.releaseLanguageModels()
+            let arguments = Self.arguments(template.dropFirst(), prompt: prompt, output: output)
+            try FileManager.default.createDirectory(at: output.deletingLastPathComponent(), withIntermediateDirectories: true)
+            return try await Self.run(executable, arguments)
+        }
         guard FileManager.default.fileExists(atPath: output.path) else {
             throw log.isEmpty ? Failure.noImage : Failure.failed(String(log.suffix(300)))
         }
@@ -52,10 +56,9 @@ struct ImageGenerationService: ImageGenerating {
             .first { FileManager.default.isExecutableFile(atPath: $0.path) }
     }
 
-    /// Frees GPU memory for the image model: stops this App's Backburner and Strata and unloads every model Ollama holds.
+    /// Frees GPU memory for the image model: unloads every model Ollama holds (Backburner and Strata are stopped by the
+    /// coordinator's "no model" lease the caller holds).
     static func releaseLanguageModels() async {
-        await BackburnerServer.shared.stop()
-        await StrataServer.shared.stop()
         guard let ps = URL(string: "http://127.0.0.1:11434/api/ps"),
               let (data, _) = try? await URLSession.shared.data(from: ps),
               let models = (try? JSONSerialization.jsonObject(with: data) as? [String: Any])?["models"] as? [[String: Any]] else { return }

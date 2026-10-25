@@ -133,9 +133,16 @@ struct OrchestratedEditService: OrchestratedEditing {
         let output = outputRoot.appendingPathComponent(key)
         let root = staging.resolvingSymlinksInPath()
         do {
-            if model.runtime == .backburner { try await BackburnerServer.shared.ensureRunning() }
-            try await TaskOrchestrator.runTask(candidate: candidate, root: root, key: key,
-                                               model: Self.routedModel(model), output: output)
+            let run: @Sendable () async throws -> Void = {
+                try await TaskOrchestrator.runTask(candidate: candidate, root: root, key: key,
+                                                   model: Self.routedModel(model), output: output)
+            }
+            // The whole task runs under one lease, so a 125B request in the chat waits instead of stopping the 27B mid-task.
+            if model.runtime == .backburner {
+                try await ModelRuntimes.shared.withLease(ModelRuntimes.defaultBackburner) {
+                    try await ModelRuntimes.Backburner().start(model: nil); try await run()
+                }
+            } else { try await run() }
         } catch {
             throw OrchestratedEditError.failed(phase: "stopped", failureClass: String(describing: error), record: output.path)
         }

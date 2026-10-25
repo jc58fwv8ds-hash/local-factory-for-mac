@@ -16,7 +16,16 @@ import Testing
         import Testing
         import Probe
         import Darwin
+        import Foundation
         @Test func valueIsOne() { #expect(value == 1) }
+        // Read-only system data generated tests commonly use (2026-10-25: a time-zone test crashed in the sandbox).
+        @Test func timeZonesResolve() { #expect(TimeZone(identifier: "America/New_York") != nil) }
+        @Test func datesFormat() {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "yyyy-MM-dd"
+            formatter.timeZone = TimeZone(secondsFromGMT: 0)
+            #expect(formatter.string(from: Date(timeIntervalSince1970: 1_800_000_000)) == "2027-01-15")
+        }
         @Test func forbiddenOperationsAreDeniedInTestDescendant() {
             for path in ["\(root.path)/Package.swift", "\(root.path)/../outside-\(root.lastPathComponent)"] {
                 let fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0o600)

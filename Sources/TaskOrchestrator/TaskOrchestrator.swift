@@ -274,6 +274,10 @@ package enum TaskOrchestrator {
                         objective: task.objective, changed: changed, permitted: scope.editable, protected: protected,
                         maxEdits: task.maxEdits, maxLines: task.maxLines, editor: editor, isolated: isolated,
                         evidence: isolation, budget: &budget, record: record)
+                    changed += try await BatchCallerStage.followUp(root: root, directory: dir, model: model,
+                        objective: task.objective, changed: changed, permitted: scope.editable, protected: protected,
+                        maxEdits: task.maxEdits, maxLines: task.maxLines, editor: editor, isolated: isolated,
+                        evidence: isolation, budget: &budget, record: record)
                     var visibleTests: [String: String] = [:]
                     for path in task.protectedFiles where path.hasSuffix(".swift") && path.split(separator: "/").contains("Tests") {
                         visibleTests[path] = try? String(contentsOf: root.appendingPathComponent(path), encoding: .utf8)

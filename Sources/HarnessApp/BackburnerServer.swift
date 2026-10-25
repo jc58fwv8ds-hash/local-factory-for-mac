@@ -72,8 +72,6 @@ actor BackburnerServer {
     private func start(model: String?) async throws {
         let serve = directory.appendingPathComponent("scripts/serve.sh")
         guard FileManager.default.isExecutableFile(atPath: serve.path) else { throw Failure.notInstalled }
-        // The 125B on Strata and the 27B do not fit in memory together (StrataServer).
-        await StrataServer.shared.stop()
         raiseWiredLimitIfNeeded()
         try FileManager.default.createDirectory(at: log.deletingLastPathComponent(), withIntermediateDirectories: true)
         FileManager.default.createFile(atPath: log.path, contents: nil)
@@ -144,22 +142,62 @@ actor BackburnerServer {
     }
 }
 
-/// Starts Backburner before any request to its runtime; every other runtime passes straight through.
+/// The large local models' one owner (ModelRuntimeCoordinator): the 27B on Backburner and the 125B MoE on Strata do not fit
+/// in memory together, so a request holds a lease while it runs and a request for the other model waits for it.
+enum ModelRuntimes {
+    struct Backburner: ModelRuntimeBackend {
+        func start(model: String?) async throws { try await BackburnerServer.shared.ensureRunning(model: model) }
+        func stop() async { await BackburnerServer.shared.stop() }
+    }
+    struct Strata: ModelRuntimeBackend {
+        func start(model: String?) async throws { try await StrataServer.shared.ensureRunning(config: model ?? "") }
+        func stop() async { await StrataServer.shared.stop() }
+    }
+    static let shared = ModelRuntimeCoordinator(backends: ["backburner": Backburner(), "strata": Strata()])
+
+    /// The target a Backburner-runtime request needs ("strata:<config>" → Strata, "gguf:<path>" or the default 27B →
+    /// Backburner); nil for requests that need neither (the helper Mac's model, other runtimes).
+    static func target(for request: InferenceRequest) -> ModelRuntimeCoordinator.Target? {
+        guard request.runtime == .backburner, !request.modelIdentifier.hasPrefix("helper:") else { return nil }
+        if let config = StrataServer.configPath(from: request.modelIdentifier) { return .init(backend: "strata", model: config) }
+        return .init(backend: "backburner", model: BackburnerServer.modelPath(from: request.modelIdentifier))
+    }
+
+    /// The default 27B (code mode's model).
+    static let defaultBackburner = ModelRuntimeCoordinator.Target(backend: "backburner")
+}
+
+/// Runs each Backburner-runtime request under a lease for its model; every other runtime passes straight through.
 struct BackburnerAwareInferenceProvider: ModelInferenceProvider {
     let base: any ModelInferenceProvider
 
     func events(for request: InferenceRequest) async -> AsyncThrowingStream<String, Error> {
-        guard request.runtime == .backburner, !request.modelIdentifier.hasPrefix("helper:") else { return await base.events(for: request) }
-        do {
-            if let config = StrataServer.configPath(from: request.modelIdentifier) {
-                try await StrataServer.shared.ensureRunning(config: config)
-            } else {
-                try await BackburnerServer.shared.ensureRunning(model: BackburnerServer.modelPath(from: request.modelIdentifier))
-            }
-        } catch {
+        guard let target = ModelRuntimes.target(for: request) else { return await base.events(for: request) }
+        let lease: ModelRuntimeCoordinator.Lease
+        do { lease = try await ModelRuntimes.shared.acquire(target) } catch {
             return AsyncThrowingStream { $0.finish(throwing: error) }
         }
-        return await base.events(for: request)
+        do {
+            // Under the lease the model stays; starting again only checks that it still answers (or restarts it after a crash).
+            if target.backend == "strata" { try await ModelRuntimes.Strata().start(model: target.model) }
+            else { try await ModelRuntimes.Backburner().start(model: target.model) }
+        } catch {
+            await ModelRuntimes.shared.release(lease)
+            return AsyncThrowingStream { $0.finish(throwing: error) }
+        }
+        let upstream = await base.events(for: request)
+        return AsyncThrowingStream { continuation in
+            let task = Task {
+                do {
+                    for try await piece in upstream { continuation.yield(piece) }
+                    continuation.finish()
+                } catch {
+                    continuation.finish(throwing: error)
+                }
+                await ModelRuntimes.shared.release(lease)
+            }
+            continuation.onTermination = { _ in task.cancel() }
+        }
     }
 }
 

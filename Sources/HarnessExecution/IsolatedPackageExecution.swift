@@ -60,6 +60,9 @@ public struct IsolatedPackageExecution: Sendable {
         let frameworks = developer + "/Platforms/MacOSX.platform/Developer/Library/Frameworks"
         func q(_ s: String) -> String { "\"" + s.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"") + "\"" }
         let tools = ["swift", "swift-package", "swift-build", "swift-test", "swiftc", "swift-driver", "swift-frontend", "swift-autolink-extract", "swift-plugin-server", "clang", "ld", "libtool", "dsymutil"]
+        // The time-zone database and ICU data are read-only system data Foundation reads for TimeZone(identifier:) and
+        // DateFormatter; without them a generated test that names a zone crashed on a nil time zone, and a correct
+        // "yyyy-MM-dd" file name came out wrong, so a right answer failed its tests (2026-10-25).
         let profile = """
         (version 1)
         (deny default)
@@ -71,6 +74,7 @@ public struct IsolatedPackageExecution: Sendable {
         (allow process-exec (literal \(q(developer + "/Toolchains/XcodeDefault.xctoolchain/usr/libexec/swift/pm/swiftpm-testing-helper"))))
         (allow file-read* (subpath "/Applications/Xcode.app/Contents"))
         (allow file-read* (literal "/") (subpath "/usr/lib") (subpath "/System/Library") (subpath "/System/Cryptexes") (subpath \(q(developer))) (subpath \(q(root.path))) (literal "/dev/null"))
+        (allow file-read* (subpath "/private/var/db/timezone") (subpath "/usr/share/zoneinfo") (literal "/private/etc/localtime") (subpath "/usr/share/icu"))
         (allow file-write* (subpath \(q(scratch.path))) (literal "/dev/null"))
         (allow process-exec \(tools.map { "(literal \(q(bin + "/" + $0)))" }.joined(separator: " ")) (subpath \(q(scratch.path))))
         """ + (Self.buildSystem == "swiftbuild" ? Self.swiftBuildAllowances(developer: developer, bin: bin, quote: q) : "")

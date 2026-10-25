@@ -104,6 +104,15 @@ public enum RequirementCoverage {
         /// One fix after the tests pass when an independent examiner test fails and a second call confirms the expectation
         /// follows from the request. Kept only if it builds and the tests still pass. Outside the cap like anchorRepair.
         case examinerRepair
+        /// One re-proposal after an edit list that was cut off at the output limit (it did not decode; retried with twice
+        /// the output budget) or that used append_block on an existing file. Recorded 2026-10-25: c2-10/c2-17 (125B MoE)
+        /// and c2-12/c2-15/c3-03 (27B) stopped on a cut-off list; c2-06/c2-15/c3-03 (125B MoE) appended to existing files.
+        /// Outside the cap like anchorRepair.
+        case formatRepair
+        /// One follow-up after the tests pass when functions the change left alone use a name whose code it changed
+        /// (UntouchedCallers); only edits inside those functions are kept, and only if it builds and the tests still pass.
+        /// Outside the cap like anchorRepair.
+        case callerRepair
     }
 
     /// Clause Coverage Gate: every mandatory clause must be cited by a requirement that
@@ -172,7 +181,7 @@ public enum RequirementCoverage {
     /// later compiler, runtime or requirement repair.
     public struct Budget: Sendable, Equatable {
         public static let taskLimit = 2
-        static let uncapped: Set<Recovery> = [.anchorRepair, .replanCompilerRepair, .leftoverRepair, .examinerRepair]
+        static let uncapped: Set<Recovery> = [.anchorRepair, .replanCompilerRepair, .leftoverRepair, .examinerRepair, .formatRepair, .callerRepair]
         public private(set) var used: [Recovery] = []
         public init() {}
         public func allows(_ kind: Recovery) -> Bool {

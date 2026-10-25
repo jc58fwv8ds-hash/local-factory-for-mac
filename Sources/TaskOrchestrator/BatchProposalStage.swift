@@ -40,11 +40,13 @@ enum BatchProposalStage {
                         editor: RecordedProjectFileEditor, budget: inout RequirementCoverage.Budget,
                         record: BatchRunRecord, runtimeFeedback: String? = nil, outputTokens: Int = 2048) async throws -> [FileChangeProposal] {
         let planJSON = String(decoding: try JSONEncoder().encode(plan), as: UTF8.self)
-        var queue = ["proposal"], anchorFeedback: String?
+        var queue = ["proposal"], anchorFeedback: String?, formatFeedback: String?, tokens = outputTokens
         while !queue.isEmpty {
             let name = queue.removeFirst()
             let dir = directory.appendingPathComponent(name)
-            let editableNow = scope.editable, readOnlyNow = scope.readOnly, repairNote = anchorFeedback
+            let editableNow = scope.editable, readOnlyNow = scope.readOnly, tokensNow = tokens
+            let notes = [formatFeedback, anchorFeedback].compactMap { $0 }
+            let repairNote = notes.isEmpty ? nil : notes.joined(separator: "\n")
             let available = runtimeFeedback == nil && budget.allows(.contextReplan)
             record.increment("modelProposalCount"); try record.save()
             do {
@@ -59,11 +61,18 @@ enum BatchProposalStage {
                         + "\nAccepted requirement coverage plan (implement it): \(planJSON)"
                         + (runtimeFeedback.map { "\n" + $0 } ?? "") + (repairNote.map { "\n" + $0 } ?? "")
                     return try await DogfoodLocalProposalRunner.collect(.init(runtime: .ollama, modelIdentifier: model,
-                        messages: SharedContextMessages.messages(for: prompt), maximumOutputTokens: outputTokens, structuredOutput: .structuredEditBatch))
+                        messages: SharedContextMessages.messages(for: prompt), maximumOutputTokens: tokensNow, structuredOutput: .structuredEditBatch))
                 }
                 return proposals
             } catch {
                 let batch = savedBatch(in: dir)
+                if formatFeedback == nil, let problem = formatProblem(error, batch: batch, appendOnly: Set(appendOnly)),
+                   budget.consume(.formatRepair) {
+                    formatFeedback = problem.feedback
+                    if problem.cutOff { tokens = outputTokens * 2 }
+                    record.append("recoveryActions", "formatRepair(\(problem.cutOff ? "cutOff" : "appendToExisting"))"); try record.save()
+                    queue.append(name + "-format"); continue
+                }
                 // Anchor repair: one re-proposal with deterministic match counts, inside the task recovery budget.
                 if case StructuredEditError.ambiguousAnchor = error, anchorFeedback == nil, let batch,
                    case let report = batch.anchorReport(originals: sources.filter { editableNow.contains($0.key) }),
@@ -95,6 +104,21 @@ enum BatchProposalStage {
             }
         }
         throw Stop.rejected("escalated proposal rejected")
+    }
+
+    /// A cut-off edit list (it did not decode, or the server reported finish_reason=length) or append_block on a file
+    /// that is not append-only: both are the response's form, not its content, so one re-proposal can fix them.
+    static func formatProblem(_ error: Error, batch: StructuredEditBatch?, appendOnly: Set<String>) -> (cutOff: Bool, feedback: String)? {
+        if error is DecodingError || String(describing: error).contains("finish_reason=length") {
+            return (true, "Your previous edit list was cut off before it ended. Return the complete list again, compactly: "
+                + "keep each expected_old_text to the few lines that make it unique, and do not repeat unchanged code in new_text.")
+        }
+        guard case StructuredEditError.scopeViolation = error, let batch else { return nil }
+        let misused = Set(batch.edits.filter { $0.operation == "append_block" && !appendOnly.contains($0.file) }.map(\.file))
+        guard !misused.isEmpty else { return nil }
+        return (false, "Your previous edits were rejected: append_block is only for the append-only paths, and "
+            + "\(misused.sorted()) already exist. To add code to an existing file, use replace_exact: quote a short unique "
+            + "anchor (for example the closing lines of the type the code belongs in) and put the anchor plus the new code in new_text.")
     }
 
     static func savedResponse(in directory: URL) -> String? {

@@ -5,6 +5,8 @@ import Testing
 
 /// The 125B writing option end to end (2026-10-25): the App's provider starts Strata in place of the 27B, answers plain
 /// and schema-bound requests, and the next 27B request stops Strata again. HARNESS_STRATA_LIVE=1, no Backburner running.
+/// Serialized: both tests drive the one shared Strata process, which answers one request at a time.
+@Suite(.serialized)
 struct StrataLiveTests {
     private func text(_ request: InferenceRequest) async throws -> String {
         var out = ""

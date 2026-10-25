@@ -22,7 +22,6 @@ actor StrataServer {
     private let directory = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Strata")
     private let models = URL(string: "http://127.0.0.1:8090/v1/models")!
     private var process: Process?
-    private var engine: String?
     private var starting: Task<Void, Error>?
 
     var log: URL {
@@ -38,7 +37,8 @@ actor StrataServer {
     }
 
     func ensureRunning(config: String) async throws {
-        if await isReady() { return }
+        // Only a server this App started counts: another program answering on 8090 is not known to serve this config.
+        if process?.isRunning == true, await isReady() { return }
         if let starting { return try await starting.value }
         let task = Task { try await start(config: config) }
         starting = task
@@ -48,22 +48,45 @@ actor StrataServer {
 
     var isRunning: Bool { process?.isRunning == true }
 
-    /// Stops only a server this App started, with its engine: server.py leaves the engine running when it is stopped.
+    /// Stops only a server this App started, with the processes it started (the engine and the image reader): server.py
+    /// leaves them running when it is stopped. They are found as its descendants, not by name, so a Strata the user runs
+    /// elsewhere is never touched.
     func stop() {
         guard let process else { return }
+        let children = Self.descendants(of: process.processIdentifier)
         process.terminate()
         process.waitUntilExit()
         self.process = nil
-        if let engine { _ = Self.run("/usr/bin/pkill", ["-f", engine + " --serve"]) }
-        _ = Self.run("/usr/bin/pkill", ["-f", directory.appendingPathComponent("build-vision/bin/strata-vision").path])
-        engine = nil
+        for pid in children { kill(pid, SIGTERM) }
+        for _ in 0..<50 where children.contains(where: { kill($0, 0) == 0 }) { usleep(100_000) }
+        for pid in children where kill(pid, 0) == 0 { kill(pid, SIGKILL) }
+    }
+
+    /// Every process below `pid` (children, their children, ...), from `pgrep -P`.
+    static func descendants(of pid: pid_t) -> [pid_t] {
+        var found: [pid_t] = [], frontier = [pid]
+        while let next = frontier.popLast() {
+            let process = Process()
+            process.executableURL = URL(fileURLWithPath: "/usr/bin/pgrep")
+            process.arguments = ["-P", String(next)]
+            let pipe = Pipe()
+            process.standardOutput = pipe
+            process.standardError = FileHandle.nullDevice
+            guard (try? process.run()) != nil else { continue }
+            process.waitUntilExit()
+            let children = String(decoding: pipe.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self)
+                .split(whereSeparator: \.isNewline).compactMap { pid_t($0) }
+            found += children
+            frontier += children
+        }
+        return found
     }
 
     private func start(config: String) async throws {
         let python = directory.appendingPathComponent(".venv/bin/python").path
         guard FileManager.default.isExecutableFile(atPath: python), FileManager.default.fileExists(atPath: config)
         else { throw Failure.notInstalled(config) }
-        await BackburnerServer.shared.stop()
+        // The coordinator has stopped this App's Backburner; one started in Terminal still holds the memory.
         if await BackburnerServer.shared.isAnswering() { throw Failure.backburnerBusy }
         _ = await HelperNode.shared.prepareStrataRows()
         try FileManager.default.createDirectory(at: log.deletingLastPathComponent(), withIntermediateDirectories: true)
@@ -77,11 +100,11 @@ actor StrataServer {
         server.standardError = output
         try server.run()
         process = server
-        engine = (try? JSONSerialization.jsonObject(with: Data(contentsOf: URL(fileURLWithPath: config))) as? [String: Any])?["exe"] as? String
         // The 37.6 GB model streams its experts from the SSD: ready in about a minute; allow 5.
         for _ in 0..<300 {
-            if await isReady() { return }
+            // Its own process first: if another program holds 8090, this server exits and its answers are not ours.
             guard server.isRunning else { break }
+            if await isReady() { return }
             try await Task.sleep(for: .seconds(1))
         }
         stop()
@@ -93,16 +116,5 @@ actor StrataServer {
         request.timeoutInterval = 2
         guard let (_, response) = try? await URLSession.shared.data(for: request) else { return false }
         return (response as? HTTPURLResponse)?.statusCode == 200
-    }
-
-    private static func run(_ path: String, _ arguments: [String]) -> Int32 {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: path)
-        process.arguments = arguments
-        process.standardOutput = FileHandle.nullDevice
-        process.standardError = FileHandle.nullDevice
-        guard (try? process.run()) != nil else { return -1 }
-        process.waitUntilExit()
-        return process.terminationStatus
     }
 }
