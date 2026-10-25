@@ -1,7 +1,9 @@
 import Foundation
 
 public enum InferencePayloadEncoder {
-    public static func body(for request: InferenceRequest) throws -> Data {
+    /// `schemaInPrompt`: see the OpenAI-compatible case.
+    public static func body(for request: InferenceRequest,
+                            schemaInPrompt: Bool = ProcessInfo.processInfo.environment["HARNESS_OPENAI_SCHEMA_IN_PROMPT"] == "1") throws -> Data {
         guard VisualAttachmentPolicy.validationError(
             for: request.images.map(\.descriptor)
         ) == nil else {
@@ -26,14 +28,20 @@ public enum InferencePayloadEncoder {
                 )
             )
         case .lmStudio, .backburner:
+            // A server without a grammar decoder (Strata, 2026-10-25) validates a response_format reply before sending any
+            // of it: nothing streams, so the first-token watchdog cut off 4 of 30 tasks, and 4 more ended on its
+            // "did not return valid JSON". With HARNESS_OPENAI_SCHEMA_IN_PROMPT=1 the schema goes into the prompt instead.
+            // Strata never constrains output to a schema, whichever route reaches it.
+            let toStrata = request.runtime == .backburner && request.modelIdentifier.hasPrefix(LocalInferenceService.strataPrefix)
+            let schemaInPrompt = schema != nil && (schemaInPrompt && request.runtime == .lmStudio || toStrata)
             return try JSONEncoder().encode(
                 OpenAIInferencePayload(
                     model: request.modelIdentifier,
-                    messages: openAIMessages(for: request),
+                    messages: openAIMessages(for: request, schemaInstruction: schemaInPrompt ? try schema.map(schemaInstruction) : nil),
                     temperature: temperature,
                     stream: true,
                     maxTokens: request.maximumOutputTokens,
-                    responseFormat: schema.map(OpenAIResponseFormat.init)
+                    responseFormat: schemaInPrompt ? nil : schema.map(OpenAIResponseFormat.init)
                 )
             )
         case .harness:
@@ -54,9 +62,18 @@ public enum InferencePayloadEncoder {
         }
     }
 
-    private static func openAIMessages(for request: InferenceRequest) -> [OpenAIMessage] {
+    static func schemaInstruction(_ schema: InferenceJSONSchema) throws -> String {
+        let encoder = JSONEncoder(); encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
+        let text = String(decoding: try encoder.encode(schema), as: UTF8.self)
+        return "\n\nReply with exactly one JSON object that matches this JSON Schema, and nothing else (no code fence, "
+            + "no text before or after it):\n" + text
+    }
+
+    private static func openAIMessages(for request: InferenceRequest, schemaInstruction: String? = nil) -> [OpenAIMessage] {
         let target = lastUserMessageIndex(in: request.messages)
         return request.messages.enumerated().map { index, message in
+            let message = index == target && schemaInstruction != nil
+                ? InferenceMessage(role: message.role, content: message.content + schemaInstruction!) : message
             guard index == target, !request.images.isEmpty else {
                 return OpenAIMessage(role: message.role, content: .text(message.content))
             }

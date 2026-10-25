@@ -35,6 +35,8 @@ actor HelperNode {
     private var tunnel: Process?
     private var splitTunnel: Process?
     static let splitLocalPort = 50061
+    private var rowsTunnel: Process?
+    static let rowsLocalPort = 50071
     private var lastFailure: Date?
     private var lastHealthCheck: Date?
     /// Roles let go because the helper ran short (HelperResourcePolicy), and until when they stay off.
@@ -117,6 +119,36 @@ actor HelperNode {
         return nil
     }
 
+    /// The 125B MoE's n-gram table on the helper (2026-10-25): `row_server` (Strata's tools/remote_rows, loopback only)
+    /// serves the copy in ~/strata, reached through an SSH forward. Measured: the same answers as from the external SSD,
+    /// decode equally fast. Without the helper Strata reads its local copy (STRATA_REMOTE_FALLBACK), so this is best effort.
+    func prepareStrataRows(_ configuration: Configuration = .saved) async -> Bool {
+        guard configuration.enabled, !configuration.hostName.isEmpty,
+              FileManager.default.fileExists(atPath: configuration.key),
+              let address = Self.thunderboltAddress(of: configuration.hostName) else { return false }
+        if Self.run("/usr/bin/nc", ["-z", "-G", "1", "127.0.0.1", String(Self.rowsLocalPort)]) == 0 { return true }
+        let ssh = ["-i", configuration.key, "-o", "BatchMode=yes", "-o", "IdentitiesOnly=yes", "-o", "ConnectTimeout=5",
+                   "-o", "HostKeyAlias=\(configuration.hostKeyAlias)", "\(configuration.user)@\(address)"]
+        let start = """
+        test -f $HOME/strata/ngram-q2_0.gguf || exit 3; pgrep -x row_server >/dev/null || \
+        (nohup $HOME/strata/row_server $HOME/strata/ngram-q2_0.gguf 50071 > $HOME/strata/row_server.log 2>&1 < /dev/null &)
+        """
+        guard Self.run("/usr/bin/ssh", ssh + [start]) == 0 else { return false }
+        rowsTunnel?.terminate()
+        let forward = Process()
+        forward.executableURL = URL(fileURLWithPath: "/usr/bin/ssh")
+        forward.arguments = ["-N", "-o", "ExitOnForwardFailure=yes", "-L", "127.0.0.1:\(Self.rowsLocalPort):127.0.0.1:50071"] + ssh
+        forward.standardOutput = FileHandle.nullDevice
+        forward.standardError = FileHandle.nullDevice
+        do { try forward.run() } catch { return false }
+        rowsTunnel = forward
+        for _ in 0..<20 {
+            if Self.run("/usr/bin/nc", ["-z", "-G", "1", "127.0.0.1", String(Self.rowsLocalPort)]) == 0 { return true }
+            try? await Task.sleep(for: .milliseconds(500))
+        }
+        return false
+    }
+
     /// At most once a minute: the helper's free memory and heat; a role is stopped there and kept off for 5 minutes when
     /// HelperResourcePolicy says so.
     private func checkResources(_ configuration: Configuration) async {
@@ -160,10 +192,12 @@ actor HelperNode {
         tunnel = nil
         splitTunnel?.terminate()
         splitTunnel = nil
+        rowsTunnel?.terminate()
+        rowsTunnel = nil
         guard configuration.enabled, let address = Self.thunderboltAddress(of: configuration.hostName) else { return }
         _ = Self.run("/usr/bin/ssh", ["-i", configuration.key, "-o", "BatchMode=yes", "-o", "IdentitiesOnly=yes",
                                       "-o", "ConnectTimeout=3", "-o", "HostKeyAlias=\(configuration.hostKeyAlias)",
-                                      "\(configuration.user)@\(address)", "pkill -x llama-server; pkill -x llama-split-prefill; pkill -x caffeinate"])
+                                      "\(configuration.user)@\(address)", "pkill -x llama-server; pkill -x llama-split-prefill; pkill -x row_server; pkill -x caffeinate"])
     }
 
     private func healthy() async -> Bool {

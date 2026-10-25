@@ -148,7 +148,12 @@ package enum InferenceHealthGate {
     /// Probe, judge against the reference, persist the measurement with its verdict.
     package static func check(model: String, context: String) async throws -> (InferenceHealth.Measurement, InferenceHealth.Verdict) {
         if PilotModelSeam.script != nil { return PilotModelSeam.syntheticHealth(context: context) }
-        let reference = InferenceHealth.reference(baseline: baseline(), history: history(), now: Date())
+        // Per model (2026-10-24): a 125B MoE on Strata decodes slower than the 27B and was judged "degraded" against the
+        // 27B's rate. Only the same model's measurements are a reference; the first healthy measurement of a model sets it.
+        let ownHistory = history().filter { $0.model == model }
+        let ownBaseline = baseline().flatMap { $0.model == model ? $0 : nil }
+        let reference = InferenceHealth.reference(baseline: ownBaseline, history: ownHistory, now: Date())
+        let firstOfModel = reference == nil && !ownHistory.contains { $0.healthy == true }
         // A pre-task check right after a healthy probe of the same model (normally the previous task's post-task check,
         // seconds earlier) reuses it instead of another ~15 s uncached probe: 565 of 565 recorded probes were healthy, and the
         // in-task watchdog still guards every call. The post-task check always probes.
@@ -163,7 +168,7 @@ package enum InferenceHealthGate {
         }
         var measurement = await probe(model: model)
         measurement.model = model
-        let verdict = InferenceHealth.evaluate(measurement, reference: reference)
+        let verdict = InferenceHealth.evaluate(measurement, reference: reference, firstOfModel: firstOfModel)
         measurement.healthy = verdict.healthy
         try append(measurement, context: context)
         return (measurement, verdict)

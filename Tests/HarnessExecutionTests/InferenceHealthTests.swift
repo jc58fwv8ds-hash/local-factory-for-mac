@@ -30,6 +30,8 @@ struct InferenceHealthTests {
         #expect(reference?.source == "recentHealthy" && reference?.decodeChunksPerSecond == 4)
         #expect(InferenceHealth.reference(baseline: nil, history: [m(1, healthy: false)], now: now) == nil)
         #expect(InferenceHealth.evaluate(m(5), reference: nil).reasons == ["noHealthyReference"])
+        // The first measurement of a model (2026-10-24): nothing to compare with, so it sets the reference.
+        #expect(InferenceHealth.evaluate(m(5), reference: nil, firstOfModel: true).healthy)
     }
 
     @Test func noGenerationMemoryAndThermalAreUnhealthy() {

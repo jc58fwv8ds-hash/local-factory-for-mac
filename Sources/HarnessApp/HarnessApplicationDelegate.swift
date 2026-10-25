@@ -42,6 +42,7 @@ final class HarnessApplicationDelegate: NSObject, NSApplicationDelegate {
         let done = DispatchSemaphore(value: 0)
         Task.detached {
             await BackburnerServer.shared.stop()
+            await StrataServer.shared.stop()
             await HelperNode.shared.stop()
             done.signal()
         }

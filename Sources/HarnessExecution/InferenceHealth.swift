@@ -74,7 +74,9 @@ public enum InferenceHealth {
                      promptBytesPerSecond: recent.promptBytesPerSecond, source: "recentHealthy", measuredAt: recent.measuredAt)
     }
 
-    public static func evaluate(_ m: Measurement, reference: Reference?) -> Verdict {
+    /// `firstOfModel`: no measurement of this model exists yet, so there is nothing to compare its speed with; this one
+    /// becomes the reference (the other checks still apply).
+    public static func evaluate(_ m: Measurement, reference: Reference?, firstOfModel: Bool = false) -> Verdict {
         var reasons: [String] = []
         if m.chunks == 0 { reasons.append("noGeneration") }
         if let reference {
@@ -82,7 +84,7 @@ public enum InferenceHealth {
                 reasons.append(String(format: "decodeBelowReference(%.2f < %.0f%% of %.2f)", m.decodeChunksPerSecond,
                                       healthyRatio * 100, reference.decodeChunksPerSecond))
             }
-        } else { reasons.append("noHealthyReference") }
+        } else if !firstOfModel { reasons.append("noHealthyReference") }
         if m.memoryPressureLevel >= 4 { reasons.append("memoryPressureCritical") }
         if m.thermalState == "critical" { reasons.append("thermalCritical") }
         return .init(healthy: reasons.isEmpty, reasons: reasons, reference: reference)

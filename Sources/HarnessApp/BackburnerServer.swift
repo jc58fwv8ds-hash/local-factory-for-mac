@@ -66,9 +66,14 @@ actor BackburnerServer {
         currentModel = nil
     }
 
+    /// A Backburner answers on 127.0.0.1:8080, this App's or one started in Terminal.
+    func isAnswering() async -> Bool { await isHealthy() }
+
     private func start(model: String?) async throws {
         let serve = directory.appendingPathComponent("scripts/serve.sh")
         guard FileManager.default.isExecutableFile(atPath: serve.path) else { throw Failure.notInstalled }
+        // The 125B on Strata and the 27B do not fit in memory together (StrataServer).
+        await StrataServer.shared.stop()
         raiseWiredLimitIfNeeded()
         try FileManager.default.createDirectory(at: log.deletingLastPathComponent(), withIntermediateDirectories: true)
         FileManager.default.createFile(atPath: log.path, contents: nil)
@@ -144,9 +149,13 @@ struct BackburnerAwareInferenceProvider: ModelInferenceProvider {
     let base: any ModelInferenceProvider
 
     func events(for request: InferenceRequest) async -> AsyncThrowingStream<String, Error> {
-        guard request.runtime == .backburner else { return await base.events(for: request) }
+        guard request.runtime == .backburner, !request.modelIdentifier.hasPrefix("helper:") else { return await base.events(for: request) }
         do {
-            try await BackburnerServer.shared.ensureRunning(model: BackburnerServer.modelPath(from: request.modelIdentifier))
+            if let config = StrataServer.configPath(from: request.modelIdentifier) {
+                try await StrataServer.shared.ensureRunning(config: config)
+            } else {
+                try await BackburnerServer.shared.ensureRunning(model: BackburnerServer.modelPath(from: request.modelIdentifier))
+            }
         } catch {
             return AsyncThrowingStream { $0.finish(throwing: error) }
         }

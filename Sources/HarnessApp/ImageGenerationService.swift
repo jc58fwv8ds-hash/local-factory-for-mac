@@ -52,9 +52,10 @@ struct ImageGenerationService: ImageGenerating {
             .first { FileManager.default.isExecutableFile(atPath: $0.path) }
     }
 
-    /// Frees GPU memory for the image model: stops this App's Backburner and unloads every model Ollama holds.
+    /// Frees GPU memory for the image model: stops this App's Backburner and Strata and unloads every model Ollama holds.
     static func releaseLanguageModels() async {
         await BackburnerServer.shared.stop()
+        await StrataServer.shared.stop()
         guard let ps = URL(string: "http://127.0.0.1:11434/api/ps"),
               let (data, _) = try? await URLSession.shared.data(from: ps),
               let models = (try? JSONSerialization.jsonObject(with: data) as? [String: Any])?["models"] as? [[String: Any]] else { return }
