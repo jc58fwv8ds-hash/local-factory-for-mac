@@ -278,8 +278,10 @@ struct VoiceConversationSessionTests {
         )
     }
 
+    /// Polls until the condition holds. The limit is generous on purpose (2026-10-25): with the whole App test target
+    /// starting at once, the main actor did not reach the first test of each voice suite within 1 s (1 run in 4).
     private func waitUntil(
-        timeout: Duration = .seconds(1),
+        timeout: Duration = .seconds(10),
         condition: @escaping @MainActor () -> Bool
     ) async throws {
         let clock = ContinuousClock()
