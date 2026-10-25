@@ -1,0 +1,2005 @@
+Building for debugging...
+[Constructing description]
+[Planning deferred tasks]
+[46 / 141]
+[62 / 119] HarnessKernelTests-product
+[63 / 150]
+[75 / 161] TaskOrchestratorTests-product
+[76 / 161] HarnessKernelTests-product
+[77 / 161] TaskOrchestratorTests-product
+[89 / 161] HarnessExecutionTests-product
+[94 / 161] TaskOrchestratorTests-product
+[95 / 161] TaskOrchestratorTests-product
+[97 / 161] TaskOrchestratorTests-product
+[102 / 161] HarnessKernelTests-product
+[106 / 161] HarnessKernelTests-product
+[107 / 161] HarnessKernelTests-product
+[108 / 161] HarnessExecutionTests-product
+[111 / 161] HarnessExecutionTests-product
+[116 / 161] TaskOrchestratorTests-product
+[123 / 161] HarnessKernelTests-product
+[124 / 161] TaskOrchestratorTests-product
+[126 / 161] HarnessExecutionTests-product
+[127 / 161] HarnessAppTests-product
+[128 / 161] HarnessAppTests-product
+[134 / 161]
+[139 / 161] HarnessApp
+[139 / 161] HarnessExecutionTests-product
+[141 / 161] HarnessExecutionTests-product
+[145 / 161] HarnessApp
+[151 / 162] HarnessAppTests-product
+[153 / 175]
+[164 / 175] HarnessAppTests-product
+[165 / 175] HarnessAppTests-product
+[169 / 175] HarnessAppTests-product
+/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-stage/Tests/HarnessAppTests/ModelCallLogTests.swift:20:9: [1;33mwarning: [1;39mno 'async' operations occur within 'await' expression[0;0m [#]8;;https://docs.swift.org/compiler/documentation/diagnostics/unnecessary-effect-marker\UnnecessaryEffectMarker]8;;\]
+[0;36m18 |[0;0m         let request = InferenceRequest(runtime: .ollama, modelIdentifier: "m",
+[0;36m19 |[0;0m                                        messages: [InferenceMessage(role: .user, content: "挨拶して")], maximumOutputTokens: 50)
+[0;36m20 |[0;0m         await ModelCallLog.$destination.withValue(file) {
+   [0;36m|[0;0m         `- [1;33mwarning: [1;39mno 'async' operations occur within 'await' expression[0;0m [#]8;;https://docs.swift.org/compiler/documentation/diagnostics/unnecessary-effect-marker\UnnecessaryEffectMarker]8;;\]
+[0;36m21 |[0;0m             ModelCallLog.record(request, response: "こんにちは", error: nil, seconds: 1.23)
+[0;36m22 |[0;0m             ModelCallLog.record(request, response: nil, error: CancellationError(), seconds: 0)
+
+[#UnnecessaryEffectMarker]: <https://docs.swift.org/compiler/documentation/diagnostics/unnecessary-effect-marker>
+[171 / 175] HarnessAppTests-product
+Build complete! (15.76秒)
+Test Suite 'All tests' started at 2026-10-25 10:03:04.578.
+Test Suite 'All tests' passed at 2026-10-25 10:03:04.580.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'All tests' started at 2026-10-25 10:03:04.697.
+Test Suite 'All tests' passed at 2026-10-25 10:03:04.697.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'All tests' started at 2026-10-25 10:03:04.973.
+Test Suite 'All tests' passed at 2026-10-25 10:03:04.974.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+Test Suite 'All tests' started at 2026-10-25 10:03:05.387.
+Test Suite 'All tests' passed at 2026-10-25 10:03:05.388.
+	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite ExampleCheckStageTests started.
+◇ Suite ClarifyQuestionsTests started.
+◇ Suite BatchExaminerStageTests started.
+◇ Suite InferenceRouteTests started.
+➜ Suite AgreedTestLiveTests skipped.
+◇ Suite SharedContextMessagesTests started.
+◇ Test theTestFilePrintsEachValueAndTheOutputIsReadBack() started.
+◇ Test answeredPointsGoToTheBuilderButAreNotClauses() started.
+◇ Test riskSignalsFollowTheMeasuredThresholds() started.
+◇ Suite InferenceHealthReuseTests started.
+◇ Test examplesAreParsedFromTheModelsBlocks() started.
+◇ Test questionsAreReadFromNumberedOrPlainLinesAtMostThree() started.
+◇ Test samePackageGivesTheSameSystemMessageForPlanAndProposal() started.
+◇ Test fileMapsMoveToTheSystemMessageAndInstructionsStay() started.
+◇ Test promptWithoutFileMapsIsUnchanged() started.
+➜ Test aCorrectedCaseBecomesAPassingProtectedTest() skipped.
+◇ Test openAIPrefixSelectsTheOpenAICompatibleRuntime() started.
+➜ Suite BatchPipelineReplayTests skipped.
+◇ Test aStructAnswerIsComparedFieldByField() started.
+◇ Test helpersTheExaminerRedefinesStayPrivate() started.
+◇ Test compactBlocksBecomeSwiftTestsWithTheirKinds() started.
+◇ Test testBodyAndFailureDetailAreExtractedByName() started.
+◇ Test theCalculatorFindsOnlyTheWrongStep() started.
+◇ Test privateTopLevelHelpersOfVisibleTestsAreOpenedButNestedOnesStay() started.
+◇ Test backburnerPrefixRoutesToTheAppManagedServer() started.
+◇ Test onlyARecentHealthyProbeOfTheSameModelIsReused() started.
+◇ Test expectationFailuresGiveTheExpressionTheExpectedAndTheActualValue() started.
+◇ Test onlyTestFunctionsArePrefixedSoHelperCallsStillResolve() started.
+◇ Test onlyTheTestFunctionWithACompileErrorIsDropped() started.
+◇ Test theCautionNamesTheSituationInWordsWithTheMeasuredValues() started.
+◇ Test expectedValuesAreHiddenAndTheVerdictComesFromTheBlindValue() started.
+◇ Test thePlansExamplesReachTheExaminerAndOldPlansAddNothing() started.
+➜ Test compilerRepairRecoversAndIsNotFirstPass() skipped.
+➜ Test killAtEveryBoundaryOfAReplannedRunResumesSafely() skipped.
+➜ Test wrongBehaviourIsReplannedOnceThenFailsAndRollsBack() skipped.
+➜ Test firstPassReachesRequirementGateWithoutFinalizing() skipped.
+✔ Test riskSignalsFollowTheMeasuredThresholds() passed after 0.001 seconds.
+➜ Test packageScopeMakesEveryProductionFileEditableAndKeepsTestsProtected() skipped.
+➜ Test editToProtectedTestIsRejected() skipped.
+➜ Test hangingTestRunIsRecordedAsTestExecutionNotCompile() skipped.
+➜ Test secondCandidateIsAcceptedOnlyWhenTheExaminerAgrees() skipped.
+➜ Test killAtEveryBoundaryOfAPassingRunResumesSafely() skipped.
+➜ Test ambiguousAnchorIsRepairedOnceAndCountsAsRecovered() skipped.
+✔ Test answeredPointsGoToTheBuilderButAreNotClauses() passed after 0.001 seconds.
+✔ Test examplesAreParsedFromTheModelsBlocks() passed after 0.001 seconds.
+✔ Test promptWithoutFileMapsIsUnchanged() passed after 0.001 seconds.
+✔ Test openAIPrefixSelectsTheOpenAICompatibleRuntime() passed after 0.001 seconds.
+✔ Test samePackageGivesTheSameSystemMessageForPlanAndProposal() passed after 0.001 seconds.
+✔ Test fileMapsMoveToTheSystemMessageAndInstructionsStay() passed after 0.001 seconds.
+✔ Test testBodyAndFailureDetailAreExtractedByName() passed after 0.001 seconds.
+✔ Test backburnerPrefixRoutesToTheAppManagedServer() passed after 0.001 seconds.
+✔ Test onlyARecentHealthyProbeOfTheSameModelIsReused() passed after 0.001 seconds.
+➜ Test packageScopeIsTheDefaultAndSelectorRemainsAvailable() skipped.
+✔ Test theTestFilePrintsEachValueAndTheOutputIsReadBack() passed after 0.001 seconds.
+✔ Test onlyTestFunctionsArePrefixedSoHelperCallsStillResolve() passed after 0.001 seconds.
+✔ Test questionsAreReadFromNumberedOrPlainLinesAtMostThree() passed after 0.001 seconds.
+✔ Test compactBlocksBecomeSwiftTestsWithTheirKinds() passed after 0.001 seconds.
+✔ Test helpersTheExaminerRedefinesStayPrivate() passed after 0.001 seconds.
+✔ Suite ExampleCheckStageTests passed after 0.001 seconds.
+✔ Test privateTopLevelHelpersOfVisibleTestsAreOpenedButNestedOnesStay() passed after 0.001 seconds.
+✔ Test onlyTheTestFunctionWithACompileErrorIsDropped() passed after 0.001 seconds.
+✔ Test theCautionNamesTheSituationInWordsWithTheMeasuredValues() passed after 0.001 seconds.
+✔ Test expectedValuesAreHiddenAndTheVerdictComesFromTheBlindValue() passed after 0.001 seconds.
+✔ Suite ClarifyQuestionsTests passed after 0.001 seconds.
+✔ Suite InferenceRouteTests passed after 0.001 seconds.
+✔ Suite InferenceHealthReuseTests passed after 0.001 seconds.
+✔ Suite SharedContextMessagesTests passed after 0.001 seconds.
+✔ Test expectationFailuresGiveTheExpressionTheExpectedAndTheActualValue() passed after 0.001 seconds.
+✔ Test thePlansExamplesReachTheExaminerAndOldPlansAddNothing() passed after 0.001 seconds.
+✔ Test theCalculatorFindsOnlyTheWrongStep() passed after 0.002 seconds.
+✔ Test aStructAnswerIsComparedFieldByField() passed after 0.006 seconds.
+✔ Suite BatchExaminerStageTests passed after 0.006 seconds.
+✔ Test run with 35 tests in 8 suites passed after 0.006 seconds.
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite KernelRoutedStartTests started.
+◇ Suite KernelExecutionBudgetTests started.
+◇ Suite KernelRoutingPolicyTests started.
+◇ Suite KernelRoutingPersistenceTests started.
+◇ Suite KernelRecoveryTests started.
+◇ Test restartAndReopenDoNotResetAttemptBudget(succeeded:) started.
+◇ Test onlyCurrentUnrestrictedToolDecisionCanStart(mode:) started.
+◇ Test toolsAndLocalDoNotRequireExternalAuthentication() started.
+◇ Test riskReviewAndRepeatedFailureAreExplicit() started.
+◇ Test malformedRoutingCannotAdvanceState(text:) started.
+◇ Test receiptSurvivesRestartAndStaleWriterCannotReportSuccess() started.
+◇ Test runBudgetIsIndependentOfStepBudget() started.
+◇ Test legacyDecisionsAreNotReinterpretedAsRoutes() started.
+◇ Test subscriptionGateCannotBeBypassedByModelAvailability() started.
+◇ Test noSilentUpgradeOrDowngrade() started.
+◇ Test case passing 1 argument mode → "allowed" to onlyCurrentUnrestrictedToolDecisionCanStart(mode:) started.
+◇ Test case passing 1 argument mode → "blocked" to onlyCurrentUnrestrictedToolDecisionCanStart(mode:) started.
+◇ Test case passing 1 argument succeeded → true to restartAndReopenDoNotResetAttemptBudget(succeeded:) started.
+◇ Test case passing 1 argument succeeded → false to restartAndReopenDoNotResetAttemptBudget(succeeded:) started.
+◇ Test case passing 1 argument text → "harness-routing-v1:broken" to malformedRoutingCannotAdvanceState(text:) started.
+◇ Test case passing 1 argument mode → "review" to onlyCurrentUnrestrictedToolDecisionCanStart(mode:) started.
+◇ Test case passing 1 argument mode → "superseded" to onlyCurrentUnrestrictedToolDecisionCanStart(mode:) started.
+◇ Test case passing 1 argument mode → "replayed" to onlyCurrentUnrestrictedToolDecisionCanStart(mode:) started.
+◇ Test invalidPlanDoesNotCreateAnEvent() started.
+◇ Test restartPreservesUnresolvedAttemptAndSupportsModelChange() started.
+◇ Test case passing 1 argument text → "harness-routing-v2:{}" to malformedRoutingCannotAdvanceState(text:) started.
+◇ Test staleWriterCannotOverwriteHistoryOrAdvanceMemory() started.
+◇ Test damagedHistoryFailsClosed(damage:) started.
+◇ Test completionRequiresEveryCurrentRequirementAndSurvivesReload() started.
+✔ Test toolsAndLocalDoNotRequireExternalAuthentication() passed after 0.003 seconds.
+✔ Test riskReviewAndRepeatedFailureAreExplicit() passed after 0.004 seconds.
+✔ Test malformedRoutingCannotAdvanceState(text:) with 2 test cases passed after 0.004 seconds.
+◇ Test case passing 1 argument damage → "corrupt" to damagedHistoryFailsClosed(damage:) started.
+◇ Test case passing 1 argument damage → "gap" to damagedHistoryFailsClosed(damage:) started.
+◇ Test case passing 1 argument damage → "future-schema" to damagedHistoryFailsClosed(damage:) started.
+◇ Test case passing 1 argument damage → "symlink" to damagedHistoryFailsClosed(damage:) started.
+✔ Test legacyDecisionsAreNotReinterpretedAsRoutes() passed after 0.008 seconds.
+✔ Test subscriptionGateCannotBeBypassedByModelAvailability() passed after 0.008 seconds.
+✔ Test noSilentUpgradeOrDowngrade() passed after 0.008 seconds.
+✔ Test invalidPlanDoesNotCreateAnEvent() passed after 0.008 seconds.
+✔ Test runBudgetIsIndependentOfStepBudget() passed after 0.008 seconds.
+✔ Test receiptSurvivesRestartAndStaleWriterCannotReportSuccess() passed after 0.008 seconds.
+✔ Test staleWriterCannotOverwriteHistoryOrAdvanceMemory() passed after 0.008 seconds.
+✔ Suite KernelRoutingPolicyTests passed after 0.008 seconds.
+✔ Suite KernelRoutingPersistenceTests passed after 0.008 seconds.
+✔ Test onlyCurrentUnrestrictedToolDecisionCanStart(mode:) with 5 test cases passed after 0.011 seconds.
+✔ Suite KernelRoutedStartTests passed after 0.011 seconds.
+✔ Test damagedHistoryFailsClosed(damage:) with 4 test cases passed after 0.011 seconds.
+✔ Test restartPreservesUnresolvedAttemptAndSupportsModelChange() passed after 0.013 seconds.
+✔ Test restartAndReopenDoNotResetAttemptBudget(succeeded:) with 2 test cases passed after 0.016 seconds.
+✔ Suite KernelExecutionBudgetTests passed after 0.016 seconds.
+✔ Test completionRequiresEveryCurrentRequirementAndSurvivesReload() passed after 0.016 seconds.
+✔ Suite KernelRecoveryTests passed after 0.017 seconds.
+✔ Test run with 15 tests in 5 suites passed after 0.017 seconds.
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite InferenceHealthTests started.
+◇ Suite LeftoverClonesTests started.
+◇ Suite RecordedBatchProposalTests started.
+◇ Suite BatchRecoveryInspectorTests started.
+◇ Suite DeclarationRecallTests started.
+◇ Suite LocalRequirementVerifierTests started.
+◇ Suite DevicePreparationTests started.
+◇ Suite SimulatorValidationConfigurationTests started.
+◇ Suite VerifierAdmissionTests started.
+◇ Suite CanaryAcceptanceDecisionTests started.
+◇ Suite LocalRepairReviewerTests started.
+◇ Suite VerifierProofBundleTests started.
+◇ Suite CompilerRepairTests started.
+◇ Suite RecoverableFileBatchTests started.
+◇ Suite ValidationExecutionLeaseTests started.
+◇ Suite RecordedStructuredProposalTests started.
+◇ Suite RequirementCoverageTests started.
+◇ Suite TargetRoutingTests started.
+◇ Suite TargetCoverageTests started.
+◇ Suite InferenceContextWindowTests started.
+◇ Suite VerifierArmGTests started.
+◇ Suite CommandProgressDecodingTests started.
+◇ Suite IsolatedHostDeathTests started.
+◇ Suite CommandOutputMonitorTests started.
+◇ Suite CommandOutputTailTests started.
+◇ Suite ValidationArtifactTests started.
+◇ Suite DeterministicVerifierTests started.
+◇ Suite RepositorySymbolIndexTests started.
+◇ Suite VerifierProofObligationTests started.
+◇ Suite VerifierArmFTests started.
+◇ Suite ExecutionBoundaryTests started.
+◇ Suite IsolatedExecutionPolicyTests started.
+◇ Suite TargetReplanCoverageFixTests started.
+◇ Suite ObjectiveClauseTests started.
+◇ Suite VerifierRelationIndexTests started.
+◇ Suite IsolatedRecoveryEvidenceTests started.
+◇ Suite ClaudeFallbackGateTests started.
+◇ Suite StructuredEditBatchTests started.
+◇ Suite RequirementGateTests started.
+◇ Suite DogfoodShadowPlannerTests started.
+◇ Suite IsolatedInterruptionTests started.
+◇ Suite ContextRelationshipTests started.
+◇ Suite RecordedValidationTests started.
+◇ Suite BoundedCommandRunnerTests started.
+◇ Suite VerifierExecutionReceiptTests started.
+◇ Suite ContextScopeSplitTests started.
+◇ Suite NativeIsolationRuntimeTests started.
+◇ Suite SchemaInPromptTests started.
+◇ Suite IsolatedPackageExecutionTests started.
+◇ Suite ContextSelectorTests started.
+◇ Suite VerifierArmETests started.
+◇ Suite ReverseReferenceExpansionTests started.
+◇ Suite RecordedFileEditTests started.
+◇ Suite VerificationAdjudicationTests started.
+◇ Suite RepairReviewFeedbackTests started.
+◇ Test referenceFallsBackToMostRecentHealthyMeasurement() started.
+◇ Test thresholdIsRelativeToTheReferenceNotAFixedRate() started.
+◇ Test replacedExpressionLeftInAnotherFileIsFoundDespiteADifferentLeadIn() started.
+◇ Test timeoutAtHealthyRateStaysACapabilityOutcome() started.
+◇ Test baselineNeedsConsistentProbesUnderNormalPressure() started.
+◇ Test noGenerationMemoryAndThermalAreUnhealthy() started.
+◇ Test shortLinesCommentsAndChangedFilesAreIgnored() started.
+◇ Test batchAdmissionNeverWritesAndRestartNeverRegenerates() started.
+◇ Test stallDetection() started.
+◇ Test sleepIsWallTimeTheAwakeClockDidNotSee() started.
+◇ Test japaneseOutputCountsByAmountNotByPieces() started.
+◇ Test expansionIsDeterministicAndBounded() started.
+◇ Test referencesOfTargetTypeDeclarationsBecomeReadOnlyEvidence() started.
+◇ Test snippetPrefersDeclarationOverLiteral() started.
+◇ Test invalidLastEditPreservesBothSources() started.
+◇ Test readsActualPartialAndCompleteWritesAcrossInspectorRestart() started.
+◇ Test providerFailureAndInterruptedMarkerBlockAnotherAttempt() started.
+◇ Test literalsAndGenericWordsNeverSeed() started.
+◇ Test generatedExecutionBlockedBeforeAnyClosureRuns() started.
+◇ Test sharedDeclarationAloneIsNotOwner() started.
+◇ Test snippetUsesContextTypeDeclarationsAndStaysBounded() started.
+◇ Test strongInitialCandidateIsRetainedWithRelation() started.
+◇ Test recordsObservationWithoutProductCompletion(blocked:) started.
+◇ Test noRelationIsRejectedAndNothingBecomesEditable() started.
+◇ Test lockQueryDoesNotUseHistoricalBootFlags() started.
+◇ Test nominationWithoutEditableTargetsUsesReadOnlyRelations() started.
+◇ Test legacyBootedInventoryCannotAuthorizeRun() started.
+◇ Test wrongRootAndLegacyRecordsNeverAuthorizeRecovery() started.
+◇ Test explicitDisabledIsNotUnknown() started.
+◇ Test readOnlyUserMakesSharedDeclarationAGapAndOwnsAfterPromotion() started.
+◇ Test identityIsRuntimeOwnedAndSelfReviewCannotPass() started.
+◇ Test missingAndNovelValuesRemainUnknown() started.
+◇ Test freshnessTargetAndFailureGate() started.
+◇ Test inventedEvidenceAndMissingItemsFailClosed() started.
+◇ Test unsafeConfigurationIsRejectedWithoutTools(mode:) started.
+◇ Test symbolCanonicalization() started.
+◇ Test deterministicContradictionIsViolatedEvenWhenModelClaimsSatisfied() started.
+◇ Test quoteOutsideClaimedSymbolScopeIsUncertain() started.
+◇ Test behaviourRelationMakesOwner() started.
+◇ Test promptExcludesIdentityAndReferenceLabels() started.
+◇ Test claimsWithoutSatisfiedProofNeverPassTheTask() started.
+◇ Test correctQuoteForWrongClauseIsUncertain() started.
+◇ Test cancellationAndWrongTargetCannotBecomeSuccess() started.
+◇ Test completeDetailsDoNotProveLockState() started.
+◇ Test validEvidenceIsAdmittedWithQualifiedSymbol() started.
+◇ Test testsNeverSubstituteForSpecification() started.
+◇ Test missingEdgeConditionIsUncertain() started.
+◇ Test rejectsUntrustedEnvelope(kind:) started.
+◇ Test promptNeverContainsTestOrProtectedSources() started.
+◇ Test nonexistentQuoteIsUncertain() started.
+◇ Test eligibilityNeverLeaksHiddenTestsOrExpandsScope() started.
+◇ Test noClaimCanAdmitAViolatedClause() started.
+◇ Test unsupportedSemanticRequirementIsUncertain() started.
+◇ Test foreignChangeAfterLastWriteCannotBecomeAggregateSuccess() started.
+◇ Test nonexistentOrMisqualifiedSymbolIsUncertain() started.
+◇ Test protectedTestEvidenceIsRejected() started.
+◇ Test parsesRootRelativeErrorsAndDeduplicates() started.
+◇ Test validReviewUsesOnlyOneSeparateRequest() started.
+◇ Test timeoutDoesNotRetry() started.
+◇ Test promptIsMinimalAndBounded() started.
+◇ Test interruptedRollbackKeepsItsPersistedDirection() started.
+◇ Test depthThreeIsRejected() started.
+◇ Test conflictNeverOverwritesEitherFile(damage:) started.
+◇ Test unverifiedSameNamedMethodDoesNotCreateRelation() started.
+◇ Test missingEndpointAndEmptyProofFailClosed() started.
+◇ Test stalePreparationAndProtectedTamperingBlockWrites() started.
+◇ Test restartReconcilesPendingWriteAndResumesWithoutDoubleApply() started.
+◇ Test actualSIGKILLBetweenFilesCanResumeOrRollback(direction:) started.
+◇ Test cycleTerminates() started.
+◇ Test competingServiceCannotRunOrReplaceIndex(cancel:) started.
+◇ Test unrelatedIdenticalLiteralIsNotProof() started.
+◇ Test classifiesCommonFailures() started.
+◇ Test claimedAdmissionCannotRepairMissingRelation() started.
+◇ Test invalidResponseIsRejectedWithoutRetry(mode:) started.
+◇ Test fullyCoveredPlanIsReadyAndNeverReplans() started.
+◇ Test genuineNoChangeRequirementStaysNoChange() started.
+◇ Test relationIdentityIncludesOwnerAndFile() started.
+◇ Test callerHelperConstantAcrossThreeFiles() started.
+◇ Test deterministicRepeatedResults() started.
+◇ Test interruptedGenerationRequiresExplicitResumeAndKeepsUnknownOutcome() started.
+◇ Test protectedEvidenceIsRejected() started.
+◇ Test anotherProcessCannotAcquireAHeldLeaseAndCanAcquireAfterRelease() started.
+◇ Test newSymbolCoverageUnchanged() started.
+◇ Test foundationImportIsAddedOnlyWhenNeeded() started.
+◇ Test providerFailureRetainsInputAndAllowsOneExplicitResume() started.
+◇ Test rollbackTruthSurvivesLaterFailure() started.
+◇ Test fifthAdditionalFileIsRejected() started.
+◇ Test coveredNoChangeAndNonBlockingStates() started.
+◇ Test twoRejectedResponsesSurviveRestartAndBlockThirdInference() started.
+◇ Test planNamingReadOnlyFileRequestsVerificationNotPromotion() started.
+◇ Test replanAttemptGetsItsOwnCompilerRepairOutsideTheCap() started.
+◇ Test explicitMinimumContextIsSentToOllama() started.
+◇ Test staleSourceIsRejected() started.
+◇ Test incompleteCoverageWithRelatedEvidenceNeedsReplan() started.
+◇ Test clauseReplanKeepsPreviousRequirementsOnlyForDroppedClauses() started.
+◇ Test nominationSchemaDecodes() started.
+◇ Test uncoveredWithoutRelatedEvidenceIsIncomplete() started.
+◇ Test noFalseEditablePromotionAcrossRoutedGaps() started.
+◇ Test patchOnlyRewritesResolvedGaps() started.
+◇ Test splitProgressAndTerminalControlsAreReassembled() started.
+◇ Test defaultRequestKeepsRuntimeContextWindow() started.
+◇ Test assessmentIsDeterministic() started.
+◇ Test behaviourOnlyRequirementWithoutConcreteReasonIsGap() started.
+◇ Test pureDeclarationClauseNeedsNoRelation() started.
+◇ Test promptCarriesOnlyGapContextAndBudgetIsSingleUse() started.
+◇ Test routedRequestPromotesOnlyWithValidRelation() started.
+◇ Test orRequirementChecksDisjunction() started.
+◇ Test readOnlyEditRequestIsRoutedNotCovered() started.
+◇ Test andRequirementWithAndImplementationIsProven() started.
+◇ Test newSymbolWithoutEditableOwnerIsABlockingGapWithEvidence() started.
+◇ Test objectiveMemberMissingFromNamedTypeIsNewEvenIfNameExistsElsewhere() started.
+◇ Test reopenReusesAcceptedResponseAndRecordedEditorCanUndo() started.
+◇ Test repairPromptGetsDeclarationsOfQuotedPackageTypes() started.
+◇ Test behaviourOnlyWithEditableOwnerIsCoveredNotGap() started.
+◇ Test oversizedRecordIsDiscardedUntilNextDelimiter() started.
+◇ Test invalidAndIncompleteInputUsesReplacementWithoutLosingASCII() started.
+◇ Test newFileOutsideAnExistingTargetIsNotCreatable() started.
+◇ Test symbolAlsoDeclaredByAnotherEditableFileIsNotUnderEscalation() started.
+◇ Test unicodeSurvivesEveryByteBoundary() started.
+◇ Test twoRequirementsOneTargetDetectsUnderEscalationWithoutContextRequest() started.
+◇ Test nestedGroupingIsStructural() started.
+◇ Test provenRelationStillNeedsValidReceipt() started.
+◇ Test fileNamedAfterAnExistingTypeIsNotCreated() started.
+◇ Test nominationNeedsRequirementAndTaskEvidence() started.
+◇ Test onlyWhenPresenceOnlyIsUncertainAndGuardedFormIsProven() started.
+◇ Test emptiedProductionSourceIsRetiredWithAComment() started.
+◇ Test oversizedAndDuplicateNodesAreRejectedWithoutTrap() started.
+◇ Test conditionParserBuildsTrees() started.
+◇ Test realHostSIGKILLAndRestart(mode:) started.
+◇ Test cancellationDoesNotDrainRemainingLog() started.
+◇ Test japaneseBoundaryDoesNotIntroduceReplacementCharacters(limit:) started.
+◇ Test eachRecoveryKindOnceAndTaskBudgetCapsChaining() started.
+◇ Test timeoutCancelsProgressObserverAfterProcessExit() started.
+◇ Test finishDrainsOnlyCapturedBoundary() started.
+◇ Test inventedOrUnrelatedTargetsNeverWidenScope() started.
+◇ Test byteLimitAndTruncationAreExact(length:) started.
+◇ Test verificationFeedbackIsAbstractAndCarriesOnlyModelArtifacts() started.
+◇ Test requirementAnchorAloneIsInsufficient() started.
+◇ Test regardlessOfAndOtherwiseUnchangedStayUnproven() started.
+◇ Test newFileInExistingTargetIsCreatableWithinBound() started.
+◇ Test optimisticLogDoesNotSatisfyUIAcceptance(mode:) started.
+◇ Test sourceModifiedAfterGreenIsStale() started.
+◇ Test normalCommandDeliversFinalProgress() started.
+◇ Test archivedEvidenceIsBoundToReceipt(mode:) started.
+◇ Test andRequirementWithOrImplementationIsNotAdmitted() started.
+◇ Test staticViolationDisputedByFreshTestsBecomesUncertain() started.
+◇ Test offPathUnresolvedReferenceDoesNotBlockProvenRelation() started.
+◇ Test unclassifiableBehaviourIsUnsupported() started.
+◇ Test staleFailureIsNotContradiction() started.
+◇ Test sparseLargeLogOnlyReturnsItsTail() started.
+◇ Test operatorMustBelongToTheSiteProducingTheResult() started.
+◇ Test freshFailureIsContradictionWithoutModel() started.
+◇ Test freshCompletePassingEvidenceIsSupported() started.
+◇ Test interpretedJSONCannotChangeBeforeArchivingAndLegacyReceiptsStillRead() started.
+◇ Test objectiveWithoutFileButExactSymbolFindsDeclaration() started.
+◇ Test comparisonOperatorMustMatchExactly() started.
+◇ Test skippedOrExpectedFailureIsNotGreen() started.
+◇ Test partialSubsetRunIsInconclusive() started.
+◇ Test boundedDiscoverySnippetIsStableAndContainsMatchedSymbol() started.
+◇ Test regressionFailureBlocksSatisfied() started.
+◇ Test inconsistentOrEmptyReceiptIsNotEvidence() started.
+◇ Test hybridNeverExceedsPhase1() started.
+◇ Test camelCaseSnakeCaseAndPascalCaseSplitIntoGeneralSubtokens() started.
+◇ Test boundedSearchReturnsAtMostFiveReadOnlyCandidates() started.
+◇ Test unreadableLogThrowsInsteadOfReturningEmptySuccess() started.
+◇ Test protectedTestMutationBlocksEverything() started.
+◇ Test repeatedSelectionIsIdentical() started.
+◇ Test camelAndSnakeIdentifiersResolveDeclarationFiles() started.
+◇ Test runAfterTheClaimDoesNotCount() started.
+◇ Test testsAndImportsAreIndexedWithoutBecomingEditable() started.
+◇ Test noInitialCandidateRequestsOneDiscoveryCycle() started.
+◇ Test callerHelperAndHelperConstantAcrossFiles() started.
+◇ Test unmappedClauseIsUnsupportedForArmB() started.
+◇ Test commentsStringsAndInterpolationDoNotCreateRelations() started.
+◇ Test cyclicGraphTerminates() started.
+◇ Test nonexistentSymbolAndUnrelatedClauseCannotPromote() started.
+◇ Test validatedRequirementPromotesOnlyExistingDiscoveredSymbol() started.
+◇ Test symbolNameMayDifferFromFileName() started.
+◇ Test sameNameMethodInAnotherTypeIsNotSelected() started.
+◇ Test externalDispatchRequiresFreshCleanReadiness() started.
+◇ Test armDUnresolvedObligationIsUncertain() started.
+◇ Test fileBoundLeavesGap() started.
+◇ Test lexerKeepsInterpolationOpaqueAndSkipsPlainAttributes() started.
+◇ Test armDAdmitsOnlyWithProofAndTrustedReceipt() started.
+◇ Test duplicateSymbolsHaveDeterministicOrdering() started.
+◇ Test unresolvedReferenceOnUsedPathIsUncertain() started.
+◇ Test physicalAcceptanceCannotCloseUntilEveryStepIsObserved() started.
+◇ Test armDUnknownRootIsUncertain() started.
+◇ Test validProofBundleResolvesBoundaryThroughConstantInAnotherFile() started.
+◇ Test missingRelationLeavesRequiredSymbolUnresolved() started.
+◇ Test unrelatedLiteralInSameTypeIsNotEvidence() started.
+◇ Test otherInclusivityIsUnresolvedNotViolated() started.
+◇ Test scopedProfileHasNoNetworkCredentialsOrArbitraryCommandGrant() started.
+◇ Test ambiguousEdgeOnUsedPathIsUncertain() started.
+◇ Test trustedReceiptAndGraphIntegration() started.
+◇ Test armDNeverViolatesOnStaticContradictionAlone() started.
+◇ Test discoveryRequestRejectsInventedFilePaths() started.
+◇ Test baselineCleanProof() started.
+◇ Test outsideScopeProtectedOverlapAndStaleBinaryRejected() started.
+◇ Test argumentsAreScannedForReferences() started.
+◇ Test promotionLimitFollowsTheNumberOfGapsWithinBounds() started.
+◇ Test boundExceededOnRequiredPathIsUncertain() started.
+◇ Test equivalentExpressionsShareThePartition() started.
+◇ Test parameterShadowIsNotTypeReference() started.
+◇ Test compatibilityNotProvenNeverExecutesGeneratedBinary() started.
+◇ Test symlinkScratchCannotEscape() started.
+◇ Test sameMethodInAnotherTypeIsNotSelected() started.
+◇ Test ignoredDiagnosticsAreRecorded() started.
+◇ Test deterministicOrderAndExactRanges() started.
+◇ Test ungroundedOrUnknownCitationsDoNotCover() started.
+◇ Test negationNumericAndConditionalSubclausesAreDetected() started.
+◇ Test twoPathsDirtyAndCleanSelectsClean() started.
+◇ Test selectorFormSymbolsMatchTheirBaseName() started.
+◇ Test negationAndUnanchoredClausesAreUnsupported() started.
+◇ Test validProofProvenanceIsAuditable() started.
+◇ Test ambiguousGuardianEvidenceBlocksResume(_:) started.
+◇ Test expansionConnectsToGraphCheckWithoutModelRelations() started.
+◇ Test armDFreshHarnessFailureIsViolation() started.
+◇ Test processEnvironmentCanBeReplacedRatherThanInheritingSecrets() started.
+◇ Test lexicalFailureAndIncompleteConstantFailClosed() started.
+◇ Test closureAndTupleShadowAreNotGuessed() started.
+◇ Test overloadAmbiguityIsNeverAnEdge() started.
+◇ Test contextualEnumGapOnRequiredPathIsUncertain() started.
+◇ Test unrelatedContextualEnumGapIsOnlyADiagnostic() started.
+◇ Test overloadsAndExtensionsRemainUnresolved() started.
+◇ Test onlyFreshSubscriptionSafeExhaustionCanPass() started.
+◇ Test depthBoundLeavesGapAndIsNotProven() started.
+◇ Test testsPassButRequirementViolatedIsNeverSuccess() started.
+◇ Test protectedSourcesNeverSupplyDeclarations() started.
+◇ Test parentheticalIsKeptAsItsOwnMandatoryClause() started.
+◇ Test depthBoundaryAndCyclesRemainBounded() started.
+◇ Test armFKeepsAdmissionPolicy() started.
+◇ Test thousandSeparatorsDoNotSplitClauses() started.
+◇ Test selfCertificationAndIncompleteReportsStayPending() started.
+◇ Test commentsStringsAndUnrelatedLiteralDoNotCreateEdges() started.
+◇ Test armDGroundedViolationDisputedByPassingTestsIsUncertain() started.
+◇ Test twoPlainSentencesBecomeTwoMandatoryClauses() started.
+◇ Test allRequirementsSatisfiedReleasesResult() started.
+◇ Test preservationRequirementNeedsReasonAndGetsActionableFeedback() started.
+◇ Test currentNonExhaustedAndUnknownBillingStateFailClosed() started.
+◇ Test protectedAndAppendOnlyRejectReplacement() started.
+◇ Test noChangeReasonIsRequiredBySchema() started.
+◇ Test anchorRepairDoesNotConsumeTheRecoveryCap() started.
+◇ Test ambiguousAnchorAndNoopRejected() started.
+◇ Test callerHelperConstantAcrossFiles() started.
+◇ Test violationFindingWithWarningFails() started.
+◇ Test uncertainIsFailClosed() started.
+◇ Test fencedOrPrefacedJSONIsUnwrappedButContentStillValidated() started.
+◇ Test cyclicUnrelatedUnresolvedRelationTerminates() started.
+◇ Test exclusivityRequestedButOnlyPresenceProvenIsUncertain() started.
+◇ Test codeSyntaxParenthesesAreNotProseClauses() started.
+◇ Test nearbyTaskFindsRelevantFilesWithoutExecutingWorker() started.
+◇ Test uncoveredParentheticalIsDetectedDespiteCompleteSelfReport() started.
+◇ Test replaceExactMayDeleteButAppendMayNotBeEmpty() started.
+◇ Test oneClauseManyRequirementsAndManyClausesOneRequirement() started.
+◇ Test decimalsAndFileNamesDoNotSplitSentences() started.
+◇ Test unsafeCatalogPathIsRejected() started.
+◇ Test appendPreservesExistingTestsAndBudget() started.
+◇ Test relatedEditsAndTwoFiles() started.
+◇ Test anchorReportCountsMatchesAfterEarlierEdits() started.
+◇ Test unusedUnresolvedReferenceDoesNotInvalidateValidPath() started.
+◇ Test macRecordingStatusPrefersPersonalMemoryReceiverToGenericViews() started.
+◇ Test anchorsMatchAcrossUnicodeNormalisationForms() started.
+◇ Test clauseReplanIsBoundedThenFails() started.
+◇ Test optionalExplanationIsNotMandatory() started.
+◇ Test constraintValuesNormaliseSeparators() started.
+◇ Test backslashPathResolvesOnlyToAnOfferedFile() started.
+◇ Test clauseIDsAreDeterministic() started.
+◇ Test cancelBuildStopsManifestChildAndFreshExecutorResumes() started.
+◇ Test invalidIndexDoesNotFallBackToAnOlderSuccess() started.
+◇ Test reviewCannotOverrideMissingOrChangedEvidence(mode:) started.
+◇ Test definitionUsedBySelectedFileIsAdded() started.
+◇ Test uncertainValidationLeavesAnUnresolvedAttempt(mode:) started.
+◇ Test recoveryChecksCurrentEvidenceWithoutReexecuting(mode:) started.
+◇ Test edgeConditionViolationFails() started.
+◇ Test gitIdentityIncludesChangesAndDeletionsButIgnoresBuildOutputs() started.
+◇ Test expansionIsCappedAndConventionalValuesIgnored() started.
+◇ Test completenessRejectsPartialDuplicateSkippedAndUnknownOutput() started.
+◇ Test sharedConstraintValueFindsUnnamedSecondFile() started.
+◇ Test successfulCommandsCreateSourceBoundEvidence() started.
+◇ Test unsuccessfulValidationNeverCompletes(mode:) started.
+◇ Test actualIsolatedReceiptRejectsRestartAndMutations() started.
+◇ Test normalExitPreservesStatusAndOutputLimit() started.
+◇ Test deterministicRouteIsRecordedBeforeValidationStarts() started.
+◇ Test merelyUsingSelectedTypeIsNotEnough() started.
+◇ Test acceptanceRejectsProtectedChangesEvenWithFreshPassingEvidence(changed:) started.
+◇ Test sharedConstraintValueGivesEditRationale() started.
+◇ Test selectionIsDeterministicAcrossInputOrder() started.
+◇ Test repairNeverWidensEditableTargets() started.
+◇ Test cancellationBeforeLaunchDoesNotStartProcess() started.
+◇ Test macRecordingLabelIsNotMisclassifiedAsIPhoneTransferStatus() started.
+◇ Test requestCarriesObjectivePlanAndProductionOnly() started.
+◇ Test missingSymbolUnrelatedFileAndWeakRelationAreRejected() started.
+◇ Test termIgnoringProcessActuallyExits(cancel:) started.
+◇ Test requestedDependencyIsAddedAndPromotedOnlyWithEditIntent() started.
+◇ Test evidenceIsReadableButNotEditableAndTargetIsEditable() started.
+◇ Test schemaMovesIntoThePromptForAnOpenAICompatibleServer() started.
+◇ Test contextRequestDecodesWithoutEditsAndIsNeverAnEdit() started.
+◇ Test qualityWarningOnlyKeepsSuccessAndRecordsWarning() started.
+◇ Test implicitRequestOnlyForExistingNonEditablePaths() started.
+◇ Test explicitlyNamedTypeIsNotCutByRelatedFileScore() started.
+◇ Test unrelatedProjectUsesSymbolsAndDependenciesWithoutFilenameAllowlist() started.
+◇ Test escalationIsAllowedOnlyOncePerTask() started.
+◇ Test invalidLastEditRejectsWholeBatch() started.
+◇ Test actualPackageBuildNeverFallsBack() started.
+◇ Test operatingSystemAllowsScratchButDeniesOutsideProtectedNetworkAndCommands() started.
+◇ Test multipleRootsButMissingRelationIsUnresolved() started.
+◇ Test contextualCaseResolvedFromEqualityWithTypedProperty() started.
+◇ Test armEKeepsAdmissionPolicy() started.
+◇ Test responseFormatStaysByDefaultAndForBackburner() started.
+◇ Test zeroMatchAnchorReportsTheFirstDifferingLine() started.
+◇ Test expandedGraphDoesNotResolveMissingValue() started.
+◇ Test strataAlwaysGetsTheSchemaInThePrompt() started.
+◇ Test contextualCaseWithoutUniqueTypeIsAmbiguous() started.
+◇ Test singleRootProofThroughEnumAndTypedMember() started.
+◇ Test threeRootProofAndRootBound() started.
+◇ Test qualifiedAndSwitchCaseReferences() started.
+◇ Test twoRootProofRequiresAConnectingEdge() started.
+◇ Test initializerDerivedAndAssignedTypes() started.
+◇ Test typedPropertyAndParameterMemberAccess() started.
+◇ Test enumCasesAreNodes() started.
+◇ Test sameMemberNameInUnrelatedTypeIsNotUsed() started.
+◇ Test stringsAndCommentsNeverCreateCaseEdges() started.
+◇ Test unknownOrAmbiguousReceiverTypeCreatesNoEdge() started.
+◇ Test multiRootNeverWidensUnionBounds() started.
+◇ Test protectedTestsCannotSeedOrBecomeEvidence() started.
+◇ Test competingLeaseAndCorruptIndexNeverStartAnEdit() started.
+◇ Test finalizesEarlyFailureAndSuccess() started.
+◇ Test reviewIsReadOnlyAndApprovedApplyAndUndoAreRecorded(creation:) started.
+◇ Test boundedOneHopDeterministicReadOnlyEvidence() started.
+◇ Test staleProposalAndUnavailableRecordingNeverWrite() started.
+◇ Test case passing 1 argument blocked → false to recordsObservationWithoutProductCompletion(blocked:) started.
+◇ Test case passing 1 argument blocked → true to recordsObservationWithoutProductCompletion(blocked:) started.
+◇ Test uncertainOutcomesKeepBackupAndBlockANewSession(mode:) started.
+◇ Test noAutomaticEditablePermission() started.
+◇ Test contractLimitsArePublishedAndConsistent() started.
+◇ Test promptCannotContainHiddenEvidenceOrInferSignalCause() started.
+◇ Test independentFailureClasses() started.
+◇ Test case passing 1 argument mode → "inside-source" to unsafeConfigurationIsRejectedWithoutTools(mode:) started.
+◇ Test case passing 1 argument mode → "existing-output" to unsafeConfigurationIsRejectedWithoutTools(mode:) started.
+◇ Test denialOverridesRuntimeAndNeverRepairs() started.
+◇ Test case passing 1 argument mode → "parent-project" to unsafeConfigurationIsRejectedWithoutTools(mode:) started.
+◇ Test case passing 1 argument mode → "option-scheme" to unsafeConfigurationIsRejectedWithoutTools(mode:) started.
+◇ Test fingerprintsIgnoreOrderNotChangedMeaning() started.
+◇ Test budgetDoesNotGrow() started.
+◇ Test case passing 1 argument kind → "version" to rejectsUntrustedEnvelope(kind:) started.
+◇ Test case passing 1 argument kind → "target" to rejectsUntrustedEnvelope(kind:) started.
+◇ Test case passing 1 argument kind → "outcome" to rejectsUntrustedEnvelope(kind:) started.
+◇ Test case passing 1 argument kind → "type" to rejectsUntrustedEnvelope(kind:) started.
+◇ Test case passing 1 argument kind → "malformed" to rejectsUntrustedEnvelope(kind:) started.
+◇ Test case passing 1 argument kind → "oversized" to rejectsUntrustedEnvelope(kind:) started.
+◇ Test case passing 1 argument damage → "partial bytes" to conflictNeverOverwritesEitherFile(damage:) started.
+◇ Test case passing 1 argument damage → "foreign edit" to conflictNeverOverwritesEitherFile(damage:) started.
+◇ Test case passing 1 argument direction → .resume to actualSIGKILLBetweenFilesCanResumeOrRollback(direction:) started.
+◇ Test case passing 1 argument direction → .rollback to actualSIGKILLBetweenFilesCanResumeOrRollback(direction:) started.
+◇ Test case passing 1 argument cancel → false to competingServiceCannotRunOrReplaceIndex(cancel:) started.
+◇ Test case passing 1 argument mode → "broken" to invalidResponseIsRejectedWithoutRetry(mode:) started.
+◇ Test case passing 1 argument mode → "oversized" to invalidResponseIsRejectedWithoutRetry(mode:) started.
+◇ Test case passing 1 argument cancel → true to competingServiceCannotRunOrReplaceIndex(cancel:) started.
+◇ Test case passing 1 argument mode → "unknown-verdict" to invalidResponseIsRejectedWithoutRetry(mode:) started.
+◇ Test case passing 1 argument mode → "missing-field" to invalidResponseIsRejectedWithoutRetry(mode:) started.
+◇ Test case passing 1 argument mode → "build" to realHostSIGKILLAndRestart(mode:) started.
+◇ Test case passing 1 argument limit → 1 to japaneseBoundaryDoesNotIntroduceReplacementCharacters(limit:) started.
+◇ Test case passing 1 argument limit → 2 to japaneseBoundaryDoesNotIntroduceReplacementCharacters(limit:) started.
+◇ Test case passing 1 argument limit → 3 to japaneseBoundaryDoesNotIntroduceReplacementCharacters(limit:) started.
+◇ Test case passing 1 argument limit → 4 to japaneseBoundaryDoesNotIntroduceReplacementCharacters(limit:) started.
+◇ Test case passing 1 argument limit → 5 to japaneseBoundaryDoesNotIntroduceReplacementCharacters(limit:) started.
+◇ Test case passing 1 argument limit → 6 to japaneseBoundaryDoesNotIntroduceReplacementCharacters(limit:) started.
+◇ Test case passing 1 argument length → 0 to byteLimitAndTruncationAreExact(length:) started.
+◇ Test case passing 1 argument length → 3 to byteLimitAndTruncationAreExact(length:) started.
+◇ Test case passing 1 argument length → 4 to byteLimitAndTruncationAreExact(length:) started.
+◇ Test case passing 1 argument length → 5 to byteLimitAndTruncationAreExact(length:) started.
+◇ Test case passing 1 argument length → 8193 to byteLimitAndTruncationAreExact(length:) started.
+◇ Test case passing 1 argument mode → "zero" to optimisticLogDoesNotSatisfyUIAcceptance(mode:) started.
+◇ Test case passing 1 argument mode → "wrong-device" to optimisticLogDoesNotSatisfyUIAcceptance(mode:) started.
+◇ Test case passing 1 argument mode → "unit-bundle" to optimisticLogDoesNotSatisfyUIAcceptance(mode:) started.
+◇ Test case passing 1 argument mode → "failed-case" to optimisticLogDoesNotSatisfyUIAcceptance(mode:) started.
+◇ Test case passing 1 argument mode → "modified" to archivedEvidenceIsBoundToReceipt(mode:) started.
+◇ Test case passing 1 argument mode → "duplicate" to optimisticLogDoesNotSatisfyUIAcceptance(mode:) started.
+◇ Test case passing 1 argument mode → "missing" to archivedEvidenceIsBoundToReceipt(mode:) started.
+◇ Test case passing 1 argument mode → "malformed" to optimisticLogDoesNotSatisfyUIAcceptance(mode:) started.
+◇ Test case passing 1 argument mode → "symlink" to archivedEvidenceIsBoundToReceipt(mode:) started.
+◇ Test case passing 1 argument mode → "no-artifacts" to optimisticLogDoesNotSatisfyUIAcceptance(mode:) started.
+◇ Test case passing 1 argument mode → "extra" to archivedEvidenceIsBoundToReceipt(mode:) started.
+◇ Test case passing 1 argument mode → "skipped" to optimisticLogDoesNotSatisfyUIAcceptance(mode:) started.
+◇ Test case passing 1 argument mode → "missing-bundle" to optimisticLogDoesNotSatisfyUIAcceptance(mode:) started.
+◇ Test case passing 1 argument condition → "running" to ambiguousGuardianEvidenceBlocksResume(_:) started.
+◇ Test case passing 1 argument mode → "pass" to reviewCannotOverrideMissingOrChangedEvidence(mode:) started.
+◇ Test case passing 1 argument mode → "reject" to reviewCannotOverrideMissingOrChangedEvidence(mode:) started.
+◇ Test case passing 1 argument mode → "insufficient" to reviewCannotOverrideMissingOrChangedEvidence(mode:) started.
+◇ Test case passing 1 argument mode → "stale" to reviewCannotOverrideMissingOrChangedEvidence(mode:) started.
+◇ Test case passing 1 argument mode → "changed" to reviewCannotOverrideMissingOrChangedEvidence(mode:) started.
+◇ Test case passing 1 argument mode → "changed-source" to uncertainValidationLeavesAnUnresolvedAttempt(mode:) started.
+◇ Test case passing 1 argument mode → "healthy" to recoveryChecksCurrentEvidenceWithoutReexecuting(mode:) started.
+◇ Test case passing 1 argument mode → "cancelled" to uncertainValidationLeavesAnUnresolvedAttempt(mode:) started.
+◇ Test case passing 1 argument mode → "changed" to recoveryChecksCurrentEvidenceWithoutReexecuting(mode:) started.
+◇ Test case passing 1 argument mode → "missing-report" to recoveryChecksCurrentEvidenceWithoutReexecuting(mode:) started.
+◇ Test case passing 1 argument mode → "corrupt-history" to recoveryChecksCurrentEvidenceWithoutReexecuting(mode:) started.
+◇ Test case passing 1 argument mode → "unresolved" to recoveryChecksCurrentEvidenceWithoutReexecuting(mode:) started.
+◇ Test case passing 1 argument mode → "zero-tests" to unsuccessfulValidationNeverCompletes(mode:) started.
+◇ Test nextAttemptRejectsFeedbackAfterSourceChanges() started.
+◇ Test feedbackIsDataNotANewInstructionRole() started.
+◇ Test onlyActionableReviewsUseAnExistingAttempt(mode:) started.
+◇ Test case passing 1 argument mode → "missing-tests" to unsuccessfulValidationNeverCompletes(mode:) started.
+◇ Test case passing 1 argument changed → false to acceptanceRejectsProtectedChangesEvenWithFreshPassingEvidence(changed:) started.
+◇ Test case passing 1 argument mode → "failed-build" to unsuccessfulValidationNeverCompletes(mode:) started.
+◇ Test case passing 1 argument changed → true to acceptanceRejectsProtectedChangesEvenWithFreshPassingEvidence(changed:) started.
+◇ Test case passing 1 argument mode → "exit-mismatch" to unsuccessfulValidationNeverCompletes(mode:) started.
+◇ Test case passing 1 argument cancel → false to termIgnoringProcessActuallyExits(cancel:) started.
+◇ Test case passing 1 argument cancel → true to termIgnoringProcessActuallyExits(cancel:) started.
+✔ Test referenceFallsBackToMostRecentHealthyMeasurement() passed after 0.211 seconds.
+✔ Test baselineNeedsConsistentProbesUnderNormalPressure() passed after 0.212 seconds.
+✔ Test noGenerationMemoryAndThermalAreUnhealthy() passed after 0.212 seconds.
+✔ Test thresholdIsRelativeToTheReferenceNotAFixedRate() passed after 0.214 seconds.
+✔ Test sleepIsWallTimeTheAwakeClockDidNotSee() passed after 0.214 seconds.
+✔ Test japaneseOutputCountsByAmountNotByPieces() passed after 0.214 seconds.
+✔ Test timeoutAtHealthyRateStaysACapabilityOutcome() passed after 0.217 seconds.
+✔ Test stallDetection() passed after 0.218 seconds.
+✔ Test generatedExecutionBlockedBeforeAnyClosureRuns() passed after 0.219 seconds.
+✔ Test shortLinesCommentsAndChangedFilesAreIgnored() passed after 0.219 seconds.
+✔ Test replacedExpressionLeftInAnotherFileIsFoundDespiteADifferentLeadIn() passed after 0.219 seconds.
+✔ Test sharedDeclarationAloneIsNotOwner() passed after 0.219 seconds.
+✔ Test literalsAndGenericWordsNeverSeed() passed after 0.219 seconds.
+✔ Test referencesOfTargetTypeDeclarationsBecomeReadOnlyEvidence() passed after 0.219 seconds.
+◇ Test case passing 1 argument creation → false to reviewIsReadOnlyAndApprovedApplyAndUndoAreRecorded(creation:) started.
+◇ Test case passing 1 argument creation → true to reviewIsReadOnlyAndApprovedApplyAndUndoAreRecorded(creation:) started.
+✔ Test snippetUsesContextTypeDeclarationsAndStaysBounded() passed after 0.220 seconds.
+✔ Test lockQueryDoesNotUseHistoricalBootFlags() passed after 0.220 seconds.
+✔ Test expansionIsDeterministicAndBounded() passed after 0.220 seconds.
+✔ Test nominationWithoutEditableTargetsUsesReadOnlyRelations() passed after 0.220 seconds.
+◇ Test case passing 1 argument mode → "throwAfterWrite" to uncertainOutcomesKeepBackupAndBlockANewSession(mode:) started.
+◇ Test case passing 1 argument mode → "noWrite" to uncertainOutcomesKeepBackupAndBlockANewSession(mode:) started.
+◇ Test case passing 1 argument mode → "brokenJournal" to uncertainOutcomesKeepBackupAndBlockANewSession(mode:) started.
+✔ Test strongInitialCandidateIsRetainedWithRelation() passed after 0.222 seconds.
+✔ Test legacyBootedInventoryCannotAuthorizeRun() passed after 0.222 seconds.
+✔ Test explicitDisabledIsNotUnknown() passed after 0.223 seconds.
+✔ Test identityIsRuntimeOwnedAndSelfReviewCannotPass() passed after 0.223 seconds.
+✔ Test noRelationIsRejectedAndNothingBecomesEditable() passed after 0.223 seconds.
+✔ Test freshnessTargetAndFailureGate() passed after 0.223 seconds.
+✔ Test invalidLastEditPreservesBothSources() passed after 0.223 seconds.
+✔ Test missingAndNovelValuesRemainUnknown() passed after 0.223 seconds.
+✔ Test inventedEvidenceAndMissingItemsFailClosed() passed after 0.223 seconds.
+✔ Test symbolCanonicalization() passed after 0.223 seconds.
+✔ Test providerFailureAndInterruptedMarkerBlockAnotherAttempt() passed after 0.223 seconds.
+✔ Test batchAdmissionNeverWritesAndRestartNeverRegenerates() passed after 0.224 seconds.
+✔ Test readOnlyUserMakesSharedDeclarationAGapAndOwnsAfterPromotion() passed after 0.223 seconds.
+✔ Test quoteOutsideClaimedSymbolScopeIsUncertain() passed after 0.223 seconds.
+✔ Test unsafeConfigurationIsRejectedWithoutTools(mode:) with 4 test cases passed after 0.223 seconds.
+✔ Test wrongRootAndLegacyRecordsNeverAuthorizeRecovery() passed after 0.224 seconds.
+✔ Test promptExcludesIdentityAndReferenceLabels() passed after 0.223 seconds.
+✔ Test completeDetailsDoNotProveLockState() passed after 0.223 seconds.
+✔ Test recordsObservationWithoutProductCompletion(blocked:) with 2 test cases passed after 0.224 seconds.
+✔ Test testsNeverSubstituteForSpecification() passed after 0.223 seconds.
+✔ Test rejectsUntrustedEnvelope(kind:) with 6 test cases passed after 0.223 seconds.
+✔ Test promptNeverContainsTestOrProtectedSources() passed after 0.223 seconds.
+✔ Test nonexistentQuoteIsUncertain() passed after 0.223 seconds.
+✔ Test eligibilityNeverLeaksHiddenTestsOrExpandsScope() passed after 0.223 seconds.
+✔ Test correctQuoteForWrongClauseIsUncertain() passed after 0.224 seconds.
+✔ Test behaviourRelationMakesOwner() passed after 0.224 seconds.
+✔ Test cancellationAndWrongTargetCannotBecomeSuccess() passed after 0.224 seconds.
+✔ Test nonexistentOrMisqualifiedSymbolIsUncertain() passed after 0.224 seconds.
+✔ Test protectedTestEvidenceIsRejected() passed after 0.224 seconds.
+✔ Test parsesRootRelativeErrorsAndDeduplicates() passed after 0.224 seconds.
+✔ Test promptIsMinimalAndBounded() passed after 0.224 seconds.
+✔ Test foreignChangeAfterLastWriteCannotBecomeAggregateSuccess() passed after 0.224 seconds.
+✔ Test depthThreeIsRejected() passed after 0.224 seconds.
+✔ Test readsActualPartialAndCompleteWritesAcrossInspectorRestart() passed after 0.224 seconds.
+✔ Test claimsWithoutSatisfiedProofNeverPassTheTask() passed after 0.224 seconds.
+✔ Test unverifiedSameNamedMethodDoesNotCreateRelation() passed after 0.224 seconds.
+✔ Test missingEndpointAndEmptyProofFailClosed() passed after 0.224 seconds.
+✔ Test unsupportedSemanticRequirementIsUncertain() passed after 0.224 seconds.
+✔ Test missingEdgeConditionIsUncertain() passed after 0.224 seconds.
+✔ Test cycleTerminates() passed after 0.224 seconds.
+✔ Test validEvidenceIsAdmittedWithQualifiedSymbol() passed after 0.224 seconds.
+✔ Test snippetPrefersDeclarationOverLiteral() passed after 0.224 seconds.
+✔ Test unrelatedIdenticalLiteralIsNotProof() passed after 0.224 seconds.
+✔ Test classifiesCommonFailures() passed after 0.224 seconds.
+✔ Test claimedAdmissionCannotRepairMissingRelation() passed after 0.224 seconds.
+✔ Test deterministicContradictionIsViolatedEvenWhenModelClaimsSatisfied() passed after 0.225 seconds.
+✔ Test stalePreparationAndProtectedTamperingBlockWrites() passed after 0.225 seconds.
+✔ Test relationIdentityIncludesOwnerAndFile() passed after 0.225 seconds.
+✔ Test callerHelperConstantAcrossThreeFiles() passed after 0.225 seconds.
+✔ Test fullyCoveredPlanIsReadyAndNeverReplans() passed after 0.225 seconds.
+✔ Test deterministicRepeatedResults() passed after 0.225 seconds.
+✔ Test protectedEvidenceIsRejected() passed after 0.225 seconds.
+✔ Test newSymbolCoverageUnchanged() passed after 0.225 seconds.
+✔ Test foundationImportIsAddedOnlyWhenNeeded() passed after 0.226 seconds.
+✔ Test genuineNoChangeRequirementStaysNoChange() passed after 0.226 seconds.
+✔ Test rollbackTruthSurvivesLaterFailure() passed after 0.226 seconds.
+✔ Test fifthAdditionalFileIsRejected() passed after 0.226 seconds.
+✔ Test coveredNoChangeAndNonBlockingStates() passed after 0.229 seconds.
+✔ Test replanAttemptGetsItsOwnCompilerRepairOutsideTheCap() passed after 0.231 seconds.
+✔ Test planNamingReadOnlyFileRequestsVerificationNotPromotion() passed after 0.231 seconds.
+✔ Test staleSourceIsRejected() passed after 0.231 seconds.
+✔ Test clauseReplanKeepsPreviousRequirementsOnlyForDroppedClauses() passed after 0.231 seconds.
+✔ Test nominationSchemaDecodes() passed after 0.231 seconds.
+✔ Test uncoveredWithoutRelatedEvidenceIsIncomplete() passed after 0.231 seconds.
+✔ Test incompleteCoverageWithRelatedEvidenceNeedsReplan() passed after 0.231 seconds.
+✔ Test noFalseEditablePromotionAcrossRoutedGaps() passed after 0.231 seconds.
+✔ Test patchOnlyRewritesResolvedGaps() passed after 0.231 seconds.
+✔ Test explicitMinimumContextIsSentToOllama() passed after 0.231 seconds.
+✔ Test defaultRequestKeepsRuntimeContextWindow() passed after 0.231 seconds.
+✔ Test splitProgressAndTerminalControlsAreReassembled() passed after 0.231 seconds.
+✔ Test conflictNeverOverwritesEitherFile(damage:) with 2 test cases passed after 0.231 seconds.
+✔ Test assessmentIsDeterministic() passed after 0.231 seconds.
+✔ Test behaviourOnlyRequirementWithoutConcreteReasonIsGap() passed after 0.231 seconds.
+✔ Test routedRequestPromotesOnlyWithValidRelation() passed after 0.231 seconds.
+✔ Test promptCarriesOnlyGapContextAndBudgetIsSingleUse() passed after 0.231 seconds.
+✔ Test readOnlyEditRequestIsRoutedNotCovered() passed after 0.231 seconds.
+✔ Test objectiveMemberMissingFromNamedTypeIsNewEvenIfNameExistsElsewhere() passed after 0.231 seconds.
+✔ Test newSymbolWithoutEditableOwnerIsABlockingGapWithEvidence() passed after 0.231 seconds.
+✔ Test repairPromptGetsDeclarationsOfQuotedPackageTypes() passed after 0.231 seconds.
+✔ Test twoRejectedResponsesSurviveRestartAndBlockThirdInference() passed after 0.231 seconds.
+✔ Test interruptedGenerationRequiresExplicitResumeAndKeepsUnknownOutcome() passed after 0.231 seconds.
+✔ Test interruptedRollbackKeepsItsPersistedDirection() passed after 0.231 seconds.
+✔ Test invalidAndIncompleteInputUsesReplacementWithoutLosingASCII() passed after 0.231 seconds.
+✔ Test providerFailureRetainsInputAndAllowsOneExplicitResume() passed after 0.231 seconds.
+✔ Test symbolAlsoDeclaredByAnotherEditableFileIsNotUnderEscalation() passed after 0.231 seconds.
+✔ Test newFileOutsideAnExistingTargetIsNotCreatable() passed after 0.231 seconds.
+✔ Test unicodeSurvivesEveryByteBoundary() passed after 0.231 seconds.
+✔ Test twoRequirementsOneTargetDetectsUnderEscalationWithoutContextRequest() passed after 0.231 seconds.
+✔ Test oversizedRecordIsDiscardedUntilNextDelimiter() passed after 0.231 seconds.
+✔ Test behaviourOnlyWithEditableOwnerIsCoveredNotGap() passed after 0.231 seconds.
+✔ Test fileNamedAfterAnExistingTypeIsNotCreated() passed after 0.231 seconds.
+✔ Test pureDeclarationClauseNeedsNoRelation() passed after 0.231 seconds.
+✔ Test emptiedProductionSourceIsRetiredWithAComment() passed after 0.231 seconds.
+✔ Test oversizedAndDuplicateNodesAreRejectedWithoutTrap() passed after 0.231 seconds.
+✔ Test nominationNeedsRequirementAndTaskEvidence() passed after 0.231 seconds.
+✔ Test conditionParserBuildsTrees() passed after 0.231 seconds.
+✔ Test japaneseBoundaryDoesNotIntroduceReplacementCharacters(limit:) with 6 test cases passed after 0.231 seconds.
+✔ Test eachRecoveryKindOnceAndTaskBudgetCapsChaining() passed after 0.231 seconds.
+✔ Test finishDrainsOnlyCapturedBoundary() passed after 0.231 seconds.
+✔ Test inventedOrUnrelatedTargetsNeverWidenScope() passed after 0.231 seconds.
+✔ Test verificationFeedbackIsAbstractAndCarriesOnlyModelArtifacts() passed after 0.231 seconds.
+✔ Test byteLimitAndTruncationAreExact(length:) with 5 test cases passed after 0.231 seconds.
+✔ Test andRequirementWithAndImplementationIsProven() passed after 0.231 seconds.
+✔ Test requirementAnchorAloneIsInsufficient() passed after 0.231 seconds.
+✔ Test newFileInExistingTargetIsCreatableWithinBound() passed after 0.231 seconds.
+✔ Test restartReconcilesPendingWriteAndResumesWithoutDoubleApply() passed after 0.232 seconds.
+✔ Test sourceModifiedAfterGreenIsStale() passed after 0.231 seconds.
+✔ Test provenRelationStillNeedsValidReceipt() passed after 0.232 seconds.
+✔ Test reopenReusesAcceptedResponseAndRecordedEditorCanUndo() passed after 0.232 seconds.
+✔ Test onlyWhenPresenceOnlyIsUncertainAndGuardedFormIsProven() passed after 0.232 seconds.
+✔ Test orRequirementChecksDisjunction() passed after 0.232 seconds.
+✔ Test nestedGroupingIsStructural() passed after 0.232 seconds.
+✔ Test regardlessOfAndOtherwiseUnchangedStayUnproven() passed after 0.232 seconds.
+✔ Test optimisticLogDoesNotSatisfyUIAcceptance(mode:) with 9 test cases passed after 0.232 seconds.
+✔ Test staticViolationDisputedByFreshTestsBecomesUncertain() passed after 0.232 seconds.
+✔ Test staleFailureIsNotContradiction() passed after 0.232 seconds.
+✔ Test sparseLargeLogOnlyReturnsItsTail() passed after 0.232 seconds.
+✔ Test freshCompletePassingEvidenceIsSupported() passed after 0.232 seconds.
+✔ Test andRequirementWithOrImplementationIsNotAdmitted() passed after 0.232 seconds.
+✔ Test unclassifiableBehaviourIsUnsupported() passed after 0.232 seconds.
+✔ Test freshFailureIsContradictionWithoutModel() passed after 0.232 seconds.
+✔ Test interpretedJSONCannotChangeBeforeArchivingAndLegacyReceiptsStillRead() passed after 0.232 seconds.
+✔ Test skippedOrExpectedFailureIsNotGreen() passed after 0.232 seconds.
+✔ Test partialSubsetRunIsInconclusive() passed after 0.232 seconds.
+✔ Test boundedDiscoverySnippetIsStableAndContainsMatchedSymbol() passed after 0.232 seconds.
+✔ Test offPathUnresolvedReferenceDoesNotBlockProvenRelation() passed after 0.232 seconds.
+✔ Test inconsistentOrEmptyReceiptIsNotEvidence() passed after 0.232 seconds.
+✔ Test regressionFailureBlocksSatisfied() passed after 0.232 seconds.
+✔ Test camelCaseSnakeCaseAndPascalCaseSplitIntoGeneralSubtokens() passed after 0.232 seconds.
+✔ Test objectiveWithoutFileButExactSymbolFindsDeclaration() passed after 0.232 seconds.
+✔ Test hybridNeverExceedsPhase1() passed after 0.232 seconds.
+✔ Test unreadableLogThrowsInsteadOfReturningEmptySuccess() passed after 0.233 seconds.
+✔ Test boundedSearchReturnsAtMostFiveReadOnlyCandidates() passed after 0.232 seconds.
+✔ Test runAfterTheClaimDoesNotCount() passed after 0.233 seconds.
+✔ Test archivedEvidenceIsBoundToReceipt(mode:) with 4 test cases passed after 0.233 seconds.
+✔ Test operatorMustBelongToTheSiteProducingTheResult() passed after 0.233 seconds.
+✔ Test protectedTestMutationBlocksEverything() passed after 0.233 seconds.
+✔ Test noInitialCandidateRequestsOneDiscoveryCycle() passed after 0.233 seconds.
+✔ Test camelAndSnakeIdentifiersResolveDeclarationFiles() passed after 0.233 seconds.
+✔ Test testsAndImportsAreIndexedWithoutBecomingEditable() passed after 0.233 seconds.
+✔ Test callerHelperAndHelperConstantAcrossFiles() passed after 0.232 seconds.
+✔ Test unmappedClauseIsUnsupportedForArmB() passed after 0.233 seconds.
+✔ Test cyclicGraphTerminates() passed after 0.233 seconds.
+✔ Test externalDispatchRequiresFreshCleanReadiness() passed after 0.233 seconds.
+✔ Test commentsStringsAndInterpolationDoNotCreateRelations() passed after 0.233 seconds.
+✔ Test nonexistentSymbolAndUnrelatedClauseCannotPromote() passed after 0.233 seconds.
+✔ Test validatedRequirementPromotesOnlyExistingDiscoveredSymbol() passed after 0.233 seconds.
+✔ Test symbolNameMayDifferFromFileName() passed after 0.233 seconds.
+✔ Test lexerKeepsInterpolationOpaqueAndSkipsPlainAttributes() passed after 0.233 seconds.
+✔ Test sameNameMethodInAnotherTypeIsNotSelected() passed after 0.233 seconds.
+✔ Test armDUnresolvedObligationIsUncertain() passed after 0.233 seconds.
+✔ Test physicalAcceptanceCannotCloseUntilEveryStepIsObserved() passed after 0.233 seconds.
+✔ Test fileBoundLeavesGap() passed after 0.233 seconds.
+✔ Test armDAdmitsOnlyWithProofAndTrustedReceipt() passed after 0.233 seconds.
+✔ Test unresolvedReferenceOnUsedPathIsUncertain() passed after 0.233 seconds.
+✔ Test armDUnknownRootIsUncertain() passed after 0.233 seconds.
+✔ Test duplicateSymbolsHaveDeterministicOrdering() passed after 0.233 seconds.
+✔ Test missingRelationLeavesRequiredSymbolUnresolved() passed after 0.233 seconds.
+✔ Test unrelatedLiteralInSameTypeIsNotEvidence() passed after 0.233 seconds.
+✔ Test validProofBundleResolvesBoundaryThroughConstantInAnotherFile() passed after 0.233 seconds.
+✔ Test ambiguousEdgeOnUsedPathIsUncertain() passed after 0.233 seconds.
+✔ Test discoveryRequestRejectsInventedFilePaths() passed after 0.233 seconds.
+✔ Test comparisonOperatorMustMatchExactly() passed after 0.233 seconds.
+✔ Test otherInclusivityIsUnresolvedNotViolated() passed after 0.233 seconds.
+✔ Test outsideScopeProtectedOverlapAndStaleBinaryRejected() passed after 0.233 seconds.
+✔ Test argumentsAreScannedForReferences() passed after 0.233 seconds.
+✔ Test parameterShadowIsNotTypeReference() passed after 0.233 seconds.
+✔ Test armDNeverViolatesOnStaticContradictionAlone() passed after 0.233 seconds.
+✔ Test promotionLimitFollowsTheNumberOfGapsWithinBounds() passed after 0.233 seconds.
+✔ Test boundExceededOnRequiredPathIsUncertain() passed after 0.233 seconds.
+✔ Test sameMethodInAnotherTypeIsNotSelected() passed after 0.233 seconds.
+✔ Test scopedProfileHasNoNetworkCredentialsOrArbitraryCommandGrant() passed after 0.233 seconds.
+✔ Test deterministicOrderAndExactRanges() passed after 0.233 seconds.
+✔ Test compatibilityNotProvenNeverExecutesGeneratedBinary() passed after 0.233 seconds.
+✔ Test ungroundedOrUnknownCitationsDoNotCover() passed after 0.233 seconds.
+✔ Test symlinkScratchCannotEscape() passed after 0.233 seconds.
+✔ Test negationNumericAndConditionalSubclausesAreDetected() passed after 0.233 seconds.
+✔ Test selectorFormSymbolsMatchTheirBaseName() passed after 0.233 seconds.
+✔ Test expansionConnectsToGraphCheckWithoutModelRelations() passed after 0.233 seconds.
+✔ Test armDFreshHarnessFailureIsViolation() passed after 0.233 seconds.
+✔ Test equivalentExpressionsShareThePartition() passed after 0.233 seconds.
+✔ Test validProofProvenanceIsAuditable() passed after 0.233 seconds.
+✔ Test negationAndUnanchoredClausesAreUnsupported() passed after 0.233 seconds.
+✔ Test closureAndTupleShadowAreNotGuessed() passed after 0.233 seconds.
+✔ Test lexicalFailureAndIncompleteConstantFailClosed() passed after 0.233 seconds.
+✔ Test ignoredDiagnosticsAreRecorded() passed after 0.233 seconds.
+✔ Test onlyFreshSubscriptionSafeExhaustionCanPass() passed after 0.233 seconds.
+✔ Test twoPathsDirtyAndCleanSelectsClean() passed after 0.233 seconds.
+✔ Test overloadsAndExtensionsRemainUnresolved() passed after 0.233 seconds.
+✔ Test protectedSourcesNeverSupplyDeclarations() passed after 0.233 seconds.
+✔ Test repeatedSelectionIsIdentical() passed after 0.233 seconds.
+✔ Test parentheticalIsKeptAsItsOwnMandatoryClause() passed after 0.233 seconds.
+✔ Test depthBoundLeavesGapAndIsNotProven() passed after 0.233 seconds.
+✔ Test overloadAmbiguityIsNeverAnEdge() passed after 0.233 seconds.
+✔ Test twoPlainSentencesBecomeTwoMandatoryClauses() passed after 0.233 seconds.
+✔ Test thousandSeparatorsDoNotSplitClauses() passed after 0.233 seconds.
+✔ Test contextualEnumGapOnRequiredPathIsUncertain() passed after 0.233 seconds.
+✔ Test currentNonExhaustedAndUnknownBillingStateFailClosed() passed after 0.233 seconds.
+✔ Test protectedAndAppendOnlyRejectReplacement() passed after 0.233 seconds.
+✔ Test selfCertificationAndIncompleteReportsStayPending() passed after 0.233 seconds.
+✔ Test baselineCleanProof() passed after 0.233 seconds.
+✔ Test anchorRepairDoesNotConsumeTheRecoveryCap() passed after 0.233 seconds.
+✔ Test allRequirementsSatisfiedReleasesResult() passed after 0.233 seconds.
+✔ Test preservationRequirementNeedsReasonAndGetsActionableFeedback() passed after 0.233 seconds.
+✔ Test noChangeReasonIsRequiredBySchema() passed after 0.233 seconds.
+✔ Test ambiguousAnchorAndNoopRejected() passed after 0.233 seconds.
+✔ Test commentsStringsAndUnrelatedLiteralDoNotCreateEdges() passed after 0.233 seconds.
+✔ Test unrelatedContextualEnumGapIsOnlyADiagnostic() passed after 0.233 seconds.
+✔ Test fencedOrPrefacedJSONIsUnwrappedButContentStillValidated() passed after 0.233 seconds.
+✔ Test violationFindingWithWarningFails() passed after 0.233 seconds.
+✔ Test codeSyntaxParenthesesAreNotProseClauses() passed after 0.233 seconds.
+✔ Test uncertainIsFailClosed() passed after 0.233 seconds.
+✔ Test uncoveredParentheticalIsDetectedDespiteCompleteSelfReport() passed after 0.233 seconds.
+✔ Test oneClauseManyRequirementsAndManyClausesOneRequirement() passed after 0.233 seconds.
+✔ Test callerHelperConstantAcrossFiles() passed after 0.233 seconds.
+✔ Test decimalsAndFileNamesDoNotSplitSentences() passed after 0.233 seconds.
+✔ Test appendPreservesExistingTestsAndBudget() passed after 0.233 seconds.
+✔ Test relatedEditsAndTwoFiles() passed after 0.233 seconds.
+✔ Test replaceExactMayDeleteButAppendMayNotBeEmpty() passed after 0.233 seconds.
+✔ Test depthBoundaryAndCyclesRemainBounded() passed after 0.233 seconds.
+✔ Test anchorsMatchAcrossUnicodeNormalisationForms() passed after 0.233 seconds.
+✔ Test anchorReportCountsMatchesAfterEarlierEdits() passed after 0.233 seconds.
+✔ Test clauseReplanIsBoundedThenFails() passed after 0.233 seconds.
+✔ Test unsafeCatalogPathIsRejected() passed after 0.233 seconds.
+✔ Test optionalExplanationIsNotMandatory() passed after 0.233 seconds.
+✔ Test armFKeepsAdmissionPolicy() passed after 0.233 seconds.
+✔ Test constraintValuesNormaliseSeparators() passed after 0.233 seconds.
+✔ Test armDGroundedViolationDisputedByPassingTestsIsUncertain() passed after 0.233 seconds.
+✔ Test backslashPathResolvesOnlyToAnOfferedFile() passed after 0.233 seconds.
+✔ Test clauseIDsAreDeterministic() passed after 0.233 seconds.
+✔ Test nearbyTaskFindsRelevantFilesWithoutExecutingWorker() passed after 0.233 seconds.
+✔ Test testsPassButRequirementViolatedIsNeverSuccess() passed after 0.233 seconds.
+✔ Test exclusivityRequestedButOnlyPresenceProvenIsUncertain() passed after 0.233 seconds.
+✔ Test cyclicUnrelatedUnresolvedRelationTerminates() passed after 0.233 seconds.
+✔ Test definitionUsedBySelectedFileIsAdded() passed after 0.233 seconds.
+✔ Test macRecordingStatusPrefersPersonalMemoryReceiverToGenericViews() passed after 0.233 seconds.
+✔ Test unusedUnresolvedReferenceDoesNotInvalidateValidPath() passed after 0.233 seconds.
+✔ Test edgeConditionViolationFails() passed after 0.233 seconds.
+✔ Test invalidIndexDoesNotFallBackToAnOlderSuccess() passed after 0.233 seconds.
+✔ Test uncertainValidationLeavesAnUnresolvedAttempt(mode:) with 2 test cases passed after 0.233 seconds.
+✔ Test completenessRejectsPartialDuplicateSkippedAndUnknownOutput() passed after 0.233 seconds.
+✔ Test reviewCannotOverrideMissingOrChangedEvidence(mode:) with 5 test cases passed after 0.233 seconds.
+✔ Test recoveryChecksCurrentEvidenceWithoutReexecuting(mode:) with 5 test cases passed after 0.233 seconds.
+✔ Test expansionIsCappedAndConventionalValuesIgnored() passed after 0.233 seconds.
+✔ Test sharedConstraintValueFindsUnnamedSecondFile() passed after 0.233 seconds.
+✔ Test sharedConstraintValueGivesEditRationale() passed after 0.233 seconds.
+✔ Test repairNeverWidensEditableTargets() passed after 0.233 seconds.
+◇ Test case passing 1 argument mode → "actionable" to onlyActionableReviewsUseAnExistingAttempt(mode:) started.
+◇ Test case passing 1 argument mode → "limit" to onlyActionableReviewsUseAnExistingAttempt(mode:) started.
+◇ Test case passing 1 argument mode → "insufficient" to onlyActionableReviewsUseAnExistingAttempt(mode:) started.
+◇ Test case passing 1 argument mode → "pass" to onlyActionableReviewsUseAnExistingAttempt(mode:) started.
+◇ Test case passing 1 argument mode → "empty" to onlyActionableReviewsUseAnExistingAttempt(mode:) started.
+◇ Test case passing 1 argument mode → "oversized" to onlyActionableReviewsUseAnExistingAttempt(mode:) started.
+✔ Test merelyUsingSelectedTypeIsNotEnough() passed after 0.234 seconds.
+✔ Test macRecordingLabelIsNotMisclassifiedAsIPhoneTransferStatus() passed after 0.234 seconds.
+✔ Test requestCarriesObjectivePlanAndProductionOnly() passed after 0.234 seconds.
+✔ Test missingSymbolUnrelatedFileAndWeakRelationAreRejected() passed after 0.234 seconds.
+✔ Test unsuccessfulValidationNeverCompletes(mode:) with 4 test cases passed after 0.234 seconds.
+✔ Test requestedDependencyIsAddedAndPromotedOnlyWithEditIntent() passed after 0.234 seconds.
+✔ Test schemaMovesIntoThePromptForAnOpenAICompatibleServer() passed after 0.234 seconds.
+✔ Test contextRequestDecodesWithoutEditsAndIsNeverAnEdit() passed after 0.234 seconds.
+✔ Test selectionIsDeterministicAcrossInputOrder() passed after 0.234 seconds.
+✔ Test qualityWarningOnlyKeepsSuccessAndRecordsWarning() passed after 0.234 seconds.
+✔ Test implicitRequestOnlyForExistingNonEditablePaths() passed after 0.234 seconds.
+✔ Test successfulCommandsCreateSourceBoundEvidence() passed after 0.234 seconds.
+✔ Test invalidLastEditRejectsWholeBatch() passed after 0.234 seconds.
+✔ Test escalationIsAllowedOnlyOncePerTask() passed after 0.234 seconds.
+✔ Test evidenceIsReadableButNotEditableAndTargetIsEditable() passed after 0.234 seconds.
+✔ Test explicitlyNamedTypeIsNotCutByRelatedFileScore() passed after 0.234 seconds.
+✔ Test contextualCaseResolvedFromEqualityWithTypedProperty() passed after 0.234 seconds.
+✔ Test responseFormatStaysByDefaultAndForBackburner() passed after 0.234 seconds.
+✔ Test zeroMatchAnchorReportsTheFirstDifferingLine() passed after 0.234 seconds.
+✔ Test deterministicRouteIsRecordedBeforeValidationStarts() passed after 0.234 seconds.
+✔ Test unrelatedProjectUsesSymbolsAndDependenciesWithoutFilenameAllowlist() passed after 0.234 seconds.
+✔ Test strataAlwaysGetsTheSchemaInThePrompt() passed after 0.234 seconds.
+✔ Test multipleRootsButMissingRelationIsUnresolved() passed after 0.234 seconds.
+✔ Test singleRootProofThroughEnumAndTypedMember() passed after 0.234 seconds.
+✔ Test contextualCaseWithoutUniqueTypeIsAmbiguous() passed after 0.234 seconds.
+✔ Test expandedGraphDoesNotResolveMissingValue() passed after 0.234 seconds.
+✔ Test typedPropertyAndParameterMemberAccess() passed after 0.234 seconds.
+✔ Test initializerDerivedAndAssignedTypes() passed after 0.234 seconds.
+✔ Test enumCasesAreNodes() passed after 0.234 seconds.
+✔ Test armEKeepsAdmissionPolicy() passed after 0.234 seconds.
+✔ Test acceptanceRejectsProtectedChangesEvenWithFreshPassingEvidence(changed:) with 2 test cases passed after 0.234 seconds.
+✔ Test sameMemberNameInUnrelatedTypeIsNotUsed() passed after 0.234 seconds.
+✔ Test threeRootProofAndRootBound() passed after 0.234 seconds.
+✔ Test stringsAndCommentsNeverCreateCaseEdges() passed after 0.234 seconds.
+✔ Test finalizesEarlyFailureAndSuccess() passed after 0.231 seconds.
+✔ Test multiRootNeverWidensUnionBounds() passed after 0.234 seconds.
+✔ Test protectedTestsCannotSeedOrBecomeEvidence() passed after 0.232 seconds.
+✔ Test qualifiedAndSwitchCaseReferences() passed after 0.234 seconds.
+✔ Test twoRootProofRequiresAConnectingEdge() passed after 0.234 seconds.
+✔ Test unknownOrAmbiguousReceiverTypeCreatesNoEdge() passed after 0.234 seconds.
+✔ Test competingLeaseAndCorruptIndexNeverStartAnEdit() passed after 0.231 seconds.
+✔ Test contractLimitsArePublishedAndConsistent() passed after 0.229 seconds.
+✔ Test promptCannotContainHiddenEvidenceOrInferSignalCause() passed after 0.229 seconds.
+✔ Test noAutomaticEditablePermission() passed after 0.229 seconds.
+✔ Test independentFailureClasses() passed after 0.227 seconds.
+✔ Test denialOverridesRuntimeAndNeverRepairs() passed after 0.225 seconds.
+✔ Test budgetDoesNotGrow() passed after 0.223 seconds.
+✔ Test fingerprintsIgnoreOrderNotChangedMeaning() passed after 0.223 seconds.
+✔ Test boundedOneHopDeterministicReadOnlyEvidence() passed after 0.231 seconds.
+✔ Test uncertainOutcomesKeepBackupAndBlockANewSession(mode:) with 3 test cases passed after 0.230 seconds.
+✔ Test staleProposalAndUnavailableRecordingNeverWrite() passed after 0.232 seconds.
+◇ Test case passing 1 argument condition → "CLEANUP_UNVERIFIED" to ambiguousGuardianEvidenceBlocksResume(_:) started.
+✔ Test onlyActionableReviewsUseAnExistingAttempt(mode:) with 6 test cases passed after 0.047 seconds.
+✔ Test feedbackIsDataNotANewInstructionRole() passed after 0.047 seconds.
+✔ Suite InferenceHealthTests passed after 0.241 seconds.
+✔ Suite BatchRecoveryInspectorTests passed after 0.241 seconds.
+✔ Suite LeftoverClonesTests passed after 0.241 seconds.
+✔ Suite DeclarationRecallTests passed after 0.241 seconds.
+✔ Suite DevicePreparationTests passed after 0.241 seconds.
+✔ Suite LocalRequirementVerifierTests passed after 0.243 seconds.
+✔ Suite RecordedBatchProposalTests passed after 0.243 seconds.
+✔ Suite SimulatorValidationConfigurationTests passed after 0.243 seconds.
+✔ Suite CanaryAcceptanceDecisionTests passed after 0.243 seconds.
+✔ Suite CompilerRepairTests passed after 0.243 seconds.
+✔ Suite VerifierProofBundleTests passed after 0.243 seconds.
+✔ Suite RequirementCoverageTests passed after 0.243 seconds.
+✔ Suite TargetRoutingTests passed after 0.243 seconds.
+✔ Suite TargetCoverageTests passed after 0.243 seconds.
+✔ Suite InferenceContextWindowTests passed after 0.243 seconds.
+✔ Suite CommandProgressDecodingTests passed after 0.243 seconds.
+✔ Suite RecordedStructuredProposalTests passed after 0.243 seconds.
+✔ Suite VerifierArmGTests passed after 0.243 seconds.
+✔ Suite CommandOutputTailTests passed after 0.243 seconds.
+✔ Test cancellationDoesNotDrainRemainingLog() passed after 0.241 seconds.
+✔ Suite DeterministicVerifierTests passed after 0.243 seconds.
+✔ Suite ValidationArtifactTests passed after 0.243 seconds.
+✔ Suite RepositorySymbolIndexTests passed after 0.243 seconds.
+✔ Suite ExecutionBoundaryTests passed after 0.243 seconds.
+✔ Suite VerifierArmFTests passed after 0.243 seconds.
+✔ Suite VerifierRelationIndexTests passed after 0.243 seconds.
+✔ Suite TargetReplanCoverageFixTests passed after 0.243 seconds.
+✔ Suite ObjectiveClauseTests passed after 0.243 seconds.
+✔ Suite ClaudeFallbackGateTests passed after 0.243 seconds.
+✔ Suite StructuredEditBatchTests passed after 0.243 seconds.
+✔ Suite RequirementGateTests passed after 0.243 seconds.
+✔ Suite DogfoodShadowPlannerTests passed after 0.243 seconds.
+✔ Suite ContextRelationshipTests passed after 0.243 seconds.
+✔ Suite ContextScopeSplitTests passed after 0.243 seconds.
+✔ Suite SchemaInPromptTests passed after 0.243 seconds.
+✔ Test cancellationBeforeLaunchDoesNotStartProcess() passed after 0.241 seconds.
+✔ Suite ContextSelectorTests passed after 0.243 seconds.
+✔ Suite VerifierArmETests passed after 0.243 seconds.
+✔ Suite ReverseReferenceExpansionTests passed after 0.243 seconds.
+✔ Test nextAttemptRejectsFeedbackAfterSourceChanges() passed after 0.052 seconds.
+✔ Suite VerificationAdjudicationTests passed after 0.243 seconds.
+✔ Test validReviewUsesOnlyOneSeparateRequest() passed after 0.244 seconds.
+◇ Test case passing 1 argument condition → "missing" to ambiguousGuardianEvidenceBlocksResume(_:) started.
+✔ Suite RepairReviewFeedbackTests passed after 0.247 seconds.
+✔ Test invalidResponseIsRejectedWithoutRetry(mode:) with 4 test cases passed after 0.246 seconds.
+◇ Test case passing 1 argument condition → "corrupt" to ambiguousGuardianEvidenceBlocksResume(_:) started.
+✔ Test normalExitPreservesStatusAndOutputLimit() passed after 0.250 seconds.
+✔ Test processEnvironmentCanBeReplacedRatherThanInheritingSecrets() passed after 0.250 seconds.
+✔ Suite IsolatedExecutionPolicyTests passed after 0.253 seconds.
+✔ Test reviewIsReadOnlyAndApprovedApplyAndUndoAreRecorded(creation:) with 2 test cases passed after 0.250 seconds.
+✔ Suite RecordedFileEditTests passed after 0.256 seconds.
+◇ Test case passing 1 argument condition → "liveSupervisor" to ambiguousGuardianEvidenceBlocksResume(_:) started.
+✔ Test timeoutDoesNotRetry() passed after 0.258 seconds.
+✔ Suite LocalRepairReviewerTests passed after 0.259 seconds.
+◇ Test case passing 1 argument condition → "liveChild" to ambiguousGuardianEvidenceBlocksResume(_:) started.
+✔ Test ambiguousGuardianEvidenceBlocksResume(_:) with 6 test cases passed after 0.265 seconds.
+◇ Test heldGuardianLeaseBlocksResume() started.
+✔ Test heldGuardianLeaseBlocksResume() passed after 0.005 seconds.
+◇ Test changedPreconditionBlocksResume(_:) started.
+◇ Test case passing 1 argument target → "source" to changedPreconditionBlocksResume(_:) started.
+✔ Test anotherProcessCannotAcquireAHeldLeaseAndCanAcquireAfterRelease() passed after 0.275 seconds.
+◇ Test case passing 1 argument target → "stable" to changedPreconditionBlocksResume(_:) started.
+✔ Test changedPreconditionBlocksResume(_:) with 2 test cases passed after 0.010 seconds.
+◇ Test sessionOutsideEvidenceIsRejected() started.
+✔ Test sessionOutsideEvidenceIsRejected() passed after 0.006 seconds.
+◇ Test verifiedStopIsRecordedAsInterruptedNotSuccess() started.
+✔ Test competingServiceCannotRunOrReplaceIndex(cancel:) with 2 test cases passed after 0.292 seconds.
+✔ Suite ValidationExecutionLeaseTests passed after 0.294 seconds.
+✔ Test verifiedStopIsRecordedAsInterruptedNotSuccess() passed after 0.004 seconds.
+◇ Test survivingScratchProcessBlocksExecution() started.
+✔ Test actualSIGKILLBetweenFilesCanResumeOrRollback(direction:) with 2 test cases passed after 0.300 seconds.
+✔ Suite RecoverableFileBatchTests passed after 0.302 seconds.
+✔ Test noClaimCanAdmitAViolatedClause() passed after 0.308 seconds.
+✔ Suite VerifierAdmissionTests passed after 0.309 seconds.
+✔ Test survivingScratchProcessBlocksExecution() passed after 0.022 seconds.
+◇ Test hostAndGuardianSIGKILLBlocksRestart() started.
+✔ Test gitIdentityIncludesChangesAndDeletionsButIgnoresBuildOutputs() passed after 0.354 seconds.
+✔ Suite RecordedValidationTests passed after 0.357 seconds.
+✔ Test normalCommandDeliversFinalProgress() passed after 0.392 seconds.
+✔ Test timeoutCancelsProgressObserverAfterProcessExit() passed after 0.534 seconds.
+✔ Suite CommandOutputMonitorTests passed after 0.536 seconds.
+✔ Test operatingSystemAllowsScratchButDeniesOutsideProtectedNetworkAndCommands() passed after 0.625 seconds.
+✔ Suite NativeIsolationRuntimeTests passed after 0.628 seconds.
+✔ Test termIgnoringProcessActuallyExits(cancel:) with 2 test cases passed after 2.762 seconds.
+✔ Suite BoundedCommandRunnerTests passed after 2.765 seconds.
+✔ Test hostAndGuardianSIGKILLBlocksRestart() passed after 2.717 seconds.
+✔ Suite IsolatedRecoveryEvidenceTests passed after 3.035 seconds.
+✔ Test cancelBuildStopsManifestChildAndFreshExecutorResumes() passed after 4.178 seconds.
+✔ Suite IsolatedInterruptionTests passed after 4.180 seconds.
+◇ Test case passing 1 argument mode → "test" to realHostSIGKILLAndRestart(mode:) started.
+✔ Test trustedReceiptAndGraphIntegration() passed after 4.913 seconds.
+✔ Suite VerifierProofObligationTests passed after 4.915 seconds.
+✔ Test actualPackageBuildNeverFallsBack() passed after 5.115 seconds.
+✔ Suite IsolatedPackageExecutionTests passed after 5.118 seconds.
+✔ Test actualIsolatedReceiptRejectsRestartAndMutations() passed after 6.339 seconds.
+✔ Suite VerifierExecutionReceiptTests passed after 6.341 seconds.
+◇ Test case passing 1 argument mode → "descendant" to realHostSIGKILLAndRestart(mode:) started.
+◇ Test case passing 1 argument mode → "orphaned" to realHostSIGKILLAndRestart(mode:) started.
+✔ Test realHostSIGKILLAndRestart(mode:) with 4 test cases passed after 23.515 seconds.
+✔ Suite IsolatedHostDeathTests passed after 23.516 seconds.
+✔ Test run with 348 tests in 55 suites passed after 23.517 seconds.
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+◇ Suite ValidationRecoverySessionTests started.
+◇ Suite ScheduledInstructionTests started.
+◇ Suite InferenceResponseTimingTests started.
+◇ Suite ContentGuardTests started.
+◇ Suite ReinstallTests started.
+◇ Suite VoiceEngineBenchmarkTests started.
+◇ Suite WorkspaceInteractionIntegrationTests started.
+◇ Suite VoiceMicrophonePermissionTests started.
+◇ Suite WorkPlanReplanEnduranceTests started.
+◇ Suite PDFEditorTests started.
+◇ Suite VoiceCaptureSessionTests started.
+◇ Suite DogfoodShadowWorkspaceTests started.
+◇ Suite XcodeIsolationTests started.
+◇ Suite ConversationSentenceCountPolicyTests started.
+◇ Suite VoiceTurnTakingPolicyTests started.
+◇ Suite RunCoordinatorTests started.
+◇ Suite WorkPlanReplanTests started.
+◇ Suite VideoGenerationLiveTests started.
+◇ Suite VoiceEngineLiveTests started.
+◇ Suite TermExplanationSessionTests started.
+◇ Suite LocalInferencePrivacyTests started.
+◇ Suite NaturalLanguageExplanationTests started.
+◇ Suite ScheduledInstructionChatTests started.
+◇ Suite ReplySuggestionCoreTests started.
+◇ Suite WorkspaceModeTests started.
+◇ Suite VoiceBargeInSessionTests started.
+◇ Suite WordEditorTests started.
+◇ Suite Qwen3TTSMLXInstallerTests started.
+◇ Suite HarnessAppEnvironmentTests started.
+◇ Suite ModelCallLogTests started.
+◇ Suite VoiceCapsuleAssetStoreTests started.
+◇ Suite FileChangeRecordingTests started.
+◇ Suite VisualAttachmentImporterTests started.
+◇ Suite ValidationFailureClassificationTests started.
+◇ Suite SourceContextSelectionPolicyTests started.
+◇ Suite FileOperationHookTests started.
+◇ Suite ComputerUseJournalTests started.
+◇ Suite OrchestratedRoutingTests started.
+➜ Suite FileOperationsLiveTests skipped.
+◇ Suite XLSXPreservationTests started.
+◇ Suite StrataLiveTests started.
+◇ Suite VoiceEnginePolicyTests started.
+◇ Suite ConversationRephraseGenerationTests started.
+◇ Suite AppInstallLiveTests started.
+◇ Suite VoiceArchitectureTests started.
+◇ Suite InferenceCancellationTests started.
+◇ Suite BulkRenameChatTests started.
+◇ Suite ContinuationResponsePolicyTests started.
+◇ Suite AppInstallerTests started.
+◇ Test residentSpeakerWithoutAnEngineSaysItIsNotInstalled() started.
+◇ Suite InstructionSubmissionTests started.
+◇ Suite VisualCommunicationPolicyTests started.
+◇ Suite DeviceInstallRecordTests started.
+◇ Suite ContinuationGenerationTests started.
+◇ Suite SourceContextSelectionIntegrationTests started.
+◇ Suite AnalysisChatTests started.
+◇ Suite OrchestratedEditTests started.
+◇ Suite VoiceModelLibraryTests started.
+◇ Suite SpreadsheetAnalysisTests started.
+◇ Suite ConversationPromptHistoryTests started.
+◇ Suite DeviceInstallLiveTests started.
+◇ Suite CreationCompletionPolicyTests started.
+◇ Suite AppleSpeechAudioInputBridgeTests started.
+◇ Suite Qwen3TTSMLXAdapterTests started.
+◇ Suite ConversationRephrasePolicyTests started.
+◇ Suite ChatChangeTests started.
+◇ Suite ReplySuggestionInteractionTests started.
+◇ Suite ResponseTextLayoutTests started.
+◇ Suite DocumentReaderTests started.
+◇ Suite BulkRenameTests started.
+◇ Suite BackburnerServerTests started.
+◇ Suite VoiceLibraryStoreTests started.
+◇ Suite XLSXEditorTests started.
+◇ Suite ConversationResponseTextTests started.
+◇ Suite HelperNodeTests started.
+◇ Suite SpreadsheetChatTests started.
+◇ Suite ComputerUseAgentTests started.
+◇ Suite WorkspaceInteractionPolicyTests started.
+◇ Suite PhysicalDeviceParserTests started.
+◇ Suite VoiceConversationSessionTests started.
+◇ Suite StructuredEditPrimitiveTests started.
+◇ Suite PurposeModelTests started.
+◇ Test xcode27MissingAccountIsRecognised() started.
+◇ Test splitReadingNeedsTheHelperSwitchedOn() started.
+◇ Test helperRolesAreLetGoWhenMemoryRunsShortOrItRunsHot() started.
+◇ Test ordinaryMessagesAreNotBooked(text:) started.
+◇ Test lateRecoveryCannotReplaceClearedState() started.
+◇ Test aMissedTimeRunsOnceAndThenWaitsForTheNextDay() started.
+◇ Test olderProjectsWithoutBookingsStillLoad() started.
+◇ Test reopeningOnlyInspectsAndDoesNotRestoreAnOldSuccessReport(status:) started.
+◇ Test clearingPresentationDoesNotBypassAutomaticStartGuard(status:) started.
+➜ Test clearCasesAreStoppedWithAReason() skipped.
+◇ Test oneButtonReinstallsAndRenewsTheExpiry() started.
+◇ Test markerWordsInsideOrdinaryConversationDoNotChangeTheBreakdown() started.
+◇ Test monotonicTimingSeparatesFirstContentFromReceivingWithoutStoringText() started.
+◇ Test sessionRunsExactlyTwoMeasurementsWithoutKeepingAudio() started.
+◇ Test slowFullClipGenerationStaysPreviewOnly() started.
+◇ Test emptyOrHiddenContentHasNoInventedFirstContentTime() started.
+◇ Test wordsMatchAsWordsAndEverydayCompoundsAreNeutral() started.
+◇ Test performanceBelongsOnlyToExactLastLocalAnswerInSameProject() started.
+◇ Test computerPlanningBlocksNewInstructionsVoiceAndProjectSwitching() started.
+◇ Test aSexualRemakeOfAnAttachedPhotoAsksForConsentOnce() started.
+◇ Test exclusiveOperationsAreBlockedWhileBenchmarkRuns() started.
+➜ Test ordinaryCreativeInstructionsAreNotStopped() skipped.
+◇ Test boundedDelayIsReportedAsUsableWithPause() started.
+◇ Test idleEngineAllowsEveryExclusiveOperation() started.
+◇ Test repeatedFastGenerationBecomesConversationCandidate() started.
+◇ Test removalCannotStartDuringBenchmark() started.
+◇ Test stoppingKeepsStoreBusyUntilSynthesisActuallyStops() started.
+◇ Test fixedPhrasesAreBooked(text:weekday:hour:minute:rest:) started.
+◇ Test candidateCatalogKeepsPersonalMemoryButSkipsOtherWorkArtifacts() started.
+◇ Test mergeExtractRemoveReorderRotateAndStampWork() started.
+◇ Test promptCompositionSeparatesConversationFromBoundedReferences() started.
+◇ Test malformedOrIncompleteMeasurementsAreRejected() started.
+◇ Test firstUseExplainsTheSystemPromptAndLocalHandling() started.
+➜ Test harnessRemoteBuildsAndTestsInsideTheSandbox() skipped.
+◇ Test twelveItemPlanCannotGrowPastTheNextReplanLimit() started.
+◇ Test remainingCapacityIsStricterThanThePerProposalMaximum() started.
+◇ Test repeatedReplanAndRestartNeverLosesOrRewritesWork() started.
+◇ Test endpointWaitsLongerWhenTheSpeakerHoldsTheFloor() started.
+◇ Test finalizedSpeechBecomesADraftOnlyAfterTheButtonIsReleased() started.
+◇ Test voicePromptRequestsACompactSpokenReply() started.
+◇ Test theProfileBlocksTheNetworkAndConfinesWrites() started.
+◇ Test revisionKeepsTheDraftBoundedAndAddsNoExecutionAuthority() started.
+◇ Test staleProposalIsRejectedWithoutMutation() started.
+◇ Test bargeInSeparatesEchoBackchannelsAndCorrections() started.
+◇ Test onlyLatestRealUserInstructionDefinesTheRequirement() started.
+◇ Test exactInstructionIsRecognized(instruction:expected:) started.
+◇ Test passingValidationCannotStartFailureDrivenReplan() started.
+◇ Test parserRejectsMissingExistingItemAndTooManyUncertainties() started.
+◇ Test transcriptFeedbackIsTrimmedAndBounded() started.
+◇ Test applyRequiresCurrentFingerprintAndNeverRewritesExistingItems() started.
+◇ Test countUsesVisibleJapanesePunctuationAndExplicitLines() started.
+◇ Test differentBuildOutputIsNotTreatedAsTheSameFailure() started.
+◇ Test rangesAndApproximateRequestsAreNotMadeStrict(instruction:) started.
+◇ Test selectsOneProductionItemAndKeepsItPinned() started.
+◇ Test parserPreservesExistingCompletionCriteriaAndExposesUncertainty() started.
+◇ Test aSandboxedCommandCannotWriteOutsideOrReachTheNetwork() started.
+◇ Test inconsistentReviewEvidenceFallsBackToRevalidationAfterRestart() started.
+➜ Test installsTheChosenQwen3TTSThroughTheAppInstaller() skipped.
+➜ Test theCatalogVideoOptionMakesAnMP4() skipped.
+◇ Test anExternalSourceChangeExpiresReviewAndValidationEvidence() started.
+◇ Test promptNeverForwardsRawDiagnosticInstructions() started.
+➜ Test residentSpeakerStreamsPiecesQuickly() skipped.
+◇ Test verifiedReviewSurvivesRestartWithoutRepeatingTheCycle() started.
+◇ Test oldProjectsDecodeWithAnInactiveCoordinator() started.
+◇ Test aConfirmedCycleLimitCanContinueWithTheNextItem() started.
+◇ Test deletingTheCurrentItemCanRecoverAfterUserConfirmation() started.
+◇ Test successfulValidationRequiresApprovalBeforeMovingOn() started.
+◇ Test twoMatchingFailuresStopWithoutPersistingBuildOutput() started.
+◇ Test defaultConfigurationNeverUsesDiskCacheOrCookies() started.
+◇ Test promptBoundsPreserveBothEndsAndQuoteMarkers() started.
+◇ Test cancellationAfterValidJSONButBeforeEOFIsNotSuccess() started.
+◇ Test schemaMatchesTheParserLimitsAndContainsNoExecutionFields() started.
+◇ Test malformedOrUnusableChoicesAreRejected(raw:) started.
+◇ Test missingPinnedItemBlocksSafelyAfterRestart() started.
+◇ Test contextKeepsRevisionsAndExcludesExternalClaimsAndUnrelatedMetadata() started.
+◇ Test explanationContractIsSharedWithoutChangingUserWords(_:) started.
+◇ Test serviceRejectsOverlongOutputAndTimesOutInsteadOfReturningPartialJSON() started.
+◇ Test reasonsRemainEvidenceBoundAndDoNotExpandApprovalOrRequireLongAnswers() started.
+◇ Test leavingBeforeDwellNeverStartsInference() started.
+◇ Test aBookedRenameRunsWhenDueAndStillWaitsForApply() started.
+◇ Test onlyAnAnsweredLocalConversationWithAModelIsEligible() started.
+◇ Test twoUniqueBoundedDraftsAreDecodedWithStableIDs() started.
+◇ Test responseLimitIncludesWhitespaceOutsideJSON() started.
+◇ Test oldRecordsAreCodeAndANewChatIsListedOnlyInChatMode() started.
+◇ Test replacementsKeepTheRunFormattingAndTheOriginal() started.
+◇ Test aDocxIsEditedIntoANewFile() started.
+◇ Test spokenReplyCanBeInterruptedByARealCorrectionWithoutClicking() started.
+◇ Test serviceUsesSelectedRuntimeSchemaAndSingleBoundedRequest() started.
+◇ Test providedRealMP3CompletesTheWholeImportPath() started.
+◇ Test uncertainEditKeepsCheckpointAndDisablesRepeat(reverting:) started.
+◇ Test preparingReviewDoesNotWriteAndApprovedApplyKeepsUndo() started.
+◇ Test paragraphsInsideATextBoxAreEditedOnTheirOwn() started.
+◇ Test mp3BecomesPrivatePortableCapsuleAndCanBeDeleted() started.
+◇ Test privateCapsuleRequiresAttestationAndCannotBecomeExportable() started.
+◇ Test completeBootstrapArchiveResumesAtVerificationWithoutAnotherDownload() started.
+◇ Test failedRangeResumeRetriesOnceFromTheSamePinnedURL() started.
+◇ Test theAppsProviderPassesTheStreamThroughUnchanged() started.
+◇ Test invalidBytesAreRejectedBeforeEnteringTheComposer() started.
+◇ Test requestsAndAnswersAreAppendedAndOldFilesPruned() started.
+◇ Test unknownBuildFailureStaysConservative() started.
+◇ Test dependencySourceDiagnosticNeedsSafeProjectAnalysis() started.
+◇ Test fixtureWorkspaceIsAcceptedOnlyInsideTheTemporaryRoot() started.
+◇ Test dogfoodBundleUsesSeparateSupportFolder() started.
+◇ Test normalizerProduces24kMonoWAV() started.
+◇ Test environmentFailuresBlockCodeChanges(output:expected:) started.
+◇ Test environmentFailureCannotCreateAnAIReplanContext() started.
+◇ Test missingTranscriptCanBeAddedOnceWithoutChangingReferenceAudio() started.
+◇ Test sourceAndEnvironmentEvidenceBecomeMixedAndBlockRepair() started.
+◇ Test visionReadsLargeScreenshotTextWhenTheSystemServiceIsAvailable() started.
+◇ Test systemImporterReadsARealMP3BeforeDurationGate() started.
+◇ Test failedTestWithoutEnvironmentMarkersPermitsRepair() started.
+◇ Test fixtureWorkspaceKeepsCapsulesBesideTheFixture() started.
+◇ Test environmentFailureKeepsCoordinatorAtRevalidation() started.
+◇ Test safeSourceDiagnosticPermitsCodeRepair() started.
+◇ Test undoOnlyTrashesFilesTheAppWrote() started.
+◇ Test aRunIsJournaledStepByStep() started.
+◇ Test recognizedTextTravelsThroughImporterWithLocationAndConfidence() started.
+◇ Test anEditNeverWritesOverTheOriginalOrAnExistingFile() started.
+◇ Test workflowExplainsFocusedAndOmittedSelectionWithoutClaimingVerification() started.
+◇ Test ordinaryAndContinuationInstructionsKeepAllSource() started.
+◇ Test unverifiedCompilerTextKeepsCoordinatorAtRevalidation() started.
+◇ Test responseRevisionOmitsSourceAfterRemovingNoChangeConstraint() started.
+◇ Test backburnerModelIsRoutedByPrefixAndOllamaIsUnchanged() started.
+◇ Test explicitFileNameFocusesOnItsReferencesWithoutReordering() started.
+➜ Test realModelAnalysisAndEdit() skipped.
+◇ Test unknownOrGenericEnglishWordsFallBackToAllSource() started.
+◇ Test imageIOValidatesActualContentAndBuildsABoundedPreview() started.
+➜ Test realModelWordEdit() skipped.
+◇ Test transcriptPolicyTrimsInputAndKeepsCreationOptional() started.
+◇ Test aRenameMaySwapNamesInsideThePlanButNotLandOnAnotherFile() started.
+◇ Test environmentSignalInsideATestIsNotMistakenForATestBug() started.
+◇ Test aRefusedOperationDoesNotRunAndIsJournaledAsStopped() started.
+◇ Test importedVoiceRequiresConsentAndVerifiedExport() started.
+◇ Test installationNeedsSupportedHardwareAndSixGigabytesOfWorkingSpace() started.
+➜ Test realModelPDFEdit() skipped.
+➜ Test swapsTheModelsAndAnswers() skipped.
+◇ Test aChangedPartThatWasNotEditedIsCaught() started.
+◇ Test responseQuestionThatNeedsCodeKeepsAllSource() started.
+◇ Test synthesisRejectsOversizedTextAndMismatchedCapsule() started.
+◇ Test otherPartsStayAndSharedFormulasAreProtected() started.
+◇ Test installationProgressParsesBoundedWorkerEventsAndDownloadPercentages() started.
+➜ Test theComposerWritesWithThe125B() skipped.
+◇ Test volatileSpeechCanNeverSubmitOrModifyAnything() started.
+◇ Test voiceDiagnosticsContainTimingButNoTranscriptOrAudio() started.
+◇ Test finalizedTranscriptBecomesAnEditableDraftBeforeSubmission() started.
+◇ Test interruptionStopsSpeechButOnlyRequestsSafeOperationCancellation() started.
+◇ Test spokenSummaryStaysShortAndKeepsTheFullAnswerOnScreen() started.
+◇ Test responseRevisionNamingARealFileUsesFocusedSource() started.
+◇ Test stoppedConversationNeverPersistsAPartialAnswer(fragment:) started.
+◇ Test partialResultsAreReplacedAndFinalResultsAccumulateWithoutDuplication() started.
+◇ Test spokenApprovalCannotBypassTheExistingPermissionFlow() started.
+◇ Test verifiedCapsuleWithTranscriptCanSynthesizeWhenEngineIsReady() started.
+◇ Test conversationModeCanSubmitTextButStillCannotGrantSideEffects() started.
+◇ Test synthesisRequiresReadyEngineAndExactReferenceTranscript() started.
+➜ Test installsASmallFreeAppAndChecksItsSignature() skipped.
+◇ Test caskInformationBecomesCandidatesWithTheirSource() started.
+◇ Test voiceCapsuleManifestIsPortableAndEngineIndependent() started.
+◇ Test unchangedRephraseIsRetriedOnceWithoutDuplicatingWork() started.
+◇ Test aRenameRequestBecomesACardThatAppliesAndUndoes() started.
+◇ Test voiceDraftPreservesAnythingTheUserAlreadyTyped() started.
+◇ Test responseTrackingAndCompletedLegacyWorkDoNotBecomeFutureProductionInstructions() started.
+◇ Test continuationAnchorsTheLastLocalProposalWithoutPromotingItToInstructions() started.
+◇ Test referencesStayBoundedAndLongInstructionRetainsItsEndConstraint() started.
+◇ Test editRecipesStayBoundedAndGenerativeEditingRunsLast() started.
+◇ Test macAndRemoteContinuationsUseTheReturnedResponseID() started.
+◇ Test missingOrUnrelatedAnswersAndExplicitRepeatRequestsDoNotEnableTheGuard() started.
+◇ Test theAppNameIsReadFromTheRequest(text:name:) started.
+◇ Test textModelsNeverSilentlyPretendToSeeOrGenerateImages() started.
+◇ Test refinementPreservesRequestConstraintsAndDoesNotPersistMessages() started.
+◇ Test otherMessagesAreNotInstallRequests(text:) started.
+◇ Test imageTextIsExplicitlyIsolatedFromExecutionAuthority() started.
+◇ Test repeatComparisonDoesNotEraseMeaningfulDifferences() started.
+◇ Test deterministicEditsDoNotRequireAVisualModel() started.
+◇ Test screenshotOCRIsBoundedLocatedAndQuotedAsUntrustedEvidence() started.
+◇ Test visualCapabilitiesAreDetectedInsteadOfGuessedFromModelSize() started.
+◇ Test theProfileIsReadFromTheEmbeddedPlist() started.
+◇ Test attachmentProvenanceSurvivesWorkspaceEncodingWithoutPixelBytes() started.
+◇ Test onByDefaultWithTheAppsOwnCheckoutAndOffWhenDisabled() started.
+◇ Test persistedIdentifiersAreDeduplicatedBoundedAndSelectionRecovers() started.
+◇ Test repeatedAnswerIsRefinedOnceWithoutAnotherInstructionOrProductionProgress() started.
+◇ Test aQueryRunsOnTheSheetsAndFileAccessIsLocked() started.
+◇ Test aQuestionAboutAnAttachedTableBecomesAResultCard() started.
+◇ Test aNewInstallReplacesTheRecordForTheSameDevice() started.
+◇ Test workspaceUsesTheSelectionBeforeBuildingTheInferenceRequest() started.
+◇ Test localRuntimePayloadsCarryVerifiedImageBytesOnTheLatestUserTurn() started.
+◇ Test acceptsBoundedScreenshotsAndPreservesDetailAcrossPasses() started.
+◇ Test rejectsDuplicateOversizedAndMalformedImages() started.
+◇ Test systemVoiceUsesAnExactEngineIdentifierWithoutCloneData() started.
+◇ Test literalOmissionWordsInAnAnswerAreNotSelectionMetadata() started.
+◇ Test longUserInputsKeepBothEndsWithoutUnboundedSystemDuplication() started.
+◇ Test largeSourceIsBoundedAndDoesNotConsumeUserHistory() started.
+◇ Test longAnswersCannotDisplaceShortUserConstraints() started.
+◇ Test lateReminderUsesOnlyBoundedRawUserClarifications() started.
+◇ Test userRevisionsSurviveMoreThanTwelveTotalMessages() started.
+◇ Test oldModelClaimsAndHistoricalSuccessAreNotCurrentEvidence() started.
+◇ Test externalBoundariesRemainClosedAtEveryHistoryBudget(limit:) started.
+◇ Test includedVoicesAreDistinctValidAndImmediatelySelectable() started.
+◇ Test proposalLanguageIsDistinctFromObservedStateWithoutForcedSlang() started.
+➜ Test installThenReinstallOnTheConnectedIPhone() skipped.
+◇ Test failedValidationCannotSetProgressToOneHundredPercent() started.
+◇ Test totalBudgetIncludesReferenceLabelsAndQuotedLineExpansion() started.
+◇ Test readingSourceAndReceivingAdviceDoNotCreateVerificationEvents() started.
+◇ Test sourceIsQuotedOutsideSystemAndCannotForgeTheClosingMarker() started.
+◇ Test verifiedCompletionPreservesRecordedWorkStatuses() started.
+◇ Test shortUnchangedHistoryHasNoFalseOmissionWarning() started.
+◇ Test completionRequiresFinishedWorkAndFreshSuccessfulValidation() started.
+◇ Test synthesisUsesPrivateRequestFilesAndValidatesWaveOutput() started.
+◇ Test anActiveCoordinatedRunCannotBeDeclaredComplete() started.
+◇ Test externalReviewNeverBecomesUserIntentEvenIfItsRoleIsUser() started.
+◇ Test aRuleIsExpandedInOrderWithNumbersDatesAndTheExtensionKept() started.
+◇ Test localAudioActivityDetectsSpeechAndFollowingSilence() started.
+◇ Test packagedInstallerUsesPinnedRuntimeAndModelInputs() started.
+◇ Test daysLeftAndTheReminder() started.
+◇ Test missingTranscriptStopsBeforeLaunchingRuntime() started.
+◇ Test wordHighlightNeverChangesStoredTextOrSelection() started.
+◇ Test applyingRenamesSwapsSafelyAndUndoRestoresEverything() started.
+◇ Test findAndReplaceWorksOnTheBaseNameAndUnchangedFilesAreLeftOut() started.
+◇ Test measuredHeightMatchesTheDisplayedGlyphs() started.
+◇ Test hitTestingRejectsWhitespaceAndFindsJapaneseAndEnglish() started.
+◇ Test collisionsAndInvalidNamesStopThePlan() started.
+◇ Test readinessExplainsWhichLocalComponentIsMissing() started.
+◇ Test comparisonKeepsMeaningfulDifferences() started.
+◇ Test includedPresetResolvesToAnInstalledJapaneseVoice() started.
+◇ Test otherRuntimesPassThroughWithoutStartingBackburner() started.
+◇ Test refinementKeepsRequestAndBoundsTheUncommittedDraft() started.
+◇ Test measurementNeverResizesTheLiveTextView() started.
+◇ Test csvIsReadAndUnsupportedFilesAreRefused() started.
+◇ Test wordFileIsReadToItsText() started.
+◇ Test pdfTextIsReadPageByPage() started.
+◇ Test backburnerRuntimeUsesTheOpenAICompatibleEndpoint() started.
+◇ Test repetitionNegativeAndOrdinaryRequestsAreNotRephrases(_:) started.
+◇ Test addingSelectingAndRemovingASystemVoicePersistsOnlyItsIdentifier() started.
+◇ Test generatingAndSelectingOnlyDraftsThenEditedWordsUseTheExistingSubmissionPath() started.
+◇ Test excelSheetsAreReadAsRowsWithTheirSharedStrings() started.
+◇ Test wiredLimitIsRequestedOnlyWhenTooLowOnSmallMacs() started.
+◇ Test documentsReachTheModelAsQuotedReferenceForOneTurn() started.
+◇ Test questionsComeBeforeBuildingAndOnlyAnsweredPointsAreSent() started.
+◇ Test cellsAreEditedIntoANewFileKeepingStylesAndTheOriginal() started.
+◇ Test directPreviousLocalAnswerIsRequired() started.
+◇ Test previewReceivesTheSelectedProfileAndCanBeStopped() started.
+◇ Test ordinaryQuotedEmbeddedAndCodeContentRemainUnchanged() started.
+◇ Test partialLabelsAreHiddenOnlyUntilTheStreamEnds() started.
+◇ Test anAttachedWorkbookEditBecomesACardAndANewFile() started.
+➜ Test theRealHelperAnswersALightJob() skipped.
+◇ Test labelledHistoricalAnswersCannotEvadeTheDuplicateGuard() started.
+◇ Test theThunderboltAddressIsReadFromTheARPTable() started.
+◇ Test aDisabledHelperIsNeverUsed() started.
+◇ Test case passing 1 argument text → "8時に起こして" to ordinaryMessagesAreNotBooked(text:) started.
+◇ Test case passing 1 argument text → "毎朝8時に" to ordinaryMessagesAreNotBooked(text:) started.
+◇ Test case passing 1 argument text → "毎朝の挨拶を考えて" to ordinaryMessagesAreNotBooked(text:) started.
+◇ Test case passing 1 argument text → "毎日 25時に集計して" to ordinaryMessagesAreNotBooked(text:) started.
+◇ Test theSameActionIsNotRepeatedEndlessly() started.
+◇ Test repeatedLeadingLabelsDoNotAccumulateAcrossConversationTurns() started.
+◇ Test explicitRephraseRequestsAreRecognized(_:) started.
+◇ Test case passing 1 argument text → "今日は毎日が楽しい" to ordinaryMessagesAreNotBooked(text:) started.
+◇ Test exactLeadingLabelsAreRemovedWithoutEditingTheBody() started.
+➜ Test liveStartAnswerAndStop() skipped.
+◇ Test pendingCheckpointsCannotBeBypassedByAnotherInputPath() started.
+◇ Test speechEndSubmitsTheFinalTurnAfterAGracePeriod() started.
+◇ Test realDeviceBeforeItsTunnelIsUpCountsAndSimulatorsDoNot() started.
+◇ Test repliesAreParsed() started.
+◇ Test activeWorkBlocksOnlyTheConflictingEntryPoints() started.
+◇ Test risksAreAssessedBeforeActing() started.
+◇ Test approvedStepsRunAndTheGoalFinishes() started.
+◇ Test case passing 1 argument status → .unresolved to clearingPresentationDoesNotBypassAutomaticStartGuard(status:) started.
+◇ Test case passing 1 argument status → .evidenceUnavailable to clearingPresentationDoesNotBypassAutomaticStartGuard(status:) started.
+◇ Test case passing 1 argument status → .journalUnavailable to clearingPresentationDoesNotBypassAutomaticStartGuard(status:) started.
+◇ Test aPasswordIsLeftToTheUser() started.
+◇ Test case passing 1 argument status → .verified to reopeningOnlyInspectsAndDoesNotRestoreAnOldSuccessReport(status:) started.
+◇ Test picturesArePointedAtSafely() started.
+◇ Test case passing 1 argument status → .sourceChanged to reopeningOnlyInspectsAndDoesNotRestoreAnOldSuccessReport(status:) started.
+◇ Test case passing 1 argument status → .unresolved to reopeningOnlyInspectsAndDoesNotRestoreAnOldSuccessReport(status:) started.
+◇ Test theLoopStopsForApprovalAndNeverActsWhenRefused() started.
+◇ Test exactOneLineReplacementProducesOnlyProposal() started.
+◇ Test theLocalCatalogFileDecodesAndRefusalsAreRecognized() started.
+◇ Test noImageModelChosenSaysWhereToChooseOne() started.
+◇ Test protectedFileAndDuplicateAnchorAreRejected() started.
+◇ Test carriageReturnCannotBypassOneLineContract() started.
+◇ Test aStoppedInstructionIsNotSentAndKeepsTheText() started.
+◇ Test writingUsesTheChosenModelAndConversationKeepsTheProjectModel() started.
+◇ Test anImageIsMadeWithTheLargeRoleWritingThePrompt() started.
+◇ Test modelProposalUsesStableSnakeCaseSchema() started.
+◇ Test case passing 5 arguments text → "毎朝8時にこのフォルダの写真を日付の名前にして", weekday → nil, hour → 8, minute → 0, rest → "このフォルダの写真を日付の名前にして" to fixedPhrasesAreBooked(text:weekday:hour:minute:rest:) started.
+◇ Test case passing 5 arguments text → "毎日 21:30 に売上表の合計を出して", weekday → nil, hour → 21, minute → 30, rest → "売上表の合計を出して" to fixedPhrasesAreBooked(text:weekday:hour:minute:rest:) started.
+◇ Test case passing 5 arguments text → "毎週月曜の9時に、先週の集計をして", weekday → 2, hour → 9, minute → 0, rest → "先週の集計をして" to fixedPhrasesAreBooked(text:weekday:hour:minute:rest:) started.
+◇ Test case passing 5 arguments text → "毎晩10時半にダウンロードを整理して", weekday → nil, hour → 22, minute → 30, rest → "ダウンロードを整理して" to fixedPhrasesAreBooked(text:weekday:hour:minute:rest:) started.
+◇ Test case passing 5 arguments text → "請求書を月ごとのフォルダ名にして。毎週金曜日 午後5時15分", weekday → 6, hour → 17, minute → 15, rest → "請求書を月ごとのフォルダ名にして" to fixedPhrasesAreBooked(text:weekday:hour:minute:rest:) started.
+◇ Test case passing 2 arguments instruction → "難しい言葉を使わず3文で教えて", expected → 3 to exactInstructionIsRecognized(instruction:expected:) started.
+◇ Test case passing 2 arguments instruction → "二文にまとめてください", expected → 2 to exactInstructionIsRecognized(instruction:expected:) started.
+◇ Test case passing 2 arguments instruction → "3文ではなく2文で教えて", expected → 2 to exactInstructionIsRecognized(instruction:expected:) started.
+◇ Test case passing 2 arguments instruction → "結論を十文だけ返して", expected → 10 to exactInstructionIsRecognized(instruction:expected:) started.
+◇ Test case passing 1 argument instruction → "1〜2文で教えて" to rangesAndApproximateRequestsAreNotMadeStrict(instruction:) started.
+◇ Test case passing 1 argument instruction → "3文以内で" to rangesAndApproximateRequestsAreNotMadeStrict(instruction:) started.
+◇ Test case passing 1 argument instruction → "2文ほどで" to rangesAndApproximateRequestsAreNotMadeStrict(instruction:) started.
+◇ Test case passing 1 argument instruction → "13文で" to rangesAndApproximateRequestsAreNotMadeStrict(instruction:) started.
+◇ Test case passing 1 argument instruction → "3文ではなく短く" to rangesAndApproximateRequestsAreNotMadeStrict(instruction:) started.
+◇ Test case passing 1 argument instruction → "三文にしないで" to rangesAndApproximateRequestsAreNotMadeStrict(instruction:) started.
+◇ Test case passing 1 argument instruction → "2文だけはやめて" to rangesAndApproximateRequestsAreNotMadeStrict(instruction:) started.
+◇ Test case passing 1 argument instruction → "短く教えて" to rangesAndApproximateRequestsAreNotMadeStrict(instruction:) started.
+◇ Test case passing 1 argument raw → "{}" to malformedOrUnusableChoicesAreRejected(raw:) started.
+◇ Test case passing 1 argument raw → "{"suggestions":[]}" to malformedOrUnusableChoicesAreRejected(raw:) started.
+◇ Test case passing 1 argument raw → "not JSON" to malformedOrUnusableChoicesAreRejected(raw:) started.
+◇ Test case passing 1 argument raw → "{"suggestions":[{"title":"A","instruction":"a","effect":"b"}]}" to malformedOrUnusableChoicesAreRejected(raw:) started.
+◇ Test case passing 1 argument raw → "{"suggestions":[{"title":"A","instruction":"a","effect":"a"},{"title":"B","instruction":"b","effect":"b"},{"title":"C","instruction":"c","effect":"c"}]}" to malformedOrUnusableChoicesAreRejected(raw:) started.
+◇ Test case passing 1 argument raw → "{"suggestions":[
+{"title":"今できることを知る","instruction":"まず今できることを短く教えて。まだ変えないでね。","effect":"作る必要がある部分を分けて考えやすくなるよ。"},
+{"title":"今できることを知る","instruction":"2つの案の違いを、難しい言葉なしで教えてちょ。","effect":"どちらが自分に合いそうか考えやすくなるよ。"}]}" to malformedOrUnusableChoicesAreRejected(raw:) started.
+◇ Test case passing 1 argument raw → "{"suggestions":[
+{"title":"今できることを知る","instruction":"まず今できることを短く教えて。まだ変えないでね。","effect":"作る必要がある部分を分けて考えやすくなるよ。"},
+{"title":"案の違いを比べる","instruction":"まず今できることを短く教えて。まだ変えないでね。","effect":"どちらが自分に合いそうか考えやすくなるよ。"}]}" to malformedOrUnusableChoicesAreRejected(raw:) started.
+◇ Test case passing 1 argument raw → "{"suggestions":[
+{"title":" ","instruction":"まず今できることを短く教えて。まだ変えないでね。","effect":"作る必要がある部分を分けて考えやすくなるよ。"},
+{"title":"案の違いを比べる","instruction":"2つの案の違いを、難しい言葉なしで教えてちょ。","effect":"どちらが自分に合いそうか考えやすくなるよ。"}]}" to malformedOrUnusableChoicesAreRejected(raw:) started.
+◇ Test case passing 1 argument raw → "なんで？短く教えてちょ" to explanationContractIsSharedWithoutChangingUserWords(_:) started.
+◇ Test case passing 1 argument raw → "{"suggestions":[
+{"title":"改行\n混入","instruction":"まず今できることを短く教えて。まだ変えないでね。","effect":"作る必要がある部分を分けて考えやすくなるよ。"},
+{"title":"案の違いを比べる","instruction":"2つの案の違いを、難しい言葉なしで教えてちょ。","effect":"どちらが自分に合いそうか考えやすくなるよ。"}]}" to malformedOrUnusableChoicesAreRejected(raw:) started.
+◇ Test case passing 1 argument raw → "理由を簡潔に説明してください。" to explanationContractIsSharedWithoutChangingUserWords(_:) started.
+◇ Test case passing 1 argument raw → "{"suggestions":[
+{"title":"長長長長長長長長長長長長長長長長長長長長長長長長長長長長長長長長長","instruction":"まず今できることを短く教えて。まだ変えないでね。","effect":"作る必要がある部分を分けて考えやすくなるよ。"},
+{"title":"案の違いを比べる","instruction":"2つの案の違いを、難しい言葉なしで教えてちょ。","effect":"どちらが自分に合いそうか考えやすくなるよ。"}]}" to malformedOrUnusableChoicesAreRejected(raw:) started.
+◇ Test case passing 1 argument raw → "{"suggestions":[
+{"title":"今できることを知る","instruction":"まず今できることを短く教えて。まだ変えないでね。","missing":"作る必要がある部分を分けて考えやすくなるよ。"},
+{"title":"案の違いを比べる","instruction":"2つの案の違いを、難しい言葉なしで教えてちょ。","missing":"どちらが自分に合いそうか考えやすくなるよ。"}]}" to malformedOrUnusableChoicesAreRejected(raw:) started.
+◇ Test case passing 1 argument reverting → true to uncertainEditKeepsCheckpointAndDisablesRepeat(reverting:) started.
+◇ Test case passing 1 argument reverting → false to uncertainEditKeepsCheckpointAndDisablesRepeat(reverting:) started.
+✔ Test xcode27MissingAccountIsRecognised() passed after 0.009 seconds.
+◇ Test case passing 2 arguments output → "xcrun: error: invalid active developer path", expected → .toolchain to environmentFailuresBlockCodeChanges(output:expected:) started.
+◇ Test case passing 2 arguments output → "Unable to find a destination matching iPhone Simulator", expected → .simulator to environmentFailuresBlockCodeChanges(output:expected:) started.
+✔ Test residentSpeakerWithoutAnEngineSaysItIsNotInstalled() passed after 0.012 seconds.
+◇ Test case passing 2 arguments output → "Signing requires a development team", expected → .signing to environmentFailuresBlockCodeChanges(output:expected:) started.
+◇ Test case passing 2 arguments output → "failed to clone repository: could not resolve host", expected → .dependency to environmentFailuresBlockCodeChanges(output:expected:) started.
+◇ Test case passing 2 arguments output → "write failed: no space left on device", expected → .resources to environmentFailuresBlockCodeChanges(output:expected:) started.
+◇ Test case passing 1 argument fragment → "" to stoppedConversationNeverPersistsAPartialAnswer(fragment:) started.
+◇ Test case passing 2 arguments text → "Firefoxをインストールして", name → "Firefox" to theAppNameIsReadFromTheRequest(text:name:) started.
+◇ Test case passing 1 argument text → "Firefoxを入れて" to otherMessagesAreNotInstallRequests(text:) started.
+◇ Test case passing 1 argument text → "インストール手順を README に書いて" to otherMessagesAreNotInstallRequests(text:) started.
+◇ Test case passing 1 argument text → "インストールの画面を作って" to otherMessagesAreNotInstallRequests(text:) started.
+◇ Test case passing 1 argument text → "今日はいい天気" to otherMessagesAreNotInstallRequests(text:) started.
+◇ Test case passing 1 argument text → "インストールして" to otherMessagesAreNotInstallRequests(text:) started.
+◇ Test case passing 2 arguments text → "「Visual Studio Code」をインストールしてください", name → "Visual Studio Code" to theAppNameIsReadFromTheRequest(text:name:) started.
+◇ Test case passing 2 arguments text → "Mac に Rectangle をインストールしたい", name → "Rectangle" to theAppNameIsReadFromTheRequest(text:name:) started.
+◇ Test case passing 2 arguments text → "ファイアフォックスってインストールできる？", name → "ファイアフォックス" to theAppNameIsReadFromTheRequest(text:name:) started.
+✔ Test helperRolesAreLetGoWhenMemoryRunsShortOrItRunsHot() passed after 0.037 seconds.
+2026-10-25 10:03:29.183 swiftpm-testing-helper[33013:11153529] Audio files cannot be non-interleaved. Ignoring setting AVLinearPCMIsNonInterleaved YES.
+◇ Test case passing 1 argument limit → 512 to externalBoundariesRemainClosedAtEveryHistoryBudget(limit:) started.
+◇ Test case passing 1 argument limit → 1024 to externalBoundariesRemainClosedAtEveryHistoryBudget(limit:) started.
+◇ Test case passing 1 argument limit → 8100 to externalBoundariesRemainClosedAtEveryHistoryBudget(limit:) started.
+◇ Test case passing 1 argument limit → 21000 to externalBoundariesRemainClosedAtEveryHistoryBudget(limit:) started.
+✔ Test splitReadingNeedsTheHelperSwitchedOn() passed after 0.064 seconds.
+◇ Test case passing 1 argument instruction → "同じ説明をもう一度して" to repetitionNegativeAndOrdinaryRequestsAreNotRephrases(_:) started.
+◇ Test case passing 1 argument instruction → "そのままもう一度見せて" to repetitionNegativeAndOrdinaryRequestsAreNotRephrases(_:) started.
+◇ Test case passing 1 argument instruction → "一字一句変えないで" to repetitionNegativeAndOrdinaryRequestsAreNotRephrases(_:) started.
+◇ Test case passing 1 argument instruction → "言い直さないで" to repetitionNegativeAndOrdinaryRequestsAreNotRephrases(_:) started.
+◇ Test case passing 1 argument instruction → "別の言い方は不要です" to repetitionNegativeAndOrdinaryRequestsAreNotRephrases(_:) started.
+◇ Test case passing 1 argument instruction → "前の案を実装して" to repetitionNegativeAndOrdinaryRequestsAreNotRephrases(_:) started.
+◇ Test case passing 1 argument instruction → "今の返答を言い直して" to explicitRephraseRequestsAreRecognized(_:) started.
+◇ Test case passing 1 argument instruction → "もっと簡単な言葉に言い換えて" to explicitRephraseRequestsAreRecognized(_:) started.
+◇ Test case passing 1 argument instruction → "別の言い方で2文にして" to explicitRephraseRequestsAreRecognized(_:) started.
+◇ Test case passing 1 argument instruction → "表現を変えてください" to explicitRephraseRequestsAreRecognized(_:) started.
+◇ Test case passing 1 argument instruction → "Please rephrase this response" to explicitRephraseRequestsAreRecognized(_:) started.
+✔ Test slowFullClipGenerationStaysPreviewOnly() passed after 0.072 seconds.
+✔ Test markerWordsInsideOrdinaryConversationDoNotChangeTheBreakdown() passed after 0.072 seconds.
+✔ Test emptyOrHiddenContentHasNoInventedFirstContentTime() passed after 0.072 seconds.
+✔ Test monotonicTimingSeparatesFirstContentFromReceivingWithoutStoringText() passed after 0.072 seconds.
+✔ Test performanceBelongsOnlyToExactLastLocalAnswerInSameProject() passed after 0.072 seconds.
+✔ Test aMissedTimeRunsOnceAndThenWaitsForTheNextDay() passed after 0.072 seconds.
+✔ Test exclusiveOperationsAreBlockedWhileBenchmarkRuns() passed after 0.072 seconds.
+✔ Test boundedDelayIsReportedAsUsableWithPause() passed after 0.072 seconds.
+✔ Test idleEngineAllowsEveryExclusiveOperation() passed after 0.072 seconds.
+✔ Test repeatedFastGenerationBecomesConversationCandidate() passed after 0.072 seconds.
+✔ Test ordinaryMessagesAreNotBooked(text:) with 5 test cases passed after 0.072 seconds.
+✔ Test promptCompositionSeparatesConversationFromBoundedReferences() passed after 0.072 seconds.
+✔ Test malformedOrIncompleteMeasurementsAreRejected() passed after 0.072 seconds.
+✔ Test candidateCatalogKeepsPersonalMemoryButSkipsOtherWorkArtifacts() passed after 0.072 seconds.
+✔ Test fixedPhrasesAreBooked(text:weekday:hour:minute:rest:) with 5 test cases passed after 0.072 seconds.
+✔ Test olderProjectsWithoutBookingsStillLoad() passed after 0.072 seconds.
+✔ Test endpointWaitsLongerWhenTheSpeakerHoldsTheFloor() passed after 0.072 seconds.
+✔ Test voicePromptRequestsACompactSpokenReply() passed after 0.072 seconds.
+✔ Test bargeInSeparatesEchoBackchannelsAndCorrections() passed after 0.072 seconds.
+✔ Test theProfileBlocksTheNetworkAndConfinesWrites() passed after 0.072 seconds.
+✔ Test onlyLatestRealUserInstructionDefinesTheRequirement() passed after 0.072 seconds.
+✔ Test exactInstructionIsRecognized(instruction:expected:) with 4 test cases passed after 0.072 seconds.
+✔ Test passingValidationCannotStartFailureDrivenReplan() passed after 0.072 seconds.
+✔ Test transcriptFeedbackIsTrimmedAndBounded() passed after 0.072 seconds.
+✔ Test revisionKeepsTheDraftBoundedAndAddsNoExecutionAuthority() passed after 0.072 seconds.
+✔ Test countUsesVisibleJapanesePunctuationAndExplicitLines() passed after 0.072 seconds.
+✔ Test rangesAndApproximateRequestsAreNotMadeStrict(instruction:) with 8 test cases passed after 0.072 seconds.
+✔ Test staleProposalIsRejectedWithoutMutation() passed after 0.072 seconds.
+✔ Test parserRejectsMissingExistingItemAndTooManyUncertainties() passed after 0.072 seconds.
+✔ Test parserPreservesExistingCompletionCriteriaAndExposesUncertainty() passed after 0.072 seconds.
+✔ Test applyRequiresCurrentFingerprintAndNeverRewritesExistingItems() passed after 0.072 seconds.
+✔ Test selectsOneProductionItemAndKeepsItPinned() passed after 0.072 seconds.
+✔ Test anExternalSourceChangeExpiresReviewAndValidationEvidence() passed after 0.072 seconds.
+✔ Test differentBuildOutputIsNotTreatedAsTheSameFailure() passed after 0.072 seconds.
+✔ Suite VideoGenerationLiveTests passed after 0.073 seconds.
+✔ Suite VoiceEngineLiveTests passed after 0.073 seconds.
+✔ Test inconsistentReviewEvidenceFallsBackToRevalidationAfterRestart() passed after 0.072 seconds.
+✔ Test oldProjectsDecodeWithAnInactiveCoordinator() passed after 0.072 seconds.
+✔ Test verifiedReviewSurvivesRestartWithoutRepeatingTheCycle() passed after 0.072 seconds.
+✔ Test promptNeverForwardsRawDiagnosticInstructions() passed after 0.072 seconds.
+✔ Test successfulValidationRequiresApprovalBeforeMovingOn() passed after 0.072 seconds.
+✔ Test twelveItemPlanCannotGrowPastTheNextReplanLimit() passed after 0.073 seconds.
+✔ Test deletingTheCurrentItemCanRecoverAfterUserConfirmation() passed after 0.072 seconds.
+✔ Test twoMatchingFailuresStopWithoutPersistingBuildOutput() passed after 0.072 seconds.
+✔ Test aConfirmedCycleLimitCanContinueWithTheNextItem() passed after 0.072 seconds.
+✔ Test remainingCapacityIsStricterThanThePerProposalMaximum() passed after 0.073 seconds.
+✔ Test missingPinnedItemBlocksSafelyAfterRestart() passed after 0.072 seconds.
+✔ Test schemaMatchesTheParserLimitsAndContainsNoExecutionFields() passed after 0.072 seconds.
+✔ Test malformedOrUnusableChoicesAreRejected(raw:) with 11 test cases passed after 0.072 seconds.
+✔ Test contextKeepsRevisionsAndExcludesExternalClaimsAndUnrelatedMetadata() passed after 0.109 seconds.
+✔ Test aSexualRemakeOfAnAttachedPhotoAsksForConsentOnce() passed after 0.109 seconds.
+✔ Test onlyAnAnsweredLocalConversationWithAModelIsEligible() passed after 0.109 seconds.
+✔ Test reasonsRemainEvidenceBoundAndDoNotExpandApprovalOrRequireLongAnswers() passed after 0.109 seconds.
+✔ Test responseLimitIncludesWhitespaceOutsideJSON() passed after 0.109 seconds.
+✔ Test twoUniqueBoundedDraftsAreDecodedWithStableIDs() passed after 0.109 seconds.
+✔ Test replacementsKeepTheRunFormattingAndTheOriginal() passed after 0.109 seconds.
+✔ Test defaultConfigurationNeverUsesDiskCacheOrCookies() passed after 0.109 seconds.
+✔ Test explanationContractIsSharedWithoutChangingUserWords(_:) with 2 test cases passed after 0.109 seconds.
+✔ Test providedRealMP3CompletesTheWholeImportPath() passed after 0.109 seconds.
+✔ Test paragraphsInsideATextBoxAreEditedOnTheirOwn() passed after 0.109 seconds.
+✔ Test privateCapsuleRequiresAttestationAndCannotBecomeExportable() passed after 0.109 seconds.
+✔ Test wordsMatchAsWordsAndEverydayCompoundsAreNeutral() passed after 0.110 seconds.
+✔ Test promptBoundsPreserveBothEndsAndQuoteMarkers() passed after 0.109 seconds.
+✔ Test completeBootstrapArchiveResumesAtVerificationWithoutAnotherDownload() passed after 0.109 seconds.
+✔ Test unknownBuildFailureStaysConservative() passed after 0.109 seconds.
+✔ Test dependencySourceDiagnosticNeedsSafeProjectAnalysis() passed after 0.109 seconds.
+✔ Test dogfoodBundleUsesSeparateSupportFolder() passed after 0.109 seconds.
+✔ Test fixtureWorkspaceIsAcceptedOnlyInsideTheTemporaryRoot() passed after 0.109 seconds.
+✔ Test environmentFailuresBlockCodeChanges(output:expected:) with 5 test cases passed after 0.109 seconds.
+✔ Test environmentFailureCannotCreateAnAIReplanContext() passed after 0.109 seconds.
+✔ Test failedRangeResumeRetriesOnceFromTheSamePinnedURL() passed after 0.109 seconds.
+✔ Test requestsAndAnswersAreAppendedAndOldFilesPruned() passed after 0.109 seconds.
+✔ Test sourceAndEnvironmentEvidenceBecomeMixedAndBlockRepair() passed after 0.109 seconds.
+✔ Test failedTestWithoutEnvironmentMarkersPermitsRepair() passed after 0.109 seconds.
+✔ Test mp3BecomesPrivatePortableCapsuleAndCanBeDeleted() passed after 0.109 seconds.
+✔ Test invalidBytesAreRejectedBeforeEnteringTheComposer() passed after 0.109 seconds.
+✔ Test environmentFailureKeepsCoordinatorAtRevalidation() passed after 0.109 seconds.
+✔ Test safeSourceDiagnosticPermitsCodeRepair() passed after 0.109 seconds.
+✔ Test fixtureWorkspaceKeepsCapsulesBesideTheFixture() passed after 0.109 seconds.
+✔ Test missingTranscriptCanBeAddedOnceWithoutChangingReferenceAudio() passed after 0.109 seconds.
+✔ Test undoOnlyTrashesFilesTheAppWrote() passed after 0.109 seconds.
+✔ Test workflowExplainsFocusedAndOmittedSelectionWithoutClaimingVerification() passed after 0.109 seconds.
+✔ Test anEditNeverWritesOverTheOriginalOrAnExistingFile() passed after 0.109 seconds.
+✔ Test ordinaryAndContinuationInstructionsKeepAllSource() passed after 0.109 seconds.
+✔ Test unverifiedCompilerTextKeepsCoordinatorAtRevalidation() passed after 0.109 seconds.
+✔ Test backburnerModelIsRoutedByPrefixAndOllamaIsUnchanged() passed after 0.109 seconds.
+✔ Test responseRevisionOmitsSourceAfterRemovingNoChangeConstraint() passed after 0.109 seconds.
+✔ Test explicitFileNameFocusesOnItsReferencesWithoutReordering() passed after 0.109 seconds.
+✔ Test unknownOrGenericEnglishWordsFallBackToAllSource() passed after 0.109 seconds.
+✔ Test transcriptPolicyTrimsInputAndKeepsCreationOptional() passed after 0.109 seconds.
+✔ Test aRenameMaySwapNamesInsideThePlanButNotLandOnAnotherFile() passed after 0.109 seconds.
+✔ Test repeatedReplanAndRestartNeverLosesOrRewritesWork() passed after 0.110 seconds.
+✔ Test environmentSignalInsideATestIsNotMistakenForATestBug() passed after 0.109 seconds.
+✔ Test importedVoiceRequiresConsentAndVerifiedExport() passed after 0.109 seconds.
+✔ Test aRefusedOperationDoesNotRunAndIsJournaledAsStopped() passed after 0.109 seconds.
+✔ Suite StrataLiveTests passed after 0.111 seconds.
+✔ Test installationNeedsSupportedHardwareAndSixGigabytesOfWorkingSpace() passed after 0.109 seconds.
+✔ Test responseQuestionThatNeedsCodeKeepsAllSource() passed after 0.109 seconds.
+✔ Test synthesisRejectsOversizedTextAndMismatchedCapsule() passed after 0.109 seconds.
+✔ Test installationProgressParsesBoundedWorkerEventsAndDownloadPercentages() passed after 0.109 seconds.
+✔ Test volatileSpeechCanNeverSubmitOrModifyAnything() passed after 0.109 seconds.
+✔ Test finalizedTranscriptBecomesAnEditableDraftBeforeSubmission() passed after 0.109 seconds.
+✔ Test interruptionStopsSpeechButOnlyRequestsSafeOperationCancellation() passed after 0.109 seconds.
+✔ Test voiceDiagnosticsContainTimingButNoTranscriptOrAudio() passed after 0.109 seconds.
+✔ Test spokenSummaryStaysShortAndKeepsTheFullAnswerOnScreen() passed after 0.109 seconds.
+✔ Test responseRevisionNamingARealFileUsesFocusedSource() passed after 0.109 seconds.
+✔ Test partialResultsAreReplacedAndFinalResultsAccumulateWithoutDuplication() passed after 0.109 seconds.
+✔ Test verifiedCapsuleWithTranscriptCanSynthesizeWhenEngineIsReady() passed after 0.109 seconds.
+✔ Test spokenApprovalCannotBypassTheExistingPermissionFlow() passed after 0.109 seconds.
+✔ Test conversationModeCanSubmitTextButStillCannotGrantSideEffects() passed after 0.109 seconds.
+✔ Test synthesisRequiresReadyEngineAndExactReferenceTranscript() passed after 0.109 seconds.
+✔ Suite AppInstallLiveTests passed after 0.111 seconds.
+✔ Test voiceCapsuleManifestIsPortableAndEngineIndependent() passed after 0.109 seconds.
+✔ Test recognizedTextTravelsThroughImporterWithLocationAndConfidence() passed after 0.110 seconds.
+✔ Test voiceDraftPreservesAnythingTheUserAlreadyTyped() passed after 0.109 seconds.
+✔ Test caskInformationBecomesCandidatesWithTheirSource() passed after 0.109 seconds.
+✔ Test responseTrackingAndCompletedLegacyWorkDoNotBecomeFutureProductionInstructions() passed after 0.109 seconds.
+✔ Test continuationAnchorsTheLastLocalProposalWithoutPromotingItToInstructions() passed after 0.109 seconds.
+✔ Test editRecipesStayBoundedAndGenerativeEditingRunsLast() passed after 0.109 seconds.
+✔ Test missingOrUnrelatedAnswersAndExplicitRepeatRequestsDoNotEnableTheGuard() passed after 0.109 seconds.
+✔ Test textModelsNeverSilentlyPretendToSeeOrGenerateImages() passed after 0.109 seconds.
+✔ Test refinementPreservesRequestConstraintsAndDoesNotPersistMessages() passed after 0.109 seconds.
+✔ Test theAppNameIsReadFromTheRequest(text:name:) with 4 test cases passed after 0.109 seconds.
+✔ Test otherMessagesAreNotInstallRequests(text:) with 5 test cases passed after 0.109 seconds.
+✔ Test imageTextIsExplicitlyIsolatedFromExecutionAuthority() passed after 0.109 seconds.
+✔ Test deterministicEditsDoNotRequireAVisualModel() passed after 0.109 seconds.
+✔ Test repeatComparisonDoesNotEraseMeaningfulDifferences() passed after 0.109 seconds.
+✔ Test visualCapabilitiesAreDetectedInsteadOfGuessedFromModelSize() passed after 0.109 seconds.
+✔ Test screenshotOCRIsBoundedLocatedAndQuotedAsUntrustedEvidence() passed after 0.109 seconds.
+✔ Test theProfileIsReadFromTheEmbeddedPlist() passed after 0.109 seconds.
+✔ Test attachmentProvenanceSurvivesWorkspaceEncodingWithoutPixelBytes() passed after 0.109 seconds.
+✔ Test persistedIdentifiersAreDeduplicatedBoundedAndSelectionRecovers() passed after 0.109 seconds.
+✔ Test referencesStayBoundedAndLongInstructionRetainsItsEndConstraint() passed after 0.109 seconds.
+✔ Test aNewInstallReplacesTheRecordForTheSameDevice() passed after 0.109 seconds.
+✔ Test acceptsBoundedScreenshotsAndPreservesDetailAcrossPasses() passed after 0.109 seconds.
+✔ Test localRuntimePayloadsCarryVerifiedImageBytesOnTheLatestUserTurn() passed after 0.109 seconds.
+✔ Test rejectsDuplicateOversizedAndMalformedImages() passed after 0.109 seconds.
+✔ Test literalOmissionWordsInAnAnswerAreNotSelectionMetadata() passed after 0.109 seconds.
+✔ Test systemVoiceUsesAnExactEngineIdentifierWithoutCloneData() passed after 0.109 seconds.
+✔ Test normalizerProduces24kMonoWAV() passed after 0.110 seconds.
+✔ Test longUserInputsKeepBothEndsWithoutUnboundedSystemDuplication() passed after 0.109 seconds.
+✔ Test longAnswersCannotDisplaceShortUserConstraints() passed after 0.109 seconds.
+✔ Test lateReminderUsesOnlyBoundedRawUserClarifications() passed after 0.109 seconds.
+✔ Test userRevisionsSurviveMoreThanTwelveTotalMessages() passed after 0.109 seconds.
+✔ Test oldModelClaimsAndHistoricalSuccessAreNotCurrentEvidence() passed after 0.109 seconds.
+✔ Test aChangedPartThatWasNotEditedIsCaught() passed after 0.110 seconds.
+✔ Test externalBoundariesRemainClosedAtEveryHistoryBudget(limit:) with 4 test cases passed after 0.109 seconds.
+✔ Test includedVoicesAreDistinctValidAndImmediatelySelectable() passed after 0.109 seconds.
+✔ Test largeSourceIsBoundedAndDoesNotConsumeUserHistory() passed after 0.109 seconds.
+✔ Test failedValidationCannotSetProgressToOneHundredPercent() passed after 0.109 seconds.
+✔ Test proposalLanguageIsDistinctFromObservedStateWithoutForcedSlang() passed after 0.109 seconds.
+✔ Test readingSourceAndReceivingAdviceDoNotCreateVerificationEvents() passed after 0.109 seconds.
+✔ Test sourceIsQuotedOutsideSystemAndCannotForgeTheClosingMarker() passed after 0.109 seconds.
+✔ Test verifiedCompletionPreservesRecordedWorkStatuses() passed after 0.109 seconds.
+✔ Test shortUnchangedHistoryHasNoFalseOmissionWarning() passed after 0.109 seconds.
+✔ Test completionRequiresFinishedWorkAndFreshSuccessfulValidation() passed after 0.109 seconds.
+✔ Test anActiveCoordinatedRunCannotBeDeclaredComplete() passed after 0.109 seconds.
+✔ Suite DeviceInstallLiveTests passed after 0.112 seconds.
+✔ Test externalReviewNeverBecomesUserIntentEvenIfItsRoleIsUser() passed after 0.109 seconds.
+✔ Test aRuleIsExpandedInOrderWithNumbersDatesAndTheExtensionKept() passed after 0.109 seconds.
+✔ Test daysLeftAndTheReminder() passed after 0.109 seconds.
+✔ Test synthesisUsesPrivateRequestFilesAndValidatesWaveOutput() passed after 0.109 seconds.
+✔ Test aSandboxedCommandCannotWriteOutsideOrReachTheNetwork() passed after 0.111 seconds.
+✔ Test packagedInstallerUsesPinnedRuntimeAndModelInputs() passed after 0.109 seconds.
+✔ Test findAndReplaceWorksOnTheBaseNameAndUnchangedFilesAreLeftOut() passed after 0.109 seconds.
+✔ Test collisionsAndInvalidNamesStopThePlan() passed after 0.109 seconds.
+✔ Test missingTranscriptStopsBeforeLaunchingRuntime() passed after 0.109 seconds.
+✔ Test comparisonKeepsMeaningfulDifferences() passed after 0.109 seconds.
+✔ Test otherRuntimesPassThroughWithoutStartingBackburner() passed after 0.109 seconds.
+✔ Test refinementKeepsRequestAndBoundsTheUncommittedDraft() passed after 0.109 seconds.
+✔ Test applyingRenamesSwapsSafelyAndUndoRestoresEverything() passed after 0.109 seconds.
+✔ Test readinessExplainsWhichLocalComponentIsMissing() passed after 0.109 seconds.
+✔ Test csvIsReadAndUnsupportedFilesAreRefused() passed after 0.109 seconds.
+✔ Test totalBudgetIncludesReferenceLabelsAndQuotedLineExpansion() passed after 0.110 seconds.
+✔ Test backburnerRuntimeUsesTheOpenAICompatibleEndpoint() passed after 0.109 seconds.
+✔ Test wiredLimitIsRequestedOnlyWhenTooLowOnSmallMacs() passed after 0.109 seconds.
+✔ Test repetitionNegativeAndOrdinaryRequestsAreNotRephrases(_:) with 6 test cases passed after 0.109 seconds.
+✔ Test documentsReachTheModelAsQuotedReferenceForOneTurn() passed after 0.109 seconds.
+✔ Test wordFileIsReadToItsText() passed after 0.109 seconds.
+✔ Test directPreviousLocalAnswerIsRequired() passed after 0.109 seconds.
+✔ Test ordinaryQuotedEmbeddedAndCodeContentRemainUnchanged() passed after 0.109 seconds.
+✔ Test partialLabelsAreHiddenOnlyUntilTheStreamEnds() passed after 0.109 seconds.
+✔ Test labelledHistoricalAnswersCannotEvadeTheDuplicateGuard() passed after 0.109 seconds.
+✔ Test aDisabledHelperIsNeverUsed() passed after 0.109 seconds.
+✔ Test theThunderboltAddressIsReadFromTheARPTable() passed after 0.109 seconds.
+✔ Test theSameActionIsNotRepeatedEndlessly() passed after 0.109 seconds.
+✔ Test repeatedLeadingLabelsDoNotAccumulateAcrossConversationTurns() passed after 0.109 seconds.
+✔ Test exactLeadingLabelsAreRemovedWithoutEditingTheBody() passed after 0.109 seconds.
+✔ Test explicitRephraseRequestsAreRecognized(_:) with 5 test cases passed after 0.110 seconds.
+✔ Test pendingCheckpointsCannotBeBypassedByAnotherInputPath() passed after 0.109 seconds.
+✔ Test pdfTextIsReadPageByPage() passed after 0.110 seconds.
+✔ Test realDeviceBeforeItsTunnelIsUpCountsAndSimulatorsDoNot() passed after 0.109 seconds.
+✔ Test activeWorkBlocksOnlyTheConflictingEntryPoints() passed after 0.109 seconds.
+✔ Test repliesAreParsed() passed after 0.109 seconds.
+✔ Test approvedStepsRunAndTheGoalFinishes() passed after 0.109 seconds.
+✔ Test aPasswordIsLeftToTheUser() passed after 0.109 seconds.
+✔ Test picturesArePointedAtSafely() passed after 0.109 seconds.
+✔ Test theLoopStopsForApprovalAndNeverActsWhenRefused() passed after 0.109 seconds.
+✔ Test exactOneLineReplacementProducesOnlyProposal() passed after 0.109 seconds.
+✔ Test risksAreAssessedBeforeActing() passed after 0.109 seconds.
+✔ Test carriageReturnCannotBypassOneLineContract() passed after 0.109 seconds.
+✔ Test protectedFileAndDuplicateAnchorAreRejected() passed after 0.109 seconds.
+✔ Test modelProposalUsesStableSnakeCaseSchema() passed after 0.109 seconds.
+✔ Test imageIOValidatesActualContentAndBuildsABoundedPreview() passed after 0.111 seconds.
+✔ Suite InferenceResponseTimingTests passed after 0.113 seconds.
+✔ Suite ScheduledInstructionTests passed after 0.113 seconds.
+✔ Suite DogfoodShadowWorkspaceTests passed after 0.113 seconds.
+✔ Suite VoiceTurnTakingPolicyTests passed after 0.113 seconds.
+✔ Suite XcodeIsolationTests passed after 0.113 seconds.
+✔ Suite ConversationSentenceCountPolicyTests passed after 0.113 seconds.
+✔ Suite WorkPlanReplanTests passed after 0.113 seconds.
+✔ Suite RunCoordinatorTests passed after 0.113 seconds.
+✔ Suite WorkPlanReplanEnduranceTests passed after 0.113 seconds.
+✔ Suite ContentGuardTests passed after 0.113 seconds.
+✔ Suite NaturalLanguageExplanationTests passed after 0.113 seconds.
+✔ Suite LocalInferencePrivacyTests passed after 0.113 seconds.
+✔ Suite Qwen3TTSMLXInstallerTests passed after 0.113 seconds.
+✔ Suite ValidationFailureClassificationTests passed after 0.113 seconds.
+✔ Suite HarnessAppEnvironmentTests passed after 0.113 seconds.
+✔ Test theAppsProviderPassesTheStreamThroughUnchanged() passed after 0.111 seconds.
+✔ Suite FileOperationHookTests passed after 0.113 seconds.
+✔ Suite SourceContextSelectionPolicyTests passed after 0.113 seconds.
+✔ Suite OrchestratedRoutingTests passed after 0.113 seconds.
+✔ Suite VoiceEnginePolicyTests passed after 0.113 seconds.
+✔ Suite VoiceArchitectureTests passed after 0.113 seconds.
+✔ Suite AppInstallerTests passed after 0.113 seconds.
+✔ Suite ContinuationResponsePolicyTests passed after 0.113 seconds.
+✔ Suite VisualCommunicationPolicyTests passed after 0.113 seconds.
+✔ Suite DeviceInstallRecordTests passed after 0.113 seconds.
+✔ Suite VoiceModelLibraryTests passed after 0.113 seconds.
+✔ Suite ConversationPromptHistoryTests passed after 0.113 seconds.
+✔ Suite CreationCompletionPolicyTests passed after 0.113 seconds.
+✔ Suite BulkRenameTests passed after 0.113 seconds.
+✔ Suite Qwen3TTSMLXAdapterTests passed after 0.113 seconds.
+✔ Suite ConversationRephrasePolicyTests passed after 0.113 seconds.
+✔ Suite BackburnerServerTests passed after 0.113 seconds.
+✔ Suite ConversationResponseTextTests passed after 0.113 seconds.
+✔ Suite HelperNodeTests passed after 0.113 seconds.
+✔ Suite ComputerUseAgentTests passed after 0.113 seconds.
+✔ Suite WorkspaceInteractionPolicyTests passed after 0.113 seconds.
+✔ Suite PhysicalDeviceParserTests passed after 0.113 seconds.
+✔ Suite StructuredEditPrimitiveTests passed after 0.113 seconds.
+✔ Test serviceUsesSelectedRuntimeSchemaAndSingleBoundedRequest() passed after 0.112 seconds.
+✔ Suite ModelCallLogTests passed after 0.114 seconds.
+✔ Test systemImporterReadsARealMP3BeforeDurationGate() passed after 0.112 seconds.
+✔ Suite VoiceCapsuleAssetStoreTests passed after 0.114 seconds.
+✔ Test cancellationAfterValidJSONButBeforeEOFIsNotSuccess() passed after 0.112 seconds.
+✔ Test mergeExtractRemoveReorderRotateAndStampWork() passed after 0.113 seconds.
+✔ Suite PDFEditorTests passed after 0.115 seconds.
+✔ Test serviceRejectsOverlongOutputAndTimesOutInsteadOfReturningPartialJSON() passed after 0.144 seconds.
+✔ Suite ReplySuggestionCoreTests passed after 0.146 seconds.
+✔ Test excelSheetsAreReadAsRowsWithTheirSharedStrings() passed after 0.176 seconds.
+✔ Suite DocumentReaderTests passed after 0.179 seconds.
+✔ Test aDocxIsEditedIntoANewFile() passed after 0.180 seconds.
+✔ Suite WordEditorTests passed after 0.181 seconds.
+✔ Test aQueryRunsOnTheSheetsAndFileAccessIsLocked() passed after 0.188 seconds.
+✔ Suite SpreadsheetAnalysisTests passed after 0.191 seconds.
+✔ Test otherPartsStayAndSharedFormulasAreProtected() passed after 0.201 seconds.
+✔ Suite XLSXPreservationTests passed after 0.203 seconds.
+✔ Test cellsAreEditedIntoANewFileKeepingStylesAndTheOriginal() passed after 0.202 seconds.
+✔ Suite XLSXEditorTests passed after 0.205 seconds.
+✔ Test visionReadsLargeScreenshotTextWhenTheSystemServiceIsAvailable() passed after 0.217 seconds.
+✔ Suite VisualAttachmentImporterTests passed after 0.219 seconds.
+✔ Test sessionRunsExactlyTwoMeasurementsWithoutKeepingAudio() passed after 1.239 seconds.
+✔ Test previewReceivesTheSelectedProfileAndCanBeStopped() passed after 1.456 seconds.
+✔ Test noImageModelChosenSaysWhereToChooseOne() passed after 1.776 seconds.
+✔ Test firstUseExplainsTheSystemPromptAndLocalHandling() passed after 1.780 seconds.
+✔ Test stoppingKeepsStoreBusyUntilSynthesisActuallyStops() passed after 1.780 seconds.
+✔ Test removalCannotStartDuringBenchmark() passed after 1.780 seconds.
+◇ Test authorizedUseDoesNotClaimThatEveryStartIsTheFirstUse() started.
+✔ Suite VoiceEngineBenchmarkTests passed after 1.782 seconds.
+✔ Test aStoppedInstructionIsNotSentAndKeepsTheText() passed after 1.831 seconds.
+✔ Test oldRecordsAreCodeAndANewChatIsListedOnlyInChatMode() passed after 1.834 seconds.
+◇ Test badgesAndVideoOptionsComeFromTheCatalog() started.
+✔ Test onByDefaultWithTheAppsOwnCheckoutAndOffWhenDisabled() passed after 1.833 seconds.
+◇ Test sessionRoutesByFlagAndNeverWritesBeforeApproval(flagOn:) started.
+◇ Test case passing 1 argument flagOn → false to sessionRoutesByFlagAndNeverWritesBeforeApproval(flagOn:) started.
+✔ Test localAudioActivityDetectsSpeechAndFollowingSilence() passed after 1.835 seconds.
+✔ Test measuredHeightMatchesTheDisplayedGlyphs() passed after 1.835 seconds.
+✔ Test addingSelectingAndRemovingASystemVoicePersistsOnlyItsIdentifier() passed after 1.835 seconds.
+✔ Test wordHighlightNeverChangesStoredTextOrSelection() passed after 1.835 seconds.
+✔ Test measurementNeverResizesTheLiveTextView() passed after 1.835 seconds.
+✔ Test hitTestingRejectsWhitespaceAndFindsJapaneseAndEnglish() passed after 1.835 seconds.
+✔ Test includedPresetResolvesToAnInstalledJapaneseVoice() passed after 1.835 seconds.
+➜ Test audioTapRunsOnItsRealtimeQueueWithoutMainActorIsolation() skipped: "CoreAudio tap callbacks require a live audio service; this host's swift-testing-helper loses its XPC connection. Run in the macOS app test host."
+✔ Test theLocalCatalogFileDecodesAndRefusalsAreRecognized() passed after 1.834 seconds.
+✔ Test clearingPresentationDoesNotBypassAutomaticStartGuard(status:) with 3 test cases passed after 1.837 seconds.
+✔ Test reopeningOnlyInspectsAndDoesNotRestoreAnOldSuccessReport(status:) with 3 test cases passed after 1.837 seconds.
+✔ Suite VoiceLibraryStoreTests passed after 1.837 seconds.
+✔ Suite ResponseTextLayoutTests passed after 1.837 seconds.
+✔ Suite AppleSpeechAudioInputBridgeTests passed after 1.837 seconds.
+✔ Test leavingBeforeDwellNeverStartsInference() passed after 1.838 seconds.
+✔ Test lateRecoveryCannotReplaceClearedState() passed after 1.839 seconds.
+✔ Test finalizedSpeechBecomesADraftOnlyAfterTheButtonIsReleased() passed after 1.839 seconds.
+✔ Suite ValidationRecoverySessionTests passed after 1.840 seconds.
+◇ Test wordChangesDiscardPendingWorkAndRepeatedHoverDoesNotRegenerate() started.
+◇ Test volatileSpeechNeverBecomesAComposerDraft() started.
+✔ Test authorizedUseDoesNotClaimThatEveryStartIsTheFirstUse() passed after 0.422 seconds.
+◇ Test deniedAndRestrictedMicrophonesHaveDifferentRecoveryGuidance() started.
+✔ Test badgesAndVideoOptionsComeFromTheCatalog() passed after 0.375 seconds.
+✔ Suite WorkspaceModeTests passed after 2.211 seconds.
+✔ Test aBookedRenameRunsWhenDueAndStillWaitsForApply() passed after 2.273 seconds.
+✔ Suite ScheduledInstructionChatTests passed after 2.275 seconds.
+✔ Test aRenameRequestBecomesACardThatAppliesAndUndoes() passed after 2.340 seconds.
+✔ Suite BulkRenameChatTests passed after 2.342 seconds.
+✔ Test aQuestionAboutAnAttachedTableBecomesAResultCard() passed after 2.400 seconds.
+✔ Suite AnalysisChatTests passed after 2.403 seconds.
+✔ Test anAttachedWorkbookEditBecomesACardAndANewFile() passed after 3.281 seconds.
+✔ Suite SpreadsheetChatTests passed after 3.284 seconds.
+✔ Test oneButtonReinstallsAndRenewsTheExpiry() passed after 3.296 seconds.
+✔ Suite ReinstallTests passed after 3.297 seconds.
+✔ Test computerPlanningBlocksNewInstructionsVoiceAndProjectSwitching() passed after 3.351 seconds.
+✔ Test speechEndSubmitsTheFinalTurnAfterAGracePeriod() passed after 3.349 seconds.
+◇ Test activeVoiceBlocksComputerPlanningAndProjectSwitching() started.
+◇ Test finalizedTranscriptSubmitsWithoutSpeechDetectorEvents() started.
+✔ Test aRunIsJournaledStepByStep() passed after 3.351 seconds.
+✔ Suite ComputerUseJournalTests passed after 3.353 seconds.
+◇ Test case passing 1 argument fragment → "途中までの返答" to stoppedConversationNeverPersistsAPartialAnswer(fragment:) started.
+✔ Test anImageIsMadeWithTheLargeRoleWritingThePrompt() passed after 3.462 seconds.
+✔ Test deniedAndRestrictedMicrophonesHaveDifferentRecoveryGuidance() passed after 1.340 seconds.
+◇ Test deniedProviderFailsWithoutRequestingPermissionAgain() started.
+✔ Test workspaceUsesTheSelectionBeforeBuildingTheInferenceRequest() passed after 3.701 seconds.
+✔ Suite SourceContextSelectionIntegrationTests passed after 3.704 seconds.
+✔ Test volatileSpeechNeverBecomesAComposerDraft() passed after 1.865 seconds.
+◇ Test cancellationDiscardsPendingRecognitionAndLateCallbacks() started.
+✔ Test unchangedRephraseIsRetriedOnceWithoutDuplicatingWork() passed after 3.759 seconds.
+◇ Test secondUnchangedRephraseIsNotSaved() started.
+✔ Test repeatedAnswerIsRefinedOnceWithoutAnotherInstructionOrProductionProgress() passed after 3.821 seconds.
+✔ Test deniedProviderFailsWithoutRequestingPermissionAgain() passed after 0.279 seconds.
+◇ Test secondDuplicateStopsWithoutSavingItOrClaimingSuccess() started.
+✔ Test activeVoiceBlocksComputerPlanningAndProjectSwitching() passed after 0.471 seconds.
+◇ Test pendingComputerPlanBlocksRemoteAndVoiceInput() started.
+◇ Test aRejectedFirstRequestReturnsTheResultingPermissionReason() started.
+✔ Test wordChangesDiscardPendingWorkAndRepeatedHoverDoesNotRegenerate() passed after 1.984 seconds.
+◇ Test popupEntryBeforeTextExitKeepsExplanationOpen() started.
+✔ Test preparingReviewDoesNotWriteAndApprovedApplyKeepsUndo() passed after 3.892 seconds.
+✔ Test generatingAndSelectingOnlyDraftsThenEditedWordsUseTheExistingSubmissionPath() passed after 3.996 seconds.
+✔ Test aRejectedFirstRequestReturnsTheResultingPermissionReason() passed after 0.174 seconds.
+◇ Test existingDraftNeedsConfirmationAndUntouchedChoicesCanBeSwitched() started.
+✔ Suite VoiceMicrophonePermissionTests passed after 3.999 seconds.
+✔ Test spokenReplyCanBeInterruptedByARealCorrectionWithoutClicking() passed after 3.999 seconds.
+◇ Test playbackEchoAndShortBackchannelsDoNotStealTheFloor() started.
+✔ Test questionsComeBeforeBuildingAndOnlyAnsweredPointsAreSent() passed after 4.214 seconds.
+◇ Test changeRequestBecomesACardAndAppliesAndRevertsAllFiles() started.
+✔ Test finalizedTranscriptSubmitsWithoutSpeechDetectorEvents() passed after 0.865 seconds.
+◇ Test volatileTranscriptUsesFallbackWhenAudioBoundaryIsMissing() started.
+✔ Test pendingComputerPlanBlocksRemoteAndVoiceInput() passed after 0.393 seconds.
+✔ Test cancellationDiscardsPendingRecognitionAndLateCallbacks() passed after 0.511 seconds.
+◇ Test staleComputerPlanCannotRunAgainstAnotherProject() started.
+◇ Test olderSystemsExplainTheLimitWithoutCallingTheProvider() started.
+✔ Test uncertainEditKeepsCheckpointAndDisablesRepeat(reverting:) with 2 test cases passed after 4.269 seconds.
+✔ Suite FileChangeRecordingTests passed after 4.271 seconds.
+✔ Test olderSystemsExplainTheLimitWithoutCallingTheProvider() passed after 0.053 seconds.
+✔ Suite VoiceCaptureSessionTests passed after 4.271 seconds.
+✔ Test stoppedConversationNeverPersistsAPartialAnswer(fragment:) with 2 test cases passed after 4.328 seconds.
+◇ Test stoppedComputerPlanDoesNotPublishEvenValidBufferedJSON() started.
+✔ Test existingDraftNeedsConfirmationAndUntouchedChoicesCanBeSwitched() passed after 0.383 seconds.
+◇ Test projectChangeDiscardsInFlightChoicesAndCannotReplaceTheNewDraft() started.
+✔ Test macAndRemoteContinuationsUseTheReturnedResponseID() passed after 4.555 seconds.
+◇ Test noModelQueuesOneResponseRecordWithoutLosingWords() started.
+◇ Test case passing 1 argument flagOn → true to sessionRoutesByFlagAndNeverWritesBeforeApproval(flagOn:) started.
+✔ Test secondUnchangedRephraseIsNotSaved() passed after 1.010 seconds.
+✔ Test popupEntryBeforeTextExitKeepsExplanationOpen() passed after 0.947 seconds.
+◇ Test explicitRequestForTheSameAnswerDoesNotRetry() started.
+◇ Test popupEntryAfterTextExitCancelsDeparture() started.
+✔ Test staleComputerPlanCannotRunAgainstAnotherProject() passed after 0.554 seconds.
+✔ Suite WorkspaceInteractionIntegrationTests passed after 4.772 seconds.
+✔ Test volatileTranscriptUsesFallbackWhenAudioBoundaryIsMissing() passed after 0.554 seconds.
+✔ Test noModelQueuesOneResponseRecordWithoutLosingWords() passed after 0.214 seconds.
+◇ Test responseIsSpokenThenListeningRestarts() started.
+◇ Test interruptedOperationKeepsCheckpointAndUnsubmittedDraft() started.
+✔ Test secondDuplicateStopsWithoutSavingItOrClaimingSuccess() passed after 1.008 seconds.
+◇ Test stoppingTheRefinementKeepsOriginalCheckpointAndDropsPartialAnswer() started.
+✔ Test projectChangeDiscardsInFlightChoicesAndCannotReplaceTheNewDraft() passed after 0.666 seconds.
+◇ Test staleChoiceIDsAreRejectedAfterNewAnswerOrModelChange() started.
+✔ Test stoppedComputerPlanDoesNotPublishEvenValidBufferedJSON() passed after 0.768 seconds.
+✔ Test playbackEchoAndShortBackchannelsDoNotStealTheFloor() passed after 1.098 seconds.
+✔ Suite VoiceBargeInSessionTests passed after 5.099 seconds.
+◇ Test stoppedArtifactPlanReportsCancellationRatherThanReady() started.
+✔ Test explicitRequestForTheSameAnswerDoesNotRetry() passed after 0.384 seconds.
+◇ Test rephraseRetryStillHasToMeetTheRequestedSentenceCount() started.
+✔ Test popupEntryAfterTextExitCancelsDeparture() passed after 0.386 seconds.
+◇ Test missingOrBusyModelShowsGuidanceWithoutInference() started.
+✔ Test staleChoiceIDsAreRejectedAfterNewAnswerOrModelChange() passed after 0.216 seconds.
+◇ Test ordinarySubmissionCancelsOptionalInferenceWithoutWaitingForItsAnswer() started.
+✔ Test sessionRoutesByFlagAndNeverWritesBeforeApproval(flagOn:) with 2 test cases passed after 3.430 seconds.
+◇ Test packageChangeIsReviewedAppliedAndRevertedTogether() started.
+✔ Test changeRequestBecomesACardAndAppliesAndRevertsAllFiles() passed after 1.109 seconds.
+◇ Test aRevertThatFailsIsReportedAndCanBeRetried() started.
+✔ Test stoppingTheRefinementKeepsOriginalCheckpointAndDropsPartialAnswer() passed after 0.552 seconds.
+◇ Test novelContinuationAndExplicitRepetitionDoNotCauseExtraRequests() started.
+✔ Test responseIsSpokenThenListeningRestarts() passed after 0.725 seconds.
+◇ Test resumedSpeechCancelsAPrematureTurnEnd() started.
+✔ Test stoppedArtifactPlanReportsCancellationRatherThanReady() passed after 0.398 seconds.
+◇ Test stoppedReplanDoesNotPublishACompleteBufferedProposal() started.
+✔ Test interruptedOperationKeepsCheckpointAndUnsubmittedDraft() passed after 0.832 seconds.
+◇ Test busySubmissionKeepsInputAndDoesNotCreateWork() started.
+✔ Test missingOrBusyModelShowsGuidanceWithoutInference() passed after 0.447 seconds.
+◇ Test cancelledOldResultCannotReplaceNewWord() started.
+✔ Test busySubmissionKeepsInputAndDoesNotCreateWork() passed after 0.113 seconds.
+✔ Suite InstructionSubmissionTests passed after 5.719 seconds.
+✔ Test rephraseRetryStillHasToMeetTheRequestedSentenceCount() passed after 0.619 seconds.
+✔ Suite ConversationRephraseGenerationTests passed after 5.776 seconds.
+✔ Test resumedSpeechCancelsAPrematureTurnEnd() passed after 0.406 seconds.
+◇ Test stoppingDuringSpeechNeverRestartsListening() started.
+✔ Test ordinarySubmissionCancelsOptionalInferenceWithoutWaitingForItsAnswer() passed after 0.693 seconds.
+◇ Test cancelAndFailureDoNotChangeProjectOrBlockTyping() started.
+✔ Test stoppedReplanDoesNotPublishACompleteBufferedProposal() passed after 0.514 seconds.
+◇ Test stoppedFileProposalDoesNotExposeCancelledContent() started.
+✔ Test novelContinuationAndExplicitRepetitionDoNotCauseExtraRequests() passed after 0.684 seconds.
+◇ Test refinementFailureDoesNotCommitTheEarlierDuplicate() started.
+✔ Test cancelAndFailureDoNotChangeProjectOrBlockTyping() passed after 0.323 seconds.
+◇ Test lateServiceCompletionCannotReplaceNewContextOrClearNewLoadingState() started.
+✔ Test stoppingDuringSpeechNeverRestartsListening() passed after 0.378 seconds.
+✔ Test cancelledOldResultCannotReplaceNewWord() passed after 0.676 seconds.
+◇ Test explicitInterruptionStopsOnlySpeechAndStartsTheNextTurn() started.
+◇ Test changingModelOrSuspendingCancelsPendingHover() started.
+✔ Test packageChangeIsReviewedAppliedAndRevertedTogether() passed after 1.020 seconds.
+◇ Test aRelatedFileThatCannotApplyLeavesTheProjectUnchanged() started.
+✔ Test refinementFailureDoesNotCommitTheEarlierDuplicate() passed after 0.267 seconds.
+◇ Test echoedReferenceLabelsAreNotSavedToConversationOrActivity() started.
+✔ Test aRevertThatFailsIsReportedAndCanBeRetried() passed after 1.065 seconds.
+◇ Test followUpRefinesThePendingProposalWithBothInstructions() started.
+✔ Test changingModelOrSuspendingCancelsPendingHover() passed after 0.223 seconds.
+✔ Suite TermExplanationSessionTests passed after 6.506 seconds.
+✔ Test stoppedFileProposalDoesNotExposeCancelledContent() passed after 0.494 seconds.
+✔ Suite InferenceCancellationTests passed after 6.506 seconds.
+✔ Test echoedReferenceLabelsAreNotSavedToConversationOrActivity() passed after 0.228 seconds.
+✔ Test explicitInterruptionStopsOnlySpeechAndStartsTheNextTurn() passed after 0.282 seconds.
+◇ Test partialInternalLabelCanBeStoppedWithoutDisplayingOrSavingIt() started.
+✔ Test lateServiceCompletionCannotReplaceNewContextOrClearNewLoadingState() passed after 0.283 seconds.
+◇ Test volatileOnlySpeechPausesTheModeInsteadOfSubmitting() started.
+✔ Suite ReplySuggestionInteractionTests passed after 6.565 seconds.
+✔ Test writingUsesTheChosenModelAndConversationKeepsTheProjectModel() passed after 6.675 seconds.
+✔ Suite PurposeModelTests passed after 6.678 seconds.
+✔ Test followUpRefinesThePendingProposalWithBothInstructions() passed after 0.340 seconds.
+✔ Test volatileOnlySpeechPausesTheModeInsteadOfSubmitting() passed after 0.166 seconds.
+◇ Test completedTurnPublishesOnlyEphemeralTimingMetrics() started.
+◇ Test aChosenAlternativeIsRememberedAndSentWithTheNextInstruction() started.
+✔ Test partialInternalLabelCanBeStoppedWithoutDisplayingOrSavingIt() passed after 0.274 seconds.
+◇ Test internalLabelAloneIsNotAcceptedAsACompleteAnswer() started.
+✔ Test aRelatedFileThatCannotApplyLeavesTheProjectUnchanged() passed after 0.606 seconds.
+◇ Test changedFilesAreCollectedSelectedFirstAndTestsIgnored() started.
+✔ Test internalLabelAloneIsNotAcceptedAsACompleteAnswer() passed after 0.108 seconds.
+◇ Test explicitSentenceCountIsRewrittenOnceWithoutChangingTheInstruction() started.
+✔ Test changedFilesAreCollectedSelectedFirstAndTestsIgnored() passed after 0.112 seconds.
+➜ Test serviceRunsThePipelineOnAStagedCopyWithTheCLIRecord() skipped.
+✔ Suite OrchestratedEditTests passed after 7.006 seconds.
+✔ Test explicitSentenceCountIsRewrittenOnceWithoutChangingTheInstruction() passed after 0.118 seconds.
+◇ Test secondSentenceCountMismatchIsNotSavedAsACompletedAnswer() started.
+✔ Test completedTurnPublishesOnlyEphemeralTimingMetrics() passed after 0.387 seconds.
+✔ Suite VoiceConversationSessionTests passed after 7.119 seconds.
+✔ Test secondSentenceCountMismatchIsNotSavedAsACompletedAnswer() passed after 0.113 seconds.
+✔ Suite ContinuationGenerationTests passed after 7.181 seconds.
+✔ Test aChosenAlternativeIsRememberedAndSentWithTheNextInstruction() passed after 0.499 seconds.
+◇ Test theCardComesFirstAndTheExamplesArriveAfterwards() started.
+✔ Test theCardComesFirstAndTheExamplesArriveAfterwards() passed after 0.284 seconds.
+◇ Test aCorrectedCaseBecomesAProtectedTestOfTheFollowUp() started.
+✔ Test aCorrectedCaseBecomesAProtectedTestOfTheFollowUp() passed after 0.181 seconds.
+◇ Test cautionsFollowTheMeasuredRiskSignals() started.
+✔ Test cautionsFollowTheMeasuredRiskSignals() passed after 0.001 seconds.
+◇ Test examplesComeFromTheRunRecordAndAnAlternativeBecomesAFollowUpInstruction() started.
+✔ Test examplesComeFromTheRunRecordAndAnAlternativeBecomesAFollowUpInstruction() passed after 0.001 seconds.
+◇ Test onlyChangeWordsRouteToACodeChange() started.
+✔ Test onlyChangeWordsRouteToACodeChange() passed after 0.001 seconds.
+◇ Test requestLikeSentencesGoToTheSystemModelButQuestionsDoNot() started.
+✔ Test requestLikeSentencesGoToTheSystemModelButQuestionsDoNot() passed after 0.001 seconds.
+➜ Test systemModelSeparatesChangesFromQuestions() skipped.
+✔ Suite ChatChangeTests passed after 7.699 seconds.
+✔ Test run with 340 tests in 81 suites passed after 7.700 seconds.
