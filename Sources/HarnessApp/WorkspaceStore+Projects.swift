@@ -112,7 +112,7 @@ extension WorkspaceStore {
             try? FileManager.default.removeItem(at: file)
         }
         for message in record.project.conversation { imageChanges[message.id] = nil }
-        removeProjectFromLibrary(id)
+        removeProjectFromLibrary(id, message: "完全に削除しました")
     }
 
     /// The images and videos a conversation names inside `folder` (「保存先: …/Images/abc-z-image-turbo.png」).
@@ -128,7 +128,7 @@ extension WorkspaceStore {
         return names.sorted().map { folder.appendingPathComponent($0) }
     }
 
-    func removeProjectFromLibrary(_ id: UUID) {
+    func removeProjectFromLibrary(_ id: UUID, message: String = "Local Factoryの一覧から削除しました。元ファイルは残っています") {
         guard library.selectedProjectID != id
             || allowInteraction(.changeSelectedProject) else { return }
         let sourceLocation = library.records.first(where: { $0.id == id })?.sourceLocation
@@ -138,7 +138,7 @@ extension WorkspaceStore {
         if let sourceLocation {
             Task { await sourceMonitor.forget(path: sourceLocation) }
         }
-        persist(successMessage: "Local Factoryの一覧から削除しました。元ファイルは残っています")
+        persist(successMessage: message)
     }
 
     func inspectSource(

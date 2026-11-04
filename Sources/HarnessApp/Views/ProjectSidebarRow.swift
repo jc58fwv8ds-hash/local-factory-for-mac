@@ -95,11 +95,13 @@ struct SidebarTrashSection: View {
                 .foregroundStyle(.secondary)
                 if isOpen {
                     ForEach(records) { record in
-                        HStack(spacing: 6) {
-                            Text(record.project.name).lineLimit(1)
-                            Spacer()
-                            Button("戻す") { store.restoreProject(record.id) }.buttonStyle(.borderless)
-                            Button("完全に削除", role: .destructive) { deleting = record }.buttonStyle(.borderless)
+                        // The name on its own line: beside the two buttons every チャット row was cut to 「チャット 11…」.
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(record.project.name).lineLimit(2)
+                            HStack(spacing: 8) {
+                                Button("戻す") { store.restoreProject(record.id) }.buttonStyle(.borderless)
+                                Button("完全に削除", role: .destructive) { deleting = record }.buttonStyle(.borderless)
+                            }
                         }
                         .padding(.leading, 16)
                     }
