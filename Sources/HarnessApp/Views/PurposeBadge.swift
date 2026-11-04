@@ -34,7 +34,7 @@ struct PurposeModelChip: View {
 
     private var modelPurpose: ModelPurpose? {
         switch purpose {
-        case .conversation: nil
+        case .conversation: .conversation
         case .writing: .writing
         case .image: .image
         case .video: .video

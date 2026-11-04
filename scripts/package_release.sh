@@ -124,6 +124,17 @@ if [[ ! -d "${resource_bundle_source}" ]]; then
     exit 65
 fi
 ditto "${resource_bundle_source}" "${staged_contents}/Resources/${resource_bundle_name}"
+# The daily news scripts and art (work/DailyNews, not part of the public source): the app copies them to Application
+# Support for its launchd jobs (DailyNewsStore.installScripts). Left out when the folder is not there.
+if [[ -f "${project_root}/work/DailyNews/run_daily.sh" ]]; then
+    mkdir -p "${staged_contents}/Resources/DailyNews/art"
+    cp "${project_root}"/work/DailyNews/{daily_news.py,run_daily.sh,youtube_upload.py} "${staged_contents}/Resources/DailyNews/"
+    cp "${project_root}"/work/DailyNews/art/*.png "${staged_contents}/Resources/DailyNews/art/"
+fi
+# The iPhone app for the agent link (HarnessRemote): the Apps screen builds and installs it from this copy (RemoteAppSource).
+if [[ -d "${project_root}/HarnessRemote/HarnessRemote.xcodeproj" ]]; then
+    rsync -a --exclude xcuserdata --exclude '*.xcuserstate' "${project_root}/HarnessRemote/" "${staged_contents}/Resources/HarnessRemote/"
+fi
 /usr/bin/lipo -create \
     "${project_root}/.build-release-arm64/arm64-apple-macosx/release/Harness" \
     "${project_root}/.build-release-x86_64/x86_64-apple-macosx/release/Harness" \

@@ -119,6 +119,7 @@ private struct SubmissionFixture {
     let store: WorkspaceStore
 
     init(hasModel: Bool = true) throws {
+        WorkspaceStore.allowsAutomaticModel = hasModel   // "no model" means none at all, not the 27B this Mac has
         directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("Harness-Submission-\(UUID().uuidString)", isDirectory: true)
         repository = WorkspaceRepository(fileURL: directory.appendingPathComponent("workspace.json"))

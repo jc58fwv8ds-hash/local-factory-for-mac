@@ -5,6 +5,7 @@ import SwiftUI
 /// The card under an image request: progress, the finished picture (saved on this Mac), or why it failed.
 struct ImageChangeCard: View {
     let change: ImageChange
+    let stop: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -12,6 +13,7 @@ struct ImageChangeCard: View {
                 Image(systemName: change.isVideo ? "film" : "photo.artframe")
                 Text(change.isVideo ? "動画" : "画像").font(.harness(.subheadline, weight: .semibold))
                 Spacer()
+                if change.isRunning { Button("止める", systemImage: "stop.fill", action: stop).controlSize(.small) }
             }
             switch change.status {
             case .running(let step):
@@ -19,6 +21,9 @@ struct ImageChangeCard: View {
                     ProgressView().controlSize(.small)
                     Text(step).font(.harness(.caption)).foregroundStyle(.secondary)
                 }
+                if let kind = change.jobKind { RemainingTimeLabel(kind: kind, startedAt: change.startedAt) }
+            case .stopped:
+                Text("止めました。").font(.harness(.caption)).foregroundStyle(.secondary)
             case .failed(let message):
                 Text(message).font(.harness(.caption)).foregroundStyle(.secondary)
             case .ready(let url):

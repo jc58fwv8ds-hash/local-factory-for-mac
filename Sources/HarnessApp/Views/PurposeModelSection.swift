@@ -10,13 +10,13 @@ struct PurposeModelSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Label("用途ごとのモデル", systemImage: "square.stack.3d.up").font(.harness(.headline))
-            Text("チャットの入力欄で「文章を書く」「画像を作る」「動画を作る」を選んだときに使うモデルです。印の付いたモデルは安全のための制限が少ないものです。コードのモードでは使いません。")
+            Text("チャットの会話と、入力欄で「文章を書く」「画像を作る」「動画を作る」を選んだときに使うモデルです。印の付いたモデルは安全のための制限が少ないものです。コードのモードでは使いません。")
                 .font(.harness(.caption)).foregroundStyle(.secondary)
             if settings.catalog == .empty {
                 Text("追加のモデルの一覧(purpose-models.json)がありません。")
                     .font(.harness(.caption)).foregroundStyle(.secondary)
             } else {
-                ForEach(ModelPurpose.allCases.filter { $0 != .video || !settings.catalog.options(for: .video).isEmpty },
+                ForEach(ModelPurpose.allCases.filter { ($0 != .video && $0 != .conversation) || !settings.catalog.options(for: $0).isEmpty },
                         id: \.self) { purpose in
                     picker(purpose)
                 }
@@ -35,7 +35,7 @@ struct PurposeModelSection: View {
         })
         return VStack(alignment: .leading, spacing: 4) {
             Picker(purpose.title, selection: binding) {
-                Text(purpose == .writing ? "プロジェクトのモデル(既定)" : "選ばない").tag("")
+                Text(purpose == .writing || purpose == .conversation ? "プロジェクトのモデル(既定)" : "選ばない").tag("")
                 ForEach(options) { option in
                     // A menu item shows text only: the mark goes in front of the name; the colored badge is shown below.
                     Text((option.badge.map { "【\($0)】" } ?? "") + option.label).tag(option.id)

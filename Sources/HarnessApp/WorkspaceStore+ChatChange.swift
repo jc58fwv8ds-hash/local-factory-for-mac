@@ -19,6 +19,10 @@ final class ChatChange: Identifiable {
 
     let id: UUID              // the user message that asked for the change
     let instruction: String
+    /// When the build began, for the remaining time.
+    var runStartedAt: Date?
+    /// The running job, for the card's 止める.
+    var task: Task<Void, Never>?
     var status: Status = .running
     var proposals: [FileChangeProposal] = []
     /// Reasons to look closely (要確認), from signals that predicted false successes in the measured suites.
@@ -67,7 +71,7 @@ extension WorkspaceStore {
         guard workspaceMode == .code, let service = chatOrchestratorOverride ?? OrchestratedRunSettings().service,
               let root = library.selectedRecord?.sourceLocation,
               FileManager.default.fileExists(atPath: URL(fileURLWithPath: root).appendingPathComponent("Package.swift").path),
-              let model = project.selectedModel, model.runtime == .ollama || model.runtime == .backburner else { return nil }
+              let model = (project.selectedModel ?? WorkspaceStore.automaticModel), model.runtime == .ollama || model.runtime == .backburner else { return nil }
         return (service, root, model)
     }
 
@@ -92,9 +96,17 @@ extension WorkspaceStore {
             }
             previous.status = .discarded
             instruction = previous.instruction + "\n\n追加の指示: " + cleaned
-        } else if let conventions = project.conventions, !conventions.isEmpty {
-            instruction += "\n\nこのプロジェクトでこれまでに確かめた決まり(守ること):\n"
-                + conventions.suffix(10).map { "- " + $0 }.joined(separator: "\n")
+        } else {
+            // Already applied: the new instruction may continue that change, on the project as it now is (2026-11-04).
+            let applied = chatChanges.values.filter { $0.status == .applied }.max { ($0.runStartedAt ?? .distantPast) < ($1.runStartedAt ?? .distantPast) }
+            if let applied {
+                instruction = "今回の指示: " + cleaned + "\n\n直前に反映した変更の指示(今回の指示がその続きなら、反映済みの内容を活かして足りない所だけ直す。作り直さない): "
+                    + String(applied.instruction.prefix(1_500))
+            }
+            if let conventions = project.conventions, !conventions.isEmpty {
+                instruction += "\n\nこのプロジェクトでこれまでに確かめた決まり(守ること):\n"
+                    + conventions.suffix(10).map { "- " + $0 }.joined(separator: "\n")
+            }
         }
         // The builder model reads text only: the text recognized in attached images goes with the instruction.
         let recognized = images.compactMap(\.recognizedText).map { transcript in
@@ -112,15 +124,16 @@ extension WorkspaceStore {
         // A new request is asked about first; a follow-up refines a proposal and is built at once.
         if seeds.isEmpty, !instruction.contains("\n\n追加の指示: ") {
             change.status = .asking
-            Task { await askBeforeBuilding(change, context: context) }
+            change.task = Task { await askBeforeBuilding(change, context: context) }
         } else {
-            Task { await runChatChange(change, context: context) }
+            change.task = Task { await runChatChange(change, context: context) }
         }
         return true
     }
 
     func runChatChange(_ change: ChatChange,
                                context: (service: any OrchestratedEditing, root: String, model: ModelSelection)) async {
+        change.runStartedAt = Date()
         do {
             let outcome = try await context.service.proposeEdit(rootPath: context.root, relativePath: "",
                                                                 instruction: change.instruction, model: context.model)
@@ -140,6 +153,7 @@ extension WorkspaceStore {
             change.runRecord = outcome.runRecord
             change.cautions = Self.chatChangeCautions(record: outcome.runRecord, instruction: change.instruction)
             change.examples = Self.chatExamples(record: outcome.runRecord)
+            if let start = change.runStartedAt { JobTimeEstimates().record("code", seconds: Date().timeIntervalSince(start)) }
             change.status = .ready
             appendAssistantNote("修正案ができました(\(proposals.count) ファイル、テスト合格)。内容を確かめて「適用する」を押すと、プロジェクトに反映します。"
                 + (change.cautions.isEmpty ? "" : " 要確認の点が \(change.cautions.count) つあります。"))
@@ -276,6 +290,7 @@ extension WorkspaceStore {
 
     func discardChatChange(_ change: ChatChange) {
         guard change.status == .ready || change.status == .running || change.status == .asking else { return }
+        change.task?.cancel()
         change.status = .discarded
     }
 

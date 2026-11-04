@@ -12,7 +12,7 @@ extension WorkspaceStore {
 
     var canResumeInterruptedInference: Bool {
         guard !isGenerating,
-              project.selectedModel != nil,
+              (project.selectedModel ?? WorkspaceStore.automaticModel) != nil,
               let workItemID = interruptedInferenceCheckpoint?.referenceID else {
             return false
         }
@@ -26,7 +26,7 @@ extension WorkspaceStore {
     func resumeInterruptedInference() {
         guard !isGenerating,
               let record = library.selectedRecord,
-              let model = record.project.selectedModel,
+              let model = (record.project.selectedModel ?? WorkspaceStore.automaticModel),
               let workItemID = record.project.operationCheckpoint?.referenceID,
               record.project.operationCheckpoint?.operation == .modelInference else {
             presentNotice("再実行するAIモデルまたは保存済みの指示を確認できません", kind: .information)

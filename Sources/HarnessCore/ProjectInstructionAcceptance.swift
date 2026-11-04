@@ -60,7 +60,7 @@ enum ProjectInstructionAcceptance {
         )
         project.currentActivity = project.selectedModel.map {
             "\($0.displayName)が指示を理解しています"
-        } ?? "AIモデルの接続を待っています"
+        } ?? "AIモデルが指示を理解しています"
         return workItemID
     }
 }

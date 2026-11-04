@@ -4,7 +4,6 @@ import SwiftUI
 struct AppleAppLibraryView: View {
     @Bindable var store: WorkspaceStore
     @State private var session: AppleAppLibrarySession
-    @State private var isConfirmingInstall = false
     @State private var installRecords = DeviceInstallRecordStore.standard.load()
 
     init(store: WorkspaceStore) {
@@ -24,7 +23,7 @@ struct AppleAppLibraryView: View {
             AppleAppInstallPanel(
                 session: session,
                 onOpenXcode: openSelectedAppInXcode,
-                onInstall: { isConfirmingInstall = true }
+                onInstall: { session.installSelected() }
             )
             .frame(width: 338)
         }
@@ -43,18 +42,6 @@ struct AppleAppLibraryView: View {
             }
         }
         .onDisappear { session.stop() }
-        .confirmationDialog(
-            "選択した端末へインストールしますか？",
-            isPresented: $isConfirmingInstall,
-            titleVisibility: .visible
-        ) {
-            Button("無料署名でインストールして起動") {
-                session.installSelected()
-            }
-            Button("キャンセル", role: .cancel) {}
-        } message: {
-            Text(confirmationMessage)
-        }
     }
 
     private var library: some View {
@@ -183,14 +170,24 @@ struct AppleAppLibraryView: View {
                 spacing: 18
             ) {
                 ForEach(session.apps) { app in
-                    AppleAppTile(
-                        app: app,
-                        isSelected: app.id == session.selectedAppID,
-                        expiryNotes: installRecords.filter { $0.appKey == app.source.rootPath }.compactMap { record in
-                            record.expiryNote().map { ($0, record.needsReinstall()) }
+                    VStack(spacing: 8) {
+                        AppleAppTile(
+                            app: app,
+                            isSelected: app.id == session.selectedAppID,
+                            expiryNotes: installRecords.filter { $0.appKey == app.source.rootPath }.compactMap { record in
+                                record.expiryNote().map { ($0, record.needsReinstall()) }
+                            }
+                        ) {
+                            session.selectApp(app.id)
                         }
-                    ) {
-                        session.selectApp(app.id)
+                        // Beside the tile, not inside it: a button inside a button is pressed along with the outer one.
+                        Button {
+                            session.installOnEveryDevice(app.id)
+                        } label: {
+                            Label("つないでいる端末に入れる", systemImage: "arrow.down.app.fill").frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(session.isBusy)
                     }
                 }
             }
@@ -223,10 +220,6 @@ struct AppleAppLibraryView: View {
         }
     }
 
-    private var confirmationMessage: String {
-        let targets = session.installationOrder.map(\.displayName).joined(separator: "と")
-        return "\(targets)向けに無料の開発用署名を行います。公開や課金は行わず、認証情報や端末IDも保存しません。"
-    }
 }
 
 private struct DeviceSummaryPill: View {

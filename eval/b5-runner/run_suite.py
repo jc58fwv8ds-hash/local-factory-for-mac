@@ -10,7 +10,9 @@ its kpi.json is appended to <out>/results.jsonl as measured (failures included).
 import argparse, json, os, subprocess, sys, time, urllib.request
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from freeze_suite import EVAL, manifest
+import provenance
 
 BACKBURNER = "openai:qwen3.8-27b-iq4xs"
 
@@ -37,6 +39,7 @@ def main():
     ap.add_argument("--examples", action="store_true", help="example check for the user after tests pass (off by default)")
     ap.add_argument("--clarify", choices=["self", "oracle"], help="settle ambiguous points before building (candidate 3)")
     ap.add_argument("--gated", action="store_true", help="examiner / example check only when a risk signal flags the change")
+    ap.add_argument("--allow-mixed", action="store_true", help="resume <out> although the model or conditions changed (rows stay tagged)")
     a = ap.parse_args()
     endpoint = require_openai_endpoint([a.model, a.secondary])
     SUITE = EVAL / a.suite
@@ -53,6 +56,15 @@ def main():
                  if not f.relative_to(Path(a.candidate).resolve() / "Sources").parts[0].startswith(("HarnessApp", "HarnessCoreChecks")))
     if not pilot.exists() or pilot.stat().st_mtime < newest:
         sys.exit("実行ファイルがソースより古いです。先に swift build --build-system native を実行してください")
+    # 2026-10-26: which model file, commit and options produced these rows, kept next to them (eval/provenance.py)
+    cond = provenance.conditions(model=a.model, endpoint=endpoint, candidate=a.candidate, suite=SUITE,
+                                 options={"scope": a.scope, "proposalTokens": a.proposal_tokens, "secondary": a.secondary,
+                                          "examiner": a.examiner, "examples": a.examples, "gated": a.gated,
+                                          "clarify": a.clarify, "timeoutSeconds": a.timeout})
+    try:
+        mark = provenance.begin(out, cond, executable=pilot, allow_mixed=a.allow_mixed, existing_rows=len(done))
+    except provenance.MixedConditions as e:
+        sys.exit(f"{out} は別の条件で測った結果を含みます(--allow-mixed で続行):\n{e}")
     for task in sorted((SUITE / "tasks").glob("*-*.json")):
         tid = task.stem
         if (a.only and tid != a.only) or tid in done: continue
@@ -74,6 +86,7 @@ def main():
         except subprocess.TimeoutExpired:
             kpi = {"id": tid, "runnerError": f"timeout after {a.timeout}s"}
         kpi["wallSeconds"] = time.time() - start
+        provenance.stamp(kpi, mark)
         with open(out / "results.jsonl", "a") as f: f.write(json.dumps(kpi, ensure_ascii=False, sort_keys=True) + "\n")
         print(f"{tid}: phase={kpi.get('phase')} holdout={kpi.get('holdout')} proxySuccess={kpi.get('proxySuccess')} "
               f"{kpi['wallSeconds']:.0f}s", flush=True)

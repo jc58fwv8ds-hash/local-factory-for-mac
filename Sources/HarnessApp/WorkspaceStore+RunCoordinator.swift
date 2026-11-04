@@ -41,7 +41,7 @@ extension WorkspaceStore {
             presentNotice("先に制作するソースフォルダを接続してね", kind: .information)
             return nil
         }
-        guard record.project.selectedModel != nil else {
+        guard (record.project.selectedModel ?? WorkspaceStore.automaticModel) != nil else {
             presentNotice("制作に使うAIモデルを先に選んでね", kind: .information)
             isShowingModelManager = true
             return nil

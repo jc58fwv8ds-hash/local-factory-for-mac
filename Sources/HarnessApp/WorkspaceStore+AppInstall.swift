@@ -28,7 +28,7 @@ extension WorkspaceStore {
         persist()
         let change = AppInstallChange(id: message.id, query: query)
         appInstallChanges[message.id] = change
-        let model = project.selectedModel
+        let model = (project.selectedModel ?? WorkspaceStore.automaticModel)
         Task { await searchApps(change, model: model) }
         return true
     }

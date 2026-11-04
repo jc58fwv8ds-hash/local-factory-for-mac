@@ -31,12 +31,24 @@ public struct ComputerUseObservation: Codable, Equatable, Sendable {
         self.application = application; self.window = window; self.elements = elements; self.screenshot = screenshot
     }
 
-    /// What the model reads: one line per element, secure fields without their value.
+    /// How many lines the model reads at most (2026-11-04, after vercel-labs/agent-desktop's compact snapshots: every line is
+    /// read again at every step, so a long list costs seconds each time).
+    public static let maximumActionLines = 60, maximumTextLines = 30
+
+    /// What the model reads: one line per element, secure fields without their value. Buttons with no name are left out (the
+    /// model cannot tell what they do), page text is cut short, and the numbers stay those of the full list.
     public var text: String {
-        "アプリ: \(application)\nウィンドウ: \(window)\n" + elements.map { element in
+        var actions = 0, texts = 0, left = 0
+        let entry = ["AXTextField", "AXTextArea", "AXSecureTextField", "AXSearchField", "AXComboBox"]
+        let lines: [String] = elements.compactMap { element in
+            let isText = element.role == "AXStaticText"
+            if element.label.isEmpty, element.value.isEmpty, !entry.contains(element.role) { left += 1; return nil }
+            if isText ? texts >= Self.maximumTextLines : actions >= Self.maximumActionLines { left += 1; return nil }
+            if isText { texts += 1 } else { actions += 1 }
             let value = element.isSecureField || element.value.isEmpty ? "" : " 値=「\(element.value.prefix(80))」"
-            return "[\(element.id)] \(element.role) 「\(element.label)」\(value)\(element.enabled ? "" : " (無効)")"
-        }.joined(separator: "\n")
+            return "[\(element.id)] \(element.role) 「\(element.label.prefix(isText ? 60 : 40))」\(value)\(element.enabled ? "" : " (無効)")"
+        }
+        return (["アプリ: \(application)", "ウィンドウ: \(window)"] + lines + (left > 0 ? ["(ほか \(left) 件は省略)"] : [])).joined(separator: "\n")
     }
 }
 
@@ -50,6 +62,10 @@ public enum ComputerUseAction: Codable, Equatable, Sendable {
     case click(Double, Double, String)
     /// Typing at the keyboard focus (adds, does not replace).
     case write(String)
+    /// A web page in Safari (http and https only), 2026-11-02 for the agent screen.
+    case openURL(String)
+    /// A web search on this Mac's own search server (RustXNG); the results come back as notes, nothing on screen changes.
+    case search(String)
     case done(String)
     case askUser(String)
 
@@ -64,6 +80,8 @@ public enum ComputerUseAction: Codable, Equatable, Sendable {
         case .key(let key): return "キー \(key) を押す"
         case .click(let x, let y, let target): return "画面の「\(target)」(\(Int(x * 100))%, \(Int(y * 100))%)を押す"
         case .write(let text): return "いまの入力位置に「\(text.prefix(60))」と書く"
+        case .openURL(let url): return "Safari で \(url.prefix(120)) を開く"
+        case .search(let query): return "「\(query.prefix(60))」を調べる"
         case .done(let summary): return "完了: \(summary)"
         case .askUser(let question): return "確認: \(question)"
         }
@@ -95,7 +113,12 @@ public enum ComputerUseRisk: Equatable, Sendable {
             irreversibleWords.first { text.localizedCaseInsensitiveContains($0) }
         }
         switch action {
-        case .done, .askUser, .openApplication:
+        case .done, .askUser, .openApplication, .search:
+            return .safe
+        case .openURL(let text):
+            guard let url = URL(string: text), ["http", "https"].contains(url.scheme?.lowercased() ?? ""), url.host != nil else {
+                return .forbidden("http か https の URL だけを開きます")
+            }
             return .safe
         case .press(let id):
             guard let target = element(id) else { return .forbidden("画面にない部品(\(id))は押しません") }
@@ -139,7 +162,7 @@ public enum ComputerUseRisk: Equatable, Sendable {
 }
 
 public enum ComputerUseAgentPrompt {
-    public static func messages(goal: String, observation: ComputerUseObservation, history: [String]) -> [InferenceMessage] {
+    public static func messages(goal: String, observation: ComputerUseObservation, history: [String], notes: [String] = []) -> [InferenceMessage] {
         let system = """
         あなたは Mac のアプリを、画面の部品の一覧を見ながら一手ずつ操作する係です。ユーザーの目的に向けて、次の一手だけを JSON 一つで返してください。
         使える一手:
@@ -148,10 +171,14 @@ public enum ComputerUseAgentPrompt {
         {"action": "type", "id": 番号, "text": "文字"}      入力欄に文字を入れる(前の内容は置き換わる)
         {"action": "menu", "path": ["ファイル", "新規"]}     メニューを選ぶ
         {"action": "key", "key": "return"}                 キー(return, tab, escape, cmd+f など)
+        {"action": "open_url", "url": "https://..."}      Safari でページを開く(http と https だけ)
+        {"action": "search", "query": "検索語"}            Web を調べる(結果と上位のページの本文が「調べた内容」に入る。画面は変わらない)
         {"action": "done", "summary": "何をしたか"}          目的を果たした、またはこれ以上できない
         {"action": "ask", "question": "ユーザーへの質問"}    ユーザーにしか決められないこと・ログインが必要なとき
         決まり: パスワードや認証コードは入力しない(ask でユーザーに頼む)。送信・購入・削除・公開などはアプリ側でユーザーの確認が入るので、
         必要なら選んでよい。同じ一手を繰り返して変化がないときは別の方法か done。番号は下の一覧のものだけを使う。
+        検索語に、名前・住所・電話・メール・アカウントなど個人の情報を入れない。調べて分かったことは、URL を添えて done の summary に書く。
+        Web のページは open_url で開く(新しいタブで開く)。Safari のアドレス欄に打ち込まない(いま見ているページが置き換わる)。調べものは、まず search を使う。
         JSON の前に "reason": "一言" を入れてよい。JSON だけを返す。
         """ + (observation.screenshot == nil ? "" : """
 
@@ -164,7 +191,7 @@ public enum ComputerUseAgentPrompt {
         これまでの操作:
         \(history.isEmpty ? "(まだなし)" : history.suffix(12).enumerated().map { "\($0.offset + 1). \($0.element)" }.joined(separator: "\n"))
 
-        いまの画面:
+        \(notes.isEmpty ? "" : "調べた内容:\n" + notes.suffix(2).joined(separator: "\n---\n") + "\n\n")いまの画面:
         \(observation.text)
         """
         return [InferenceMessage(role: .system, content: system), InferenceMessage(role: .user, content: user)]
@@ -175,8 +202,8 @@ public enum ComputerUseAgentPrompt {
               let object = try? JSONSerialization.jsonObject(with: Data(response[start...end].utf8)) as? [String: Any],
               let action = object["action"] as? String else { return nil }
         func id() -> Int? { (object["id"] as? Int) ?? (object["id"] as? String).flatMap(Int.init) }
-        func text(_ key: String) -> String? {
-            (object[key] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty.map { String($0.prefix(400)) }
+        func text(_ key: String, limit: Int = 400) -> String? {
+            (object[key] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty.map { String($0.prefix(limit)) }
         }
         switch action {
         case "open": return text("app").map { .openApplication($0) }
@@ -189,7 +216,10 @@ public enum ComputerUseAgentPrompt {
             guard let x = number("x"), let y = number("y") else { return nil }
             return .click(x, y, text("target") ?? "")
         case "write": return (object["text"] as? String).map { .write(String($0.prefix(400))) }
-        case "done": return .done(text("summary") ?? "完了しました")
+        case "open_url": return text("url").map { .openURL($0) }
+        case "search": return text("query").map { .search(String($0.prefix(120))) }
+        // A summary can carry what was found and its sources (2026-11-02: 400 characters cut the second point off).
+        case "done": return .done(text("summary", limit: 2_000) ?? "完了しました")
         case "ask": return text("question").map { .askUser($0) }
         default: return nil
         }
@@ -229,9 +259,11 @@ public enum ComputerUseAgent {
         decide: @Sendable ([InferenceMessage], Data?) async throws -> String,
         approve: @Sendable (String, String) async -> Bool,
         onStep: @Sendable (ComputerUseStep) async -> Void = { _ in },
+        search: (@Sendable (String) async throws -> String)? = nil,
         maximumSteps: Int = maximumSteps
     ) async -> ComputerUseOutcome {
         var history: [String] = []
+        var notes: [String] = []
         var unreadable = 0
         for _ in 0..<maximumSteps {
             if Task.isCancelled { return .stopped("止めました") }
@@ -241,7 +273,7 @@ public enum ComputerUseAgent {
             }
             let response: String
             do {
-                response = try await decide(ComputerUseAgentPrompt.messages(goal: goal, observation: observation, history: history),
+                response = try await decide(ComputerUseAgentPrompt.messages(goal: goal, observation: observation, history: history, notes: notes),
                                             observation.screenshot)
             } catch {
                 return .stopped("次の一手を考えられませんでした: \(error.localizedDescription)")
@@ -278,6 +310,18 @@ public enum ComputerUseAgent {
                     return .stopped("「\(line)」はユーザーの判断で行いませんでした")
                 }
             case .safe: break
+            }
+            if case .search(let query) = action {
+                // Read-only and off screen: the results become notes for the next decisions.
+                let result: String
+                if let search {
+                    do { notes.append("「\(query)」の結果:\n" + (try await search(query))); result = "調べた(調べた内容に入れた)" } catch {
+                        result = "調べられなかった: \(error.localizedDescription)"
+                    }
+                } else { result = "この Mac では調べられない" }
+                history.append("\(line) → \(result)")
+                await onStep(.init(action: line, result: result))
+                continue
             }
             let result: String
             do { result = try await controller.perform(action, in: observation) } catch {

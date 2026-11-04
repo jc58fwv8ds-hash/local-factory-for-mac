@@ -16,7 +16,7 @@ struct VideoGenerationLiveTests {
         let output = FileManager.default.temporaryDirectory.appendingPathComponent("video-\(UUID().uuidString).mp4")
         let started = ContinuousClock.now
         try await ImageGenerationService().generate(option: option, prompt:
-            "Paper lanterns sway gently over a quiet night street, light rain, soft reflections", output: output)
+            "Paper lanterns sway gently over a quiet night street, light rain, soft reflections", output: output, options: ImageGenerationOptions(seed: 1))
         let size = (try? FileManager.default.attributesOfItem(atPath: output.path)[.size] as? Int) ?? 0
         print("動画: \(output.path) \(size) バイト / \(ContinuousClock.now - started)")
         #expect(size > 100_000)

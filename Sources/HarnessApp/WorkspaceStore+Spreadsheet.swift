@@ -7,6 +7,8 @@ import HarnessCore
 @MainActor
 @Observable
 final class SpreadsheetChange: Identifiable {
+    /// The running job, for the card's 止める.
+    var task: Task<Void, Never>?
     enum Status: Equatable { case running, ready, applied(URL), failed(String), discarded }
     let id: UUID
     let instruction: String
@@ -71,7 +73,7 @@ extension WorkspaceStore {
         persist()
         let change = SpreadsheetChange(id: message.id, instruction: text, source: URL(fileURLWithPath: path))
         spreadsheetChanges[message.id] = change
-        Task { await runSpreadsheetChange(change, model: model) }
+        change.task = Task { await runSpreadsheetChange(change, model: model) }
         return true
     }
 
@@ -129,7 +131,9 @@ extension WorkspaceStore {
     }
 
     func discardSpreadsheetChange(_ change: SpreadsheetChange) {
-        if change.status == .ready || change.status == .running { change.status = .discarded }
+        guard change.status == .ready || change.status == .running else { return }
+        change.task?.cancel()
+        change.status = .discarded
     }
 }
 

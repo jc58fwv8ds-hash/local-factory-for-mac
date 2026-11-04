@@ -4,12 +4,15 @@ import Foundation
 /// conversation model. The options come from a local catalog file (purpose-models.json), not from the app: without one,
 /// only the project's model is offered. Nothing here is used unless the user picks an option in the settings.
 public enum ModelPurpose: String, Codable, CaseIterable, Sendable {
+    /// Conversation in chat mode (2026-11-02, the user: the chat's conversation uses a model of their choice).
+    case conversation
     case writing
     case image
     case video
 
     public var title: String {
         switch self {
+        case .conversation: "会話"
         case .writing: "文章を書く"
         case .image: "画像を作る"
         case .video: "動画を作る"
@@ -47,6 +50,8 @@ public struct PurposeModelCatalog: Codable, Equatable, Sendable {
     public var image: [PurposeModelOption]
     /// Video generation (2026-10-19): command-line options like image; absent in older catalog files.
     public var video: [PurposeModelOption]?
+    /// Conversation options (2026-11-02); absent in older catalog files.
+    public var conversation: [PurposeModelOption]?
     /// When a writing option is chosen, every model role in that flow follows it: the "large" role (the project's 27B-class
     /// model) and the "checker" role (the second model that rechecks). Ids of writing options.
     public var roles: [String: String]?
@@ -54,8 +59,8 @@ public struct PurposeModelCatalog: Codable, Equatable, Sendable {
     public var codeRefusalFallback: String?
 
     public init(writing: [PurposeModelOption] = [], image: [PurposeModelOption] = [], video: [PurposeModelOption]? = nil,
-                roles: [String: String]? = nil, codeRefusalFallback: String? = nil) {
-        self.writing = writing; self.image = image; self.video = video; self.roles = roles
+                roles: [String: String]? = nil, codeRefusalFallback: String? = nil, conversation: [PurposeModelOption]? = nil) {
+        self.writing = writing; self.image = image; self.video = video; self.roles = roles; self.conversation = conversation
         self.codeRefusalFallback = codeRefusalFallback
     }
 
@@ -69,6 +74,7 @@ public struct PurposeModelCatalog: Codable, Equatable, Sendable {
 
     public func options(for purpose: ModelPurpose) -> [PurposeModelOption] {
         switch purpose {
+        case .conversation: conversation ?? []
         case .writing: writing
         case .image: image
         case .video: video ?? []

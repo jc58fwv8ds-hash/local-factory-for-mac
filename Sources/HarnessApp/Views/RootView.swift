@@ -28,6 +28,12 @@ struct RootView: View {
             } else if store.selectedSection == .developer {
                 DogfoodShadowView(sourcePath: store.library.selectedRecord?.sourceLocation)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if store.selectedSection == .agent {
+                AgentView(agent: AgentStore.shared, onInstallRemoteApp: { store.selectedSection = .apps })
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if store.selectedSection == .dailyNews {
+                DailyNewsView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if store.selectedSection == .voices {
                 VoiceLibraryView(store: store)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -149,6 +155,12 @@ private struct SidebarView: View {
 
                 if store.workspaceMode == .chat {
                 SidebarButton(
+                    title: "エージェント",
+                    systemImage: "cursorarrow.motionlines",
+                    accessibilityID: "sidebar-agent",
+                    isSelected: store.selectedSection == .agent
+                ) { store.selectedSection = .agent }
+                SidebarButton(
                     title: "声",
                     systemImage: "waveform",
                     accessibilityID: HarnessAccessibilityID.sidebarVoices,
@@ -157,6 +169,12 @@ private struct SidebarView: View {
                     store.openVoiceLibrary()
                 }
                 }
+                SidebarButton(
+                    title: "毎日のニュース",
+                    systemImage: "play.rectangle",
+                    accessibilityID: "sidebar-daily-news",
+                    isSelected: store.selectedSection == .dailyNews
+                ) { store.selectedSection = .dailyNews }
 #if DEBUG
                 if store.workspaceMode == .code {
                 SidebarButton(
@@ -195,8 +213,12 @@ private struct SidebarView: View {
                                 && store.selectedSection == .home
                         ) {
                             store.selectProject(record.id)
+                        } onDelete: {
+                            store.deleteFromSidebar(record.id)
                         }
                     }
+
+                    SidebarTrashSection(store: store)
 
                     if store.modeRecords.isEmpty {
                         Text(store.workspaceMode == .chat ? "チャットはありません(+ で始めます)" : "プロジェクトはありません")
@@ -215,7 +237,7 @@ private struct SidebarView: View {
                 Circle()
                     .fill(store.hasConfiguredModel ? .green : .orange)
                     .frame(width: 8, height: 8)
-                Text(store.hasConfiguredModel ? "AI 接続済み" : "AI 未接続")
+                Text(store.project.selectedModel != nil ? "AI 接続済み" : store.hasConfiguredModel ? "AI 自動(使うときに読み込み)" : "AI 未接続")
                     .font(.harness(.caption))
                     .foregroundStyle(.secondary)
                 Spacer()
@@ -245,46 +267,6 @@ private struct HarnessBrandIcon: View {
     var body: some View {
         FactoryLogoView(height: 38)
             .accessibilityHidden(true)
-    }
-}
-
-private struct ProjectSidebarRow: View {
-    let record: ProjectRecord
-    let isSelected: Bool
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 10) {
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(Color.accentColor.opacity(isSelected ? 0.2 : 0.1))
-                    .overlay {
-                        Image(systemName: record.origin == .imported ? "folder.fill" : "hammer.fill")
-                            .font(.harness(.caption))
-                            .foregroundStyle(Color.accentColor)
-                    }
-                    .frame(width: 31, height: 31)
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(record.project.name)
-                        .font(.harness(.subheadline, weight: isSelected ? .semibold : .medium))
-                        .lineLimit(1)
-                    Text(record.project.stage.rawValue)
-                        .font(.harness(.caption2))
-                        .foregroundStyle(.secondary)
-                }
-                Spacer()
-            }
-            .padding(.horizontal, 6)
-            .padding(.vertical, 5)
-            .background(
-                isSelected ? Color.accentColor.opacity(0.1) : Color.clear,
-                in: RoundedRectangle(cornerRadius: 9)
-            )
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityIdentifier(HarnessAccessibilityID.sidebarProject(record.id))
     }
 }
 

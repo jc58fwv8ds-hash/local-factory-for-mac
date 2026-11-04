@@ -69,7 +69,7 @@ enum PDFIntent {
 extension WorkspaceStore {
     func submitPDFEdit(_ text: String) -> Bool {
         let files = documentAttachments.filter { $0.kind == "PDF" }.compactMap(\.sourcePath).map { URL(fileURLWithPath: $0) }
-        guard !files.isEmpty, let model = project.selectedModel, PDFIntent.isEditRequest(text) else { return false }
+        guard !files.isEmpty, let model = (project.selectedModel ?? WorkspaceStore.automaticModel), PDFIntent.isEditRequest(text) else { return false }
         let message = ConversationMessage(role: .user, content: text + "\n(添付: " + files.map(\.lastPathComponent).joined(separator: "、") + ")",
                                           origin: .user)
         library.updateSelectedProject { $0.conversation.append(message) }

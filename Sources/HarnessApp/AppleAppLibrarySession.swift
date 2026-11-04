@@ -74,7 +74,7 @@ final class AppleAppLibrarySession {
                 try Task.checkCancellation()
                 let connected = (try? await provider.listDevices()) ?? []
                 try Task.checkCancellation()
-                apps = discovered
+                apps = Self.oneTilePerApp(discovered)
                 devices = connected
                 normalizeDeviceSelection()
                 if !discovered.contains(where: { $0.id == selectedAppID }) {
@@ -89,6 +89,17 @@ final class AppleAppLibrarySession {
             }
             phase = .idle
             task = nil
+        }
+    }
+
+    /// One tile for one app (2026-11-04: a project's two schemes and an older copy of a project each made their own tile,
+    /// four tiles for two apps). The same bundle identifiers mean the same app; the first found stays, and the bundled
+    /// Remote comes first in the sources.
+    nonisolated static func oneTilePerApp(_ found: [InstallableAppleApp]) -> [InstallableAppleApp] {
+        var seen = Set<String>()
+        return found.filter { app in
+            let main = app.configuration(for: .iPhone)?.bundleIdentifier ?? app.configuration(for: .appleWatch)?.bundleIdentifier ?? app.id
+            return seen.insert(main).inserted
         }
     }
 
@@ -133,6 +144,24 @@ final class AppleAppLibrarySession {
     func selectedDevice(for platform: AppleAppPlatform) -> PhysicalAppleDevice? {
         let id = selectedDeviceIDs[platform]
         return devices.first { $0.id == id && $0.platform == platform }
+    }
+
+    /// One press (2026-11-04, the user: installing needs one button): every device this app runs on that is here now.
+    /// A device that is not here is left out and named afterwards; nothing else is asked.
+    func installOnEveryDevice(_ appID: String) {
+        guard !isBusy else { return }
+        selectApp(appID)
+        guard let app = selectedApp else { return }
+        let ready = app.supportedPlatforms.filter { !devices(for: $0).isEmpty }
+        selectedPlatforms = Set(AppleAppInstallSelectionPolicy.installationOrder(requested: Set(ready), app: app))
+        for platform in selectedPlatforms where selectedDevice(for: platform) == nil {
+            selectedDeviceIDs[platform] = devices(for: platform).first?.id
+        }
+        guard canInstall else {
+            errorMessage = ready.isEmpty ? "端末が見つかりません。ケーブルか同じ Wi-Fi でつないでください。" : "無料署名の設定が必要です。右の「Xcodeで無料署名を設定」から設定してください。"
+            return
+        }
+        installSelected()
     }
 
     func installSelected() {

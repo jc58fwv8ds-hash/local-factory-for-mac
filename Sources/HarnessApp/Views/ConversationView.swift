@@ -12,7 +12,7 @@ struct ConversationView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            if store.project.selectedModel == nil {
+            if !store.hasConfiguredModel {
                 Label("AIモデルが未接続です。サイドバーの「AIモデル」から選んでください。", systemImage: "exclamationmark.circle")
                     .font(.harness(.caption, weight: .medium))
                     .foregroundStyle(.orange)
@@ -62,7 +62,7 @@ struct ConversationView: View {
                             SpreadsheetChangeCard(change: sheet, store: store)
                         }
                         if let image = store.imageChanges[message.id] {
-                            ImageChangeCard(change: image)
+                            ImageChangeCard(change: image) { store.stopImage(image) }
                         }
                     }
 
@@ -110,7 +110,7 @@ private struct ConversationBubble: View {
                 if message.role == .assistant {
                     ExplainedResponseText(
                         text: message.content,
-                        model: store.project.selectedModel,
+                        model: store.effectiveModel,
                         service: store.termExplanationService,
                         isSuspended: store.isGenerating || store.computerOperator.isBusy || store.replySuggestions.isLoading
                     )

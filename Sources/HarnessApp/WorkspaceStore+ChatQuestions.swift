@@ -40,6 +40,6 @@ extension WorkspaceStore {
         let built = ChatChange(id: change.id, instruction: instruction)
         built.questions = change.questions
         chatChanges[change.id] = built
-        Task { await runChatChange(built, context: context) }
+        built.task = Task { await runChatChange(built, context: context) }
     }
 }

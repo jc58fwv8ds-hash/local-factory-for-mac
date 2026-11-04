@@ -34,12 +34,19 @@ final class AccessibilityComputerUse: ComputerUseControlling, @unchecked Sendabl
 
     func observe() async throws -> ComputerUseObservation {
         guard AXIsProcessTrusted() else { throw Failure.permission }
+        // The lock screen (2026-11-04: asked from the iPhone with the lid just opened, the model took it for a login page and
+        // tried keys and apps). Web search still works; nothing on the screen can be operated.
+        if await MainActor.run(body: { Self.isLocked }) {
+            return ComputerUseObservation(application: "(Mac の画面がロック中。検索はできるが、アプリやブラウザは操作できない)", window: "", elements: [])
+        }
         let app = await MainActor.run { () -> NSRunningApplication? in
             let own = Bundle.main.bundleIdentifier
             if let front = NSWorkspace.shared.frontmostApplication, front.bundleIdentifier != own { return front }
             return lock.withLock { target }
         }
-        guard let app else { throw Failure.noApplication }
+        // Nothing to operate yet (the request was typed into Local Factory itself, 2026-11-02 agent screen): the model starts
+        // by opening an app or a page.
+        guard let app else { return ComputerUseObservation(application: "(操作中のアプリなし)", window: "", elements: []) }
         lock.withLock { target = app }
         let root = AXUIElementCreateApplication(app.processIdentifier)
         let window = string(focusedWindow(root) ?? root, kAXTitleAttribute)
@@ -81,7 +88,13 @@ final class AccessibilityComputerUse: ComputerUseControlling, @unchecked Sendabl
         return note
     }
 
+    /// True while the login window is in front: the screen is locked or nobody has logged in.
+    @MainActor static var isLocked: Bool { NSWorkspace.shared.frontmostApplication?.bundleIdentifier == "com.apple.loginwindow" }
+
     private func act(_ action: ComputerUseAction) async throws -> String {
+        if await MainActor.run(body: { Self.isLocked }) {
+            throw Failure.action("Mac の画面がロックされているので操作できません。ロックを解除してから頼み直してください")
+        }
         switch action {
         case .openApplication(let name):
             let url = try await MainActor.run { () throws -> URL in try Self.applicationURL(named: name) }
@@ -127,7 +140,17 @@ final class AccessibilityComputerUse: ComputerUseControlling, @unchecked Sendabl
         case .write(let text):
             typeCharacters(text)
             return "書いた"
-        case .done, .askUser:
+        case .openURL(let text):
+            // Safari, whatever the default browser is (the user asked for Safari, 2026-11-02); the risk check allowed http(s) only.
+            guard let url = URL(string: text) else { throw Failure.action("URL を読めません") }
+            let safari = try await MainActor.run { () throws -> URL in try Self.applicationURL(named: "Safari") }
+            let configuration = NSWorkspace.OpenConfiguration()
+            configuration.activates = true
+            let app = try await NSWorkspace.shared.open([url], withApplicationAt: safari, configuration: configuration)
+            lock.withLock { target = app }
+            try? await Task.sleep(for: .milliseconds(2500))   // the page loads
+            return "開いた"
+        case .done, .askUser, .search:
             return ""
         }
     }

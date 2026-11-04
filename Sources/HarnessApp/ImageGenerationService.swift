@@ -5,7 +5,14 @@ import HarnessCore
 /// runs, the language models are moved out of memory: the Backburner server this App started is stopped (it starts again
 /// on the next use) and Ollama is asked to unload its models. A Backburner the user launched in Terminal is left alone.
 protocol ImageGenerating: Sendable {
-    func generate(option: PurposeModelOption, prompt: String, output: URL) async throws
+    func generate(option: PurposeModelOption, prompt: String, output: URL, options: ImageGenerationOptions) async throws
+}
+
+/// What a run may be told besides the prompt. `seconds` and `image` reach only commands with {seconds} and {image}.
+struct ImageGenerationOptions: Sendable {
+    var seed: Int
+    var seconds: Int?
+    var image: URL?
 }
 
 struct ImageGenerationService: ImageGenerating {
@@ -25,26 +32,37 @@ struct ImageGenerationService: ImageGenerating {
                               FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".local/bin").path,
                               "/usr/bin", "/bin"]
 
-    func generate(option: PurposeModelOption, prompt: String, output: URL) async throws {
+    func generate(option: PurposeModelOption, prompt: String, output: URL, options: ImageGenerationOptions) async throws {
         guard let template = option.command, let tool = template.first else { throw Failure.noCommand }
         guard let executable = Self.resolve(tool) else { throw Failure.notInstalled(tool) }
         // "No model" under a lease for the whole run: running language requests finish first, and a chat request that comes
         // in meanwhile waits instead of loading the 27B beside the image model.
         let log = try await ModelRuntimes.shared.withLease(.none) {
+            try Task.checkCancellation()
             await Self.releaseLanguageModels()
-            let arguments = Self.arguments(template.dropFirst(), prompt: prompt, output: output)
+            let arguments = Self.arguments(template.dropFirst(), prompt: prompt, output: output, seed: options.seed, seconds: options.seconds, image: options.image)
             try FileManager.default.createDirectory(at: output.deletingLastPathComponent(), withIntermediateDirectories: true)
-            return try await Self.run(executable, arguments)
+            return try await Self.run(executable, arguments, limit: 1200 + Double(options.seconds ?? 0) * 150)
         }
+        try Task.checkCancellation()
         guard FileManager.default.fileExists(atPath: output.path) else {
             throw log.isEmpty ? Failure.noImage : Failure.failed(String(log.suffix(300)))
         }
     }
 
-    static func arguments(_ template: ArraySlice<String>, prompt: String, output: URL, seed: Int = Int.random(in: 1...999_999)) -> [String] {
-        template.map {
+    static func arguments(_ template: ArraySlice<String>, prompt: String, output: URL, seed: Int = Int.random(in: 1...999_999),
+                          seconds: Int? = nil, image: URL? = nil) -> [String] {
+        // A flag whose value was not given goes with it: ["--image", "{image}"] without an image is left out.
+        var kept: [String] = []
+        for argument in template {
+            if (argument.contains("{image}") && image == nil) || (argument.contains("{seconds}") && seconds == nil) { _ = kept.popLast(); continue }
+            kept.append(argument)
+        }
+        return kept.map {
             $0.replacingOccurrences(of: "{prompt}", with: prompt).replacingOccurrences(of: "{output}", with: output.path)
                 .replacingOccurrences(of: "{seed}", with: String(seed))
+                .replacingOccurrences(of: "{seconds}", with: seconds.map(String.init) ?? "")
+                .replacingOccurrences(of: "{image}", with: image?.path ?? "")
                 .replacingOccurrences(of: "{width}", with: "1024").replacingOccurrences(of: "{height}", with: "1024")
                 .replacingOccurrences(of: "{home}", with: FileManager.default.homeDirectoryForCurrentUser.path)
         }
@@ -70,8 +88,16 @@ struct ImageGenerationService: ImageGenerating {
         }
     }
 
-    /// Runs the tool with a 20-minute limit; returns its combined output.
-    static func run(_ executable: URL, _ arguments: [String]) async throws -> String {
+    /// Runs the tool with a time limit (20 minutes, more for a long video); returns its combined output. Cancelling the
+    /// task stops the tool (the card's 止める).
+    static func run(_ executable: URL, _ arguments: [String], limit: Double = 1200) async throws -> String {
+        let running = RunningProcess()
+        return try await withTaskCancellationHandler {
+            try await launch(executable, arguments, limit: limit, running: running)
+        } onCancel: { running.stopIfRunning() }
+    }
+
+    private static func launch(_ executable: URL, _ arguments: [String], limit: Double, running: RunningProcess) async throws -> String {
         try await withCheckedThrowingContinuation { continuation in
             let process = Process()
             process.executableURL = executable
@@ -85,7 +111,7 @@ struct ImageGenerationService: ImageGenerating {
             // Progress bars can fill the pipe: read while it runs, keep the last 8 KB.
             let collected = OutputTail()
             pipe.fileHandleForReading.readabilityHandler = { collected.append($0.availableData) }
-            let running = RunningProcess(process)
+            running.attach(process)
             process.terminationHandler = { _ in
                 pipe.fileHandleForReading.readabilityHandler = nil
                 collected.append(pipe.fileHandleForReading.readDataToEndOfFile())
@@ -93,7 +119,8 @@ struct ImageGenerationService: ImageGenerating {
             }
             do {
                 try process.run()
-                DispatchQueue.global().asyncAfter(deadline: .now() + 1200) { running.stopIfRunning() }
+                if Task.isCancelled { running.stopIfRunning() }
+                DispatchQueue.global().asyncAfter(deadline: .now() + limit) { running.stopIfRunning() }
             } catch {
                 continuation.resume(throwing: Failure.failed(error.localizedDescription))
             }
@@ -112,9 +139,13 @@ private final class OutputTail: @unchecked Sendable {
     var text: String { lock.lock(); defer { lock.unlock() }; return String(decoding: data, as: UTF8.self) }
 }
 
-/// The 20-minute limit: the tool is stopped if it is still running then.
+/// The time limit or the user's 止める: the tool is stopped if it is still running then.
 private final class RunningProcess: @unchecked Sendable {
-    private let process: Process
-    init(_ process: Process) { self.process = process }
-    func stopIfRunning() { if process.isRunning { process.terminate() } }
+    private let lock = NSLock()
+    private var process: Process?
+    func attach(_ process: Process) { lock.lock(); defer { lock.unlock() }; self.process = process }
+    func stopIfRunning() {
+        lock.lock(); defer { lock.unlock() }
+        if process?.isRunning == true { process?.terminate() }
+    }
 }

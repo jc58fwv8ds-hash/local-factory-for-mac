@@ -13,7 +13,7 @@ public enum AppleAppLibraryError: LocalizedError, Equatable, Sendable {
     case settingsUnavailable
     case buildFailed(PhysicalDeviceBuildFailure)
     case appProductUnavailable
-    case installFailed(AppleAppPlatform)
+    case installFailed(AppleAppPlatform, reason: String? = nil)
     case launchFailed(AppleAppPlatform)
     case timedOut
 
@@ -43,8 +43,8 @@ public enum AppleAppLibraryError: LocalizedError, Equatable, Sendable {
             "実機向けビルドを完了できませんでした。\(reason.guidance)"
         case .appProductUnavailable:
             "ビルド済みアプリを安全な一時領域内で確認できませんでした。"
-        case let .installFailed(platform):
-            "\(platform.displayName)へインストールできませんでした。接続、空き容量、署名を確認してください。"
+        case let .installFailed(platform, reason):
+            "\(platform.displayName)へインストールできませんでした。接続、空き容量、署名を確認してください。" + (reason.map { "(端末からの返事: \($0))" } ?? "")
         case let .launchFailed(platform):
             "インストールは完了しましたが、\(platform.displayName)で起動できませんでした。ロックを解除してください。"
         case .timedOut:

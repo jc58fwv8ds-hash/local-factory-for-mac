@@ -20,6 +20,7 @@ struct WordChangeCard: View {
                     ProgressView().controlSize(.small)
                     Text("直す部分を考えています。ファイルはまだ変更していません。").font(.harness(.caption)).foregroundStyle(.secondary)
                 }
+                Button("止める", systemImage: "stop.fill") { store.discardWordChange(change) }.controlSize(.small)
             case .failed(let message):
                 Text(message).font(.harness(.caption)).foregroundStyle(.secondary)
             case .discarded:

@@ -33,15 +33,15 @@ enum ComputerUseSelfTest {
             controller.focus(on: app)
             write("操作の対象: \(arguments[at + 1])")
         }
-        let provider = LocalInferenceService()
-        let model = ModelSelection(identifier: "qwen3.8-27b-iq4xs", displayName: "Backburner", runtime: .backburner)
+        let provider = BackburnerAwareInferenceProvider(base: LocalInferenceService())   // loads the model by itself
+        let model = AgentStore.agentModel
         Task {
             let outcome = await ComputerUseAgent.run(
                 goal: goal, controller: controller,
                 decide: { messages, screenshot in
                     var reply = ""
                     let request = InferenceRequest(runtime: model.runtime, modelIdentifier: model.identifier, messages: messages,
-                                                   maximumOutputTokens: 400,
+                                                   maximumOutputTokens: 1_200,
                                                    images: await ComputerUseScreenshot.inferenceImages(screenshot), temperature: 0)
                     for try await piece in await provider.events(for: request) { reply += piece }
                     write("モデル: \(reply.replacingOccurrences(of: "\n", with: " ").prefix(300))")
@@ -51,7 +51,8 @@ enum ComputerUseSelfTest {
                     write("確認が必要なので行わない: \(action)(\(reason))")
                     return false
                 },
-                onStep: { step in write("一手: \(step.action) → \(step.result)") })
+                onStep: { step in write("一手: \(step.action) → \(step.result)") },
+                search: LocalWebSearch.isInstalled ? { @Sendable query in try await LocalWebSearch().search(query) } : nil)
             write("終了: \(outcome)")
             NSApp.terminate(nil)
         }

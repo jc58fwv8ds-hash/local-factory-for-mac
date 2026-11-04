@@ -9,6 +9,8 @@ import HarnessCore
 final class WordChange: Identifiable {
     enum Status: Equatable { case running, ready, applied(URL), failed(String), discarded }
     let id: UUID
+    /// The running job, for the card's 止める.
+    var task: Task<Void, Never>?
     let instruction: String
     let source: URL
     var status: Status = .running
@@ -53,7 +55,7 @@ extension WorkspaceStore {
         persist()
         let change = WordChange(id: message.id, instruction: text, source: URL(fileURLWithPath: path))
         wordChanges[message.id] = change
-        Task { await runWordChange(change, model: model) }
+        change.task = Task { await runWordChange(change, model: model) }
         return true
     }
 
@@ -109,6 +111,8 @@ extension WorkspaceStore {
     }
 
     func discardWordChange(_ change: WordChange) {
-        if change.status == .ready || change.status == .running { change.status = .discarded }
+        guard change.status == .ready || change.status == .running else { return }
+        change.task?.cancel()
+        change.status = .discarded
     }
 }

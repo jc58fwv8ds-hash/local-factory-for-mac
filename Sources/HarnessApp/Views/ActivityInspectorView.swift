@@ -138,12 +138,12 @@ struct ActivityInspectorView: View {
                 Label("AIモデル", systemImage: "brain.head.profile")
                     .font(.harness(.subheadline, weight: .semibold))
                 Spacer()
-                Text(store.project.selectedModel == nil ? "未接続" : "接続済み")
+                Text(store.project.selectedModel != nil ? "接続済み" : store.hasConfiguredModel ? "自動" : "未接続")
                     .font(.harness(.caption, weight: .semibold))
-                    .foregroundStyle(store.project.selectedModel == nil ? .orange : .green)
+                    .foregroundStyle(store.hasConfiguredModel ? .green : .orange)
             }
 
-            if let model = store.project.selectedModel {
+            if let model = store.effectiveModel {
                 VStack(alignment: .leading, spacing: 3) {
                     Text(model.displayName)
                         .font(.harness(.subheadline, weight: .medium))

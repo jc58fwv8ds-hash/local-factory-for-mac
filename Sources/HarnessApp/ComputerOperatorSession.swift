@@ -134,8 +134,8 @@ final class ComputerOperatorSession {
     }
 
     func makePlan(project: HarnessProject, rootPath: String?) {
-        guard canPlan, let model = project.selectedModel else {
-            errorMessage = project.selectedModel == nil ? "先にAIモデルを選択してください。" : nil
+        guard canPlan, let model = (project.selectedModel ?? WorkspaceStore.automaticModel) else {
+            errorMessage = (project.selectedModel ?? WorkspaceStore.automaticModel) == nil ? "先にAIモデルを選択してください。" : nil
             return
         }
         let requestedInstruction = instruction

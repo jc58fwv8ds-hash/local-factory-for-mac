@@ -100,6 +100,25 @@ struct BatchPipelineReplayTests {
         #expect(source.contains("min(v, 10)"))
     }
 
+    /// A repair that fixes its error and meets another goes on (2026-11-04); the same error again stops and leaves nothing.
+    @Test func aRepairThatGetsPastItsErrorMayContinue() async throws {
+        let (record, source, _) = try await run("followup", plans: [Self.plan()],
+            edits: [Self.edit("return v", "return clampToTen(v)"), Self.edit("return clampToTen(v)", "return clampToNine(v)"),
+                    Self.edit("return clampToNine(v)", "return min(v, 10)")])
+        #expect(record["testsPassedHarnessResult"] as? String == "HARNESS_RECOVERED_SUCCESS", "\(record)")
+        #expect((record["recoveryActions"] as? [String])?.contains("compilerRepairFollowUp(2)") == true)
+        #expect(source.contains("min(v, 10)"))
+    }
+
+    @Test func aRepeatedCompileErrorStopsAndRollsEverythingBack() async throws {
+        let (record, source, _) = try await run("followup-stop", plans: [Self.plan()],
+            edits: [Self.edit("return v", "return clampA(v)"), Self.edit("return clampA(v)", "return clampB(v)"),
+                    Self.edit("return clampB(v)", "return  clampB(v)")])
+        #expect(record["harnessResult"] as? String == "HARNESS_FAIL", "\(record)")
+        #expect(record["rollbackResult"] as? String == RollbackOutcome.ATTEMPTED_SUCCESS.rawValue, "\(record)")
+        #expect(source == Self.meter)
+    }
+
     @Test func wrongBehaviourIsReplannedOnceThenFailsAndRollsBack() async throws {
         let wrong = Self.edit("return v", "return min(v, 9)")
         let (record, source, _) = try await run("fail", plans: [Self.plan(), Self.plan()], edits: [wrong, wrong])

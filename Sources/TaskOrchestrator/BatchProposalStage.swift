@@ -15,8 +15,10 @@ enum BatchProposalStage {
         or you need a file or symbol you have not been shown), do not guess: return
         {"edits":[],"context_request":{"file":"relative path or empty","symbol":"name or empty","why_needed":"...","relation":"how it relates to the task","operation":"edit or read"}}.
         """ : "No further context can be requested; work only with what is shown."
+        // 2026-11-01: positions of quoted fixed formats, worked out without a model (FormatPositions).
+        let positions = FormatPositions.note(objective).map { "\n" + $0 } ?? ""
         return """
-        \(objective)
+        \(objective)\(positions)
         Return JSON only: {"edits":[{"operation":"replace_exact","file":"relative path","expected_old_text":"exact source anchor","new_text":"replacement"}]}.
         Edit ONLY files under EDITABLE. Files under READ-ONLY are evidence to read; never put them in edits.
         Never invent files, types or fields you have not been shown.

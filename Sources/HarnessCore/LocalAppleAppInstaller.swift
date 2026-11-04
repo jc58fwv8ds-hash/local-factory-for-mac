@@ -99,16 +99,16 @@ struct LocalAppleAppInstaller: Sendable {
         let deviceEnvironment = try await deviceEnvironment()
 
         await onStage(.installing)
-        let installed = try await run(
-            [
-                "devicectl", "device", "install", "app",
-                "--device", device.deviceIdentifier, appURL.path, "--quiet"
-            ],
-            rootURL: nil,
-            environment: deviceEnvironment
-        )
+        // A Watch is reached over Wi-Fi and its link comes and goes (2026-11-04: the same Watch answered one minute after a
+        // failed install), so it gets three tries; the device's own words are kept for the message.
+        let tries = device.platform == .appleWatch ? 3 : 1
+        var installed = try await run(installArguments(device: device, appURL: appURL), rootURL: nil, environment: deviceEnvironment)
+        for _ in 1..<tries where installed.exitCode != 0 {
+            try await Task.sleep(for: .seconds(10))
+            installed = try await run(installArguments(device: device, appURL: appURL), rootURL: nil, environment: deviceEnvironment)
+        }
         guard installed.exitCode == 0 else {
-            throw AppleAppLibraryError.installFailed(device.platform)
+            throw AppleAppLibraryError.installFailed(device.platform, reason: Self.installProblem(installed.output))
         }
 
         await onStage(.launching)
@@ -129,6 +129,25 @@ struct LocalAppleAppInstaller: Sendable {
             profile: ProvisioningProfileReader.read(appURL: appURL),
             launchProblem: launched.exitCode == 0 ? nil : Self.launchProblem(launched.output, platform: device.platform)
         )
+    }
+
+    private func installArguments(device: PhysicalAppleDevice, appURL: URL) -> [String] {
+        ["devicectl", "device", "install", "app", "--device", device.deviceIdentifier, appURL.path, "--quiet"]
+    }
+
+    /// Rising with time, in the form CFBundleVersion takes: 261104.2240.
+    static func buildNumber(at date: Date = Date()) -> String {
+        let format = DateFormatter()
+        format.locale = Locale(identifier: "en_US_POSIX")
+        format.dateFormat = "yyMMdd.HHmm"
+        return format.string(from: date)
+    }
+
+    /// The line of devicectl's output that says what went wrong, shortened for the message.
+    static func installProblem(_ output: String) -> String? {
+        let lines = output.split(whereSeparator: \.isNewline).map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        let line = lines.first { $0.localizedCaseInsensitiveContains("error") || $0.contains("エラー") } ?? lines.last
+        return line.map { String($0.prefix(200)) }
     }
 
     private func validateReadiness(
@@ -175,6 +194,9 @@ struct LocalAppleAppInstaller: Sendable {
             "-allowProvisioningUpdates",
             "-allowProvisioningDeviceRegistration",
             "-hideShellScriptEnvironment",
+            // A new number for every install (2026-11-04: both apps stayed at build 1, and the iPhone's Watch app left the old
+            // Watch app in place). The iPhone app and the Watch app inside it get the same one, as watchOS requires.
+            "CURRENT_PROJECT_VERSION=\(Self.buildNumber())",
             "build"
         ]
     }

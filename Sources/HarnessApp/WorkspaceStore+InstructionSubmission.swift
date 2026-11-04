@@ -93,7 +93,9 @@ extension WorkspaceStore {
             instruction,
             origin: .user,
             images: visualAttachments.inferenceImages,
-            documents: documentAttachments
+            documents: documentAttachments,
+            // Chat mode's conversation uses the model chosen for 会話 (2026-11-02); code mode keeps the project's model.
+            modelOverride: workspaceMode == .chat ? purposeSettings.chosen(.conversation)?.selection : nil
         )
         if decision.status == .accepted || decision.status == .queued {
             instruction = ""
@@ -170,7 +172,7 @@ extension WorkspaceStore {
             ? "iPhoneからの指示を受け付けました"
             : "指示を受け付けました")
 
-        guard let selectedModel = modelOverride ?? record.project.selectedModel else {
+        guard let selectedModel = modelOverride ?? record.project.selectedModel ?? Self.automaticModel else {
             presentNotice("実行するにはAIモデルを選択してください", kind: .information)
             return RemoteInstructionDecision(
                 status: .queued,

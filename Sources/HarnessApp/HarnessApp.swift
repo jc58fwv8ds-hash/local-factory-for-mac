@@ -43,6 +43,12 @@ struct HarnessApp: App {
         }
         .defaultSize(width: 1_380, height: 860)
         .windowStyle(.hiddenTitleBar)
+        // 「設定…」(⌘,): what is stopped and why, straight from the menu (2026-11-02, the user's request).
+        Settings {
+            ScrollView { ContentGuardSection().padding(24) }
+                .frame(width: 620, height: 640)
+                .font(.harness(.body))
+        }
         .commands {
             CommandGroup(replacing: .newItem) {
                 Button("新規プロジェクト") {

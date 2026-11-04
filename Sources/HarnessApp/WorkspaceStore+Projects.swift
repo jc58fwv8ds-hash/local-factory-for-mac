@@ -88,6 +88,14 @@ extension WorkspaceStore {
         persist(successMessage: "Local Factoryのゴミ箱へ移動しました。元ファイルは残っています")
     }
 
+    /// Deleted from the sidebar: the next chat or project of this mode opens, not one of the other mode.
+    func deleteFromSidebar(_ id: UUID) {
+        moveProjectToTrash(id)
+        guard !selectedProjectIsInMode, let next = modeRecords.first else { return }
+        library.select(next.id)
+        persist()
+    }
+
     func restoreProject(_ id: UUID) {
         guard library.selectedProjectID == id
             || allowInteraction(.changeSelectedProject) else { return }

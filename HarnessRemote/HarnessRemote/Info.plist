@@ -14,6 +14,6 @@
 <key>UILaunchScreen</key><dict/>
 <key>UIApplicationSupportsIndirectInputEvents</key><true/>
 <key>NSLocalNetworkUsageDescription</key>
-<string>近くのMacで動作するHarnessへ制作指示を送るために使用します。</string>
-<key>NSBonjourServices</key><array><string>_harness-remote._tcp</string></array>
+<string>MacのLocal Factoryを見つけて、制作指示やエージェントへの依頼を送るために使用します。</string>
+<key>NSBonjourServices</key><array><string>_harness-remote._tcp</string><string>_lfagent._tcp</string><string>_lfagent-pair._tcp</string></array>
 </dict></plist>

@@ -71,7 +71,7 @@ extension WorkspaceStore {
 
     /// A rename request with a folder attached becomes a rename card under the message.
     func submitRenameRequest(_ text: String) -> Bool {
-        guard let folder = attachedFolder, let model = project.selectedModel else { return false }
+        guard let folder = attachedFolder, let model = (project.selectedModel ?? WorkspaceStore.automaticModel) else { return false }
         let cleaned = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !cleaned.isEmpty else { return false }
         let message = ConversationMessage(role: .user, content: cleaned + "\n(フォルダ: \(folder.lastPathComponent))", origin: .user)

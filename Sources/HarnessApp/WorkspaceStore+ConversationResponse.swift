@@ -33,6 +33,14 @@ extension WorkspaceStore {
         let sentenceCount = ConversationSentenceCountPolicy(project: project)
         generationPhase = .generating
         try await streamConversationResponse(request)
+        // A refusal by mistake is answered again by the model chosen for refusals (settings, 2026-11-02).
+        if ModelRefusal.looksLikeRefusal(streamingResponse),
+           let fallback = ContentGuardSettings().refusalFallback(catalog: purposeSettings.catalog), fallback != model {
+            streamingResponse = ""
+            try await streamConversationResponse(InferenceRequest(runtime: fallback.runtime, modelIdentifier: fallback.identifier,
+                messages: request.messages, maximumOutputTokens: request.maximumOutputTokens, images: images))
+            return
+        }
         let revisionRequest: InferenceRequest?
         if continuation?.repeats(streamingResponse) == true {
             revisionRequest = continuation?.refinementRequest(from: request)

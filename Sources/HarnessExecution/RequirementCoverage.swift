@@ -93,6 +93,9 @@ public enum RequirementCoverage {
         case targetReplan
         /// One re-proposal after an anchor that did not occur exactly once, with deterministic match diagnostics.
         case anchorRepair
+        /// Further compiler repairs while each one gets past the last error (2026-11-04: all 3 compile failures of the c2/c3
+        /// runs had fixed their error and met a new one, and were stopped there). Two at most; a repeated error ends them.
+        case compilerFollowUp1, compilerFollowUp2
         /// One compiler repair of the second attempt's proposal (after a requirement replan or runtime repair). Recorded
         /// c2-12 / c2-10 / c1-20: the first attempt's repair compiled, the replan repeated the same kind of compile error
         /// and the task stopped only because the single compilerRepair was spent. Outside the cap like anchorRepair; the
@@ -113,6 +116,9 @@ public enum RequirementCoverage {
         /// (UntouchedCallers); only edits inside those functions are kept, and only if it builds and the tests still pass.
         /// Outside the cap like anchorRepair.
         case callerRepair
+        /// One follow-up after the tests pass when the code the change added has a known Swift pitfall (SwiftPitfalls);
+        /// only edits inside those functions are kept, and only if it builds and the tests still pass. Outside the cap.
+        case pitfallRepair
     }
 
     /// Clause Coverage Gate: every mandatory clause must be cited by a requirement that
@@ -181,7 +187,7 @@ public enum RequirementCoverage {
     /// later compiler, runtime or requirement repair.
     public struct Budget: Sendable, Equatable {
         public static let taskLimit = 2
-        static let uncapped: Set<Recovery> = [.anchorRepair, .replanCompilerRepair, .leftoverRepair, .examinerRepair, .formatRepair, .callerRepair]
+        static let uncapped: Set<Recovery> = [.anchorRepair, .compilerFollowUp1, .compilerFollowUp2, .replanCompilerRepair, .leftoverRepair, .examinerRepair, .formatRepair, .callerRepair, .pitfallRepair]
         public private(set) var used: [Recovery] = []
         public init() {}
         public func allows(_ kind: Recovery) -> Bool {

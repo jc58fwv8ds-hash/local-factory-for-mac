@@ -32,12 +32,14 @@
     <key>NSHighResolutionCapable</key>
     <true/>
     <key>NSLocalNetworkUsageDescription</key>
-    <string>iPhoneから選択中のプロジェクトへ制作指示を送るため、ローカルネットワーク上のHarnessを検出します。</string>
+    <string>つないだiPhoneから、制作指示やエージェントへの依頼を受け付けるために使います。</string>
     <key>NSMicrophoneUsageDescription</key>
 	<string>話した内容をMac上だけで文字にし、音声入力または会話に使います。録音は保存しません。</string>
     <key>NSBonjourServices</key>
     <array>
         <string>_harness-remote._tcp</string>
+        <string>_lfagent._tcp</string>
+        <string>_lfagent-pair._tcp</string>
     </array>
 </dict>
 </plist>

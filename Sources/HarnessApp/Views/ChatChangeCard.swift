@@ -25,6 +25,8 @@ struct ChatChangeCard: View {
                     Text("計画 → 修正 → ビルド → テストを手元で実行しています。プロジェクトはまだ変更していません。")
                         .font(.harness(.caption)).foregroundStyle(.secondary)
                 }
+                if let start = change.runStartedAt { RemainingTimeLabel(kind: "code", startedAt: start) }
+                Button("止める", systemImage: "stop.fill") { store.discardChatChange(change) }.controlSize(.small)
             case .failed(let message):
                 Text(message).font(.harness(.caption)).foregroundStyle(.secondary).lineLimit(4)
             case .discarded:

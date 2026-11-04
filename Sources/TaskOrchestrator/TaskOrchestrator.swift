@@ -262,7 +262,7 @@ package enum TaskOrchestrator {
                     if let again = try await BatchCompilerRepair.compile(isolated, evidence: isolation, root: root) {
                         attemptRecord["repairCompile"] = "FAIL"; attemptRecord["repairDiagnostics"] = BatchCompilerRepair.encode(again.diagnostics)
                         attemptRecord["sameFailureClassRecurred"] = again.failureClass == failure.failureClass
-                        throw BatchCompilerRepair.Stop.repairDidNotCompile
+                        changed += try await BatchCompilerRepair.followUps(after: again, isolated: isolated, evidence: isolation, root: root, output: dir, model: model, objective: task.objective, earlier: changed, permitted: scope.editable, protected: protected, maxEdits: task.maxEdits, maxLines: task.maxLines, editor: editor, budget: &budget, record: record)
                     }
                     attemptRecord["repairCompile"] = "PASS"
                 } else { attemptRecord["firstCompile"] = "PASS" }
@@ -274,7 +274,7 @@ package enum TaskOrchestrator {
                         objective: task.objective, changed: changed, permitted: scope.editable, protected: protected,
                         maxEdits: task.maxEdits, maxLines: task.maxLines, editor: editor, isolated: isolated,
                         evidence: isolation, budget: &budget, record: record)
-                    changed += try await BatchCallerStage.followUp(root: root, directory: dir, model: model,
+                    changed += try await BatchPitfallStage.afterCallers(root: root, directory: dir, model: model,
                         objective: task.objective, changed: changed, permitted: scope.editable, protected: protected,
                         maxEdits: task.maxEdits, maxLines: task.maxLines, editor: editor, isolated: isolated,
                         evidence: isolation, budget: &budget, record: record)

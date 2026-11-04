@@ -21,6 +21,7 @@ struct SpreadsheetChangeCard: View {
                     ProgressView().controlSize(.small)
                     Text("書き換えるセルを考えています。ファイルはまだ変更していません。").font(.harness(.caption)).foregroundStyle(.secondary)
                 }
+                Button("止める", systemImage: "stop.fill") { store.discardSpreadsheetChange(change) }.controlSize(.small)
             case .failed(let message):
                 Text(message).font(.harness(.caption)).foregroundStyle(.secondary)
             case .discarded:

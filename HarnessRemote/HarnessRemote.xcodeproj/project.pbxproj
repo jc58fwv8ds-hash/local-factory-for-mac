@@ -9,6 +9,9 @@
 		C00000000000000000000001 /* HarnessRemoteApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000001 /* HarnessRemoteApp.swift */; };
 		C00000000000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000002 /* ContentView.swift */; };
 		C00000000000000000000003 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000003 /* DesignSystem.swift */; };
+		C000000000000000000000A1 /* AgentWire.swift in Sources */ = {isa = PBXBuildFile; fileRef = B000000000000000000000A1 /* AgentWire.swift */; };
+		C000000000000000000000A2 /* AgentClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = B000000000000000000000A2 /* AgentClient.swift */; };
+		C000000000000000000000A3 /* AgentScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = B000000000000000000000A3 /* AgentScreen.swift */; };
 		C00000000000000000000004 /* RemoteProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000004 /* RemoteProtocol.swift */; };
 		C00000000000000000000005 /* RemoteSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000005 /* RemoteSession.swift */; };
 		C00000000000000000000006 /* RemoteProtocolTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00000000000000000000007 /* RemoteProtocolTests.swift */; };
@@ -23,6 +26,9 @@
 		B00000000000000000000001 /* HarnessRemoteApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HarnessRemoteApp.swift; sourceTree = "<group>"; };
 		B00000000000000000000002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		B00000000000000000000003 /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
+		B000000000000000000000A1 /* AgentWire.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentWire.swift; sourceTree = "<group>"; };
+		B000000000000000000000A2 /* AgentClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentClient.swift; sourceTree = "<group>"; };
+		B000000000000000000000A3 /* AgentScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentScreen.swift; sourceTree = "<group>"; };
 		B00000000000000000000004 /* RemoteProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteProtocol.swift; sourceTree = "<group>"; };
 		B00000000000000000000005 /* RemoteSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteSession.swift; sourceTree = "<group>"; };
 		B00000000000000000000006 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -39,7 +45,7 @@
 
 /* Begin PBXGroup section */
 		D00000000000000000000001 = {isa = PBXGroup; children = (D00000000000000000000002 /* HarnessRemote */, D00000000000000000000003 /* HarnessRemoteTests */, D00000000000000000000004 /* Products */); sourceTree = "<group>"; };
-		D00000000000000000000002 /* HarnessRemote */ = {isa = PBXGroup; children = (B00000000000000000000001, B00000000000000000000002, B00000000000000000000003, B00000000000000000000004, B00000000000000000000005, B00000000000000000000006, B00000000000000000000010); path = HarnessRemote; sourceTree = "<group>"; };
+		D00000000000000000000002 /* HarnessRemote */ = {isa = PBXGroup; children = (B00000000000000000000001, B00000000000000000000002, B00000000000000000000003, B00000000000000000000004, B00000000000000000000005, B00000000000000000000006, B00000000000000000000010, B000000000000000000000A1, B000000000000000000000A2, B000000000000000000000A3); path = HarnessRemote; sourceTree = "<group>"; };
 		D00000000000000000000003 /* HarnessRemoteTests */ = {isa = PBXGroup; children = (B00000000000000000000007); path = HarnessRemoteTests; sourceTree = "<group>"; };
 		D00000000000000000000004 /* Products */ = {isa = PBXGroup; children = (B00000000000000000000008, B00000000000000000000009); name = Products; sourceTree = "<group>"; };
 /* End PBXGroup section */
@@ -59,7 +65,7 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		E00000000000000000000001 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (C00000000000000000000001, C00000000000000000000002, C00000000000000000000003, C00000000000000000000004, C00000000000000000000005); runOnlyForDeploymentPostprocessing = 0; };
+		E00000000000000000000001 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (C00000000000000000000001, C00000000000000000000002, C00000000000000000000003, C00000000000000000000004, C00000000000000000000005, C000000000000000000000A1, C000000000000000000000A2, C000000000000000000000A3); runOnlyForDeploymentPostprocessing = 0; };
 		E00000000000000000000004 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (C00000000000000000000006); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXSourcesBuildPhase section */
 

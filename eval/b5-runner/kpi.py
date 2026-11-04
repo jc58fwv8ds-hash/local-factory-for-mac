@@ -56,6 +56,12 @@ def main(out, suite_name="suite-b5"):
     for r in valid:
         if not r.get("proxySuccess"): phases[r.get("phase") or "none"] += 1
     report["failurePhases"] = dict(sorted(phases.items()))
+    # 2026-10-26: rows of different conditions must not be added up as one measurement (eval/provenance.py)
+    by_condition = defaultdict(int)
+    for r in rows: by_condition[(r.get("provenance") or {}).get("conditions", "unrecorded")] += 1
+    report["rowsByConditions"] = dict(sorted(by_condition.items()))
+    if len(by_condition) > 1:
+        report["warning"] = "条件の違う行が混ざっています。python3 eval/provenance.py show <out> で確かめてください"
     print(json.dumps(report, indent=2, ensure_ascii=False))
 
 if __name__ == "__main__":

@@ -96,6 +96,9 @@ actor BackburnerServer {
             environment["MODEL"] = model
             environment["DRAFT"] = ""
             environment["SPEC_TYPE"] = "none"
+            // Its own image encoder when one lies beside it as <name>.mmproj.gguf (2026-11-04, the agent's 35B A3B).
+            let own = URL(fileURLWithPath: model).deletingPathExtension().appendingPathExtension("mmproj.gguf")
+            if FileManager.default.fileExists(atPath: own.path) { environment["LLAMA_ARG_MMPROJ"] = own.path }
         }
         server.environment = environment
         server.standardOutput = output

@@ -10,7 +10,7 @@ extension WorkspaceStore {
             presentNotice("Local Factoryでプロジェクトを選択してください", kind: .information)
             return false
         }
-        guard record.project.selectedModel != nil else {
+        guard (record.project.selectedModel ?? WorkspaceStore.automaticModel) != nil else {
             presentNotice("操作案を作るAIモデルを先に選択してください", kind: .information)
             isShowingModelManager = true
             return false

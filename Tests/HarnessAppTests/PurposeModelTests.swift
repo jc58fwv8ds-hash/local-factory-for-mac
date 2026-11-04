@@ -19,7 +19,7 @@ struct PurposeModelTests {
     }
 
     struct FakeImages: ImageGenerating {
-        func generate(option: PurposeModelOption, prompt: String, output: URL) async throws {
+        func generate(option: PurposeModelOption, prompt: String, output: URL, options: ImageGenerationOptions) async throws {
             try FileManager.default.createDirectory(at: output.deletingLastPathComponent(), withIntermediateDirectories: true)
             try Data("png".utf8).write(to: output)
         }
@@ -86,6 +86,41 @@ struct PurposeModelTests {
         #expect(change?.prompt == "a calm lake at dawn")
         #expect(await recorder.models == ["writer-large"])
         try? FileManager.default.removeItem(at: url)
+    }
+
+    /// A follow-up on an image starts from its prompt and seed (2026-11-04), and the check counts the earlier instructions.
+    @Test func aFollowUpBuildsOnTheLastImageAndTheCheckSeesTheEarlierInstruction() async throws {
+        let (store, recorder, _) = try makeStore(reply: "EDIT: a calm red lake")
+        store.purposeSettings.choose("img", for: .image)
+        store.composerPurpose = .image
+        store.instruction = "夜明けの静かな湖"
+        store.submitInstruction()
+        func ready(_ count: Int) async throws {
+            for _ in 0..<200 {
+                let done = store.imageChanges.values.filter { if case .ready = $0.status { true } else { false } }
+                if done.count == count { return }
+                try await Task.sleep(for: .milliseconds(20))
+            }
+            Issue.record("not ready: \(count)")
+        }
+        try await ready(1)
+        let first = try #require(store.imageChanges.values.first)
+        store.instruction = "もっと赤くして"
+        store.submitInstruction()
+        try await ready(2)
+        let second = try #require(store.imageChanges.values.first { $0.id != first.id })
+        #expect(second.prompt == "a calm red lake" && second.seed == first.seed)
+
+        store.instruction = "小学生の写真"
+        store.submitInstruction()
+        try await ready(3)
+        store.instruction = "裸にして"
+        store.submitInstruction()
+        try await Task.sleep(for: .milliseconds(100))
+        #expect(store.instruction == "裸にして")   // stopped: the earlier instruction counts
+        #expect(store.imageChanges.count == 3)
+        _ = recorder
+        for change in store.imageChanges.values { if case .ready(let url) = change.status { try? FileManager.default.removeItem(at: url) } }
     }
 
     @Test func noImageModelChosenSaysWhereToChooseOne() async throws {

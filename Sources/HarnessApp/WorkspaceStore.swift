@@ -8,7 +8,7 @@ enum StudioSection: String, CaseIterable, Identifiable {
     case projects = "プロジェクト"
     case apps = "アプリ"
     case models = "AIモデル"
-    case voices = "声"
+    case voices = "声", dailyNews = "毎日のニュース", agent = "エージェント"
     case developer = "開発"
 
     var id: String { rawValue }
@@ -71,8 +71,9 @@ final class WorkspaceStore {
     @ObservationIgnored var chatOrchestratorOverride: (any OrchestratedEditing)?
     var inspectingSourceProjectIDs = Set<UUID>()
     var sourceChangeSummaries: [UUID: SourceChangeSummary] = [:]
-    var generationPhase: GenerationPhase = .idle
+    var generationPhase: GenerationPhase = .idle { didSet { generationTimingChanged(from: oldValue) } }
     var streamingResponse = ""
+    var generationStartedAt: Date?
     var generationProjectID: UUID?
     var generationTimings: [InferenceResponseTiming] = []
     var lastConversationPerformance: ConversationPerformance?
@@ -243,8 +244,6 @@ final class WorkspaceStore {
 
     var hasSelectedProject: Bool { library.selectedRecord != nil }
 
-    var hasConfiguredModel: Bool { project.selectedModel != nil }
-
     var isGenerating: Bool { generationPhase != .idle }
 
     var isGeneratingSelectedProject: Bool {
@@ -252,7 +251,7 @@ final class WorkspaceStore {
     }
 
     var appleAppSources: [AppleAppSource] {
-        library.activeRecords.compactMap { record in
+        RemoteAppSource.sources + library.activeRecords.compactMap { record in
             guard let rootPath = record.sourceLocation else { return nil }
             return AppleAppSource(
                 projectID: record.id,

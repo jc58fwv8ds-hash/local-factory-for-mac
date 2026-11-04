@@ -49,8 +49,14 @@ extension TaskOrchestrator {
         classifyEnvironment(record); try record.save()
     }
 
-    /// Undoes the repair transaction (if one was started) and then the proposal's.
+    /// Undoes the repair transactions (those that were started, last first) and then the proposal's.
     static func rollback(_ tx: RecoverableFileBatch, _ repairTx: RecoverableFileBatch, _ repairState: URL, root: URL) async -> String {
+        let directory = repairState.deletingLastPathComponent().deletingLastPathComponent()
+        for number in [3, 2] {
+            let followUp = directory.appendingPathComponent("transaction-repair-\(number)")
+            guard FileManager.default.fileExists(atPath: followUp.appendingPathComponent("transaction.json").path) else { continue }
+            if (try? await RecoverableFileBatch(directory: followUp).run(root: root, direction: .rollback)) == nil { return "REPAIR_ROLLBACK_FAILED" }
+        }
         if FileManager.default.fileExists(atPath: repairState.path),
            (try? await repairTx.run(root: root, direction: .rollback)) == nil { return "REPAIR_ROLLBACK_FAILED" }
         return (try? await tx.run(root: root, direction: .rollback)) == nil ? "FAILED" : "PASS"

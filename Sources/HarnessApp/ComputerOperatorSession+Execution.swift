@@ -77,7 +77,7 @@ extension ComputerOperatorSession {
     }
 
     func summarizeResults(project: HarnessProject) async {
-        guard let plan, let model = project.selectedModel else { return }
+        guard let plan, let model = (project.selectedModel ?? WorkspaceStore.automaticModel) else { return }
         isSummarizing = true
         let messages = ComputerOperationResultSummaryPromptBuilder.messages(
             instruction: instruction,

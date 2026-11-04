@@ -3,7 +3,8 @@ import HarnessCore
 import HarnessExecution
 
 /// I/O half of the bounded compiler-guided repair: one fast compile, receipt-based
-/// diagnostics, and at most one recorded repair proposal applied as its own transaction.
+/// diagnostics, and recorded repair proposals applied as their own transactions: one, and up to two more while each
+/// gets past the last error (`followUps`).
 enum BatchCompilerRepair {
     enum Stop: Error { case notRepairable(String), repairDidNotCompile }
 
@@ -44,7 +45,8 @@ enum BatchCompilerRepair {
                         firstPass: [FileChangeProposal], failure: CompileFailure,
                         permitted: [String], protected: Set<String>, maxEdits: Int, maxLines: Int,
                         editor: RecordedProjectFileEditor, transaction: RecoverableFileBatch,
-                        budget: inout RequirementCoverage.Budget, record: BatchRunRecord? = nil) async throws -> [FileChangeProposal] {
+                        budget: inout RequirementCoverage.Budget, record: BatchRunRecord? = nil,
+                        proposalName: String = "repair-proposal") async throws -> [FileChangeProposal] {
         let files = CompilerRepair.repairFiles(diagnostics: failure.diagnostics,
             firstPass: firstPass.map(\.relativePath), editable: Set(permitted))
         var packageSources: [String: String] = [:]
@@ -65,22 +67,50 @@ enum BatchCompilerRepair {
         }
         let proposals: [FileChangeProposal]
         do {
-            proposals = try await propose("repair-proposal", note: nil)
+            proposals = try await propose(proposalName, note: nil)
         } catch StructuredEditError.ambiguousAnchor {
             // Same anchor repair as the proposal stage (shared single-use budget): one re-proposal with the match counts.
-            let directory = output.appendingPathComponent("repair-proposal")
+            let directory = output.appendingPathComponent(proposalName)
             guard let batch = BatchProposalStage.savedBatch(in: directory),
                   let originals = (try? JSONSerialization.jsonObject(with: Data(contentsOf: directory.appendingPathComponent("checkpoint.json")))
                       as? [String: Any])?["originals"] as? [String: String],
                   case let report = batch.anchorReport(originals: originals), !report.isEmpty,
                   budget.consume(.anchorRepair) else { throw StructuredEditError.ambiguousAnchor }
             record?.append("recoveryActions", "anchorRepair(compilerRepair)"); try record?.save()
-            proposals = try await propose("repair-proposal-anchor", note: "Your previous edits were rejected because an anchor did not occur exactly once:\n"
+            proposals = try await propose(proposalName + "-anchor", note: "Your previous edits were rejected because an anchor did not occur exactly once:\n"
                 + report.joined(separator: "\n") + "\nReturn the complete corrected edit list.")
         }
         try await transaction.prepare(root: root, proposals: proposals, allowed: Set(permitted), protected: protected)
         _ = try await transaction.run(root: root, direction: .resume)
         return proposals
+    }
+
+    /// Whether a repair changed anything the compiler has to say: the same messages again means it is not getting anywhere.
+    static func madeProgress(from old: [CompilerRepair.Diagnostic], to new: [CompilerRepair.Diagnostic]) -> Bool {
+        Set(old.map { $0.path + "\n" + $0.message }) != Set(new.map { $0.path + "\n" + $0.message })
+    }
+
+    /// `failure`: what the first repair still left. More repairs, each its own transaction beside the first
+    /// (`transaction-repair-2`, `-3`, undone by `TaskOrchestrator.rollback`), until it compiles, an error repeats or the two
+    /// follow-ups are used. Throws `repairDidNotCompile` when it does not compile in the end.
+    static func followUps(after failure: CompileFailure, isolated: IsolatedPackageExecution, evidence: URL, root: URL, output: URL, model: String,
+                          objective: String, earlier: [FileChangeProposal], permitted: [String], protected: Set<String>, maxEdits: Int, maxLines: Int,
+                          editor: RecordedProjectFileEditor, budget: inout RequirementCoverage.Budget, record: BatchRunRecord) async throws -> [FileChangeProposal] {
+        var made: [FileChangeProposal] = [], current = failure, last = [CompilerRepair.Diagnostic]()
+        for (index, kind) in [RequirementCoverage.Recovery.compilerFollowUp1, .compilerFollowUp2].enumerated() {
+            guard madeProgress(from: last, to: current.diagnostics), budget.consume(kind) else { throw Stop.repairDidNotCompile }
+            let number = index + 2
+            record.append("recoveryActions", "compilerRepairFollowUp(\(number))"); try record.save()
+            made += try await attempt(root: root, output: output, model: model, objective: objective, firstPass: earlier + made, failure: current,
+                permitted: permitted, protected: protected, maxEdits: maxEdits, maxLines: maxLines, editor: editor,
+                transaction: RecoverableFileBatch(directory: output.appendingPathComponent("transaction-repair-\(number)")),
+                budget: &budget, record: record, proposalName: "repair-proposal-\(number)")
+            record.increment("modelProposalCount")
+            last = current.diagnostics
+            guard let again = try await compile(isolated, evidence: evidence, root: root) else { return made }
+            current = again
+        }
+        throw Stop.repairDidNotCompile
     }
 
     enum TestOutcome { case passed, verificationFailed(VerificationAdjudication.Verdict) }

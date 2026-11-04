@@ -1,4 +1,5 @@
 import PhotosUI
+import HarnessCore
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -9,6 +10,8 @@ struct CommandComposer: View {
     @State private var isShowingFolderImporter = false
     @State private var isShowingPhotoLibrary = false
     @State private var photoItems: [PhotosPickerItem] = []
+    @FocusState private var fieldIsFocused: Bool
+    @AppStorage(VideoLength.settingKey) private var videoSeconds = VideoLength.defaultSeconds
 
     private var instructionIsEmpty: Bool {
         store.instruction.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -45,7 +48,36 @@ struct CommandComposer: View {
                 VoiceTranscriptStatus(store: store)
             }
 
-            HStack(alignment: .bottom, spacing: 12) {
+            // The field has the whole width above the controls (2026-11-04: squeezed beside them it was a small part of the
+            // card, and clicks on the rest of the card did nothing, which looked like input not working).
+            VStack(alignment: .leading, spacing: 3) {
+                if store.isGenerating {
+                    HStack(spacing: 8) {
+                        Text(store.generationStatusMessage)
+                            .font(.harness(.caption2))
+                            .foregroundStyle(.secondary)
+                        if let start = store.generationStartedAt { RemainingTimeLabel(kind: store.generationJobKind, startedAt: start) }
+                    }
+                }
+                TextField(
+                    store.workspaceMode == .chat ? "メッセージを入力" : "このアプリをどう育てますか？",
+                    text: $store.instruction,
+                    axis: .vertical
+                )
+                .textFieldStyle(.plain)
+                .focused($fieldIsFocused)
+                .accessibilityIdentifier(HarnessAccessibilityID.commandField)
+                .lineLimit(1...6)
+                .disabled(store.isGenerating)
+                .onSubmit { store.submitInstruction() }
+            }
+            .frame(maxWidth: .infinity, minHeight: 44, alignment: .topLeading)
+            .contentShape(Rectangle())
+            .onTapGesture { fieldIsFocused = true }
+            .padding(.horizontal, 16)
+            .padding(.top, 12)
+
+            HStack(alignment: .center, spacing: 12) {
                 Menu {
                     Button("写真ライブラリから選ぶ", systemImage: "photo.on.rectangle") {
                         isShowingPhotoLibrary = true
@@ -90,6 +122,14 @@ struct CommandComposer: View {
                     .fixedSize()
                     .help("次のメッセージの用途。文章・画像・動画は「AIモデル」の「用途ごとのモデル」で選んだモデルを使います")
                     PurposeModelChip(purpose: store.composerPurpose, settings: store.purposeSettings)
+                    if store.composerPurpose == .video {
+                        Picker("長さ", selection: $videoSeconds) {
+                            ForEach(VideoLength.choices, id: \.self) { Text("\($0) 秒").tag($0) }
+                        }
+                        .fixedSize()
+                        .font(.harness(.caption))
+                        .help("動画の長さ。指示に「10秒」と書いても指定できます。画像を添付すると、その画像の人物から始まる動画を作ります(Sulphur 2)")
+                    }
                 }
 
                 ContinuityCameraButton { data, name in
@@ -101,27 +141,7 @@ struct CommandComposer: View {
                 VoiceConversationControl(store: store)
                 VoiceInputControl(store: store)
 
-                VStack(alignment: .leading, spacing: 3) {
-                    if store.isGenerating {
-                        Text(store.generationStatusMessage)
-                            .font(.harness(.caption2))
-                            .foregroundStyle(.secondary)
-                    } else {
-                        Text("「続けよう」「この画像みたいに」など、いつもの言葉で大丈夫です")
-                            .font(.harness(.caption2))
-                            .foregroundStyle(.secondary)
-                    }
-                    TextField(
-                        "このアプリをどう育てますか？",
-                        text: $store.instruction,
-                        axis: .vertical
-                    )
-                    .textFieldStyle(.plain)
-                    .accessibilityIdentifier(HarnessAccessibilityID.commandField)
-                    .lineLimit(1...4)
-                    .disabled(store.isGenerating)
-                    .onSubmit { store.submitInstruction() }
-                }
+                Spacer(minLength: 0)
 
                 Button {
                     if store.isGenerating {
