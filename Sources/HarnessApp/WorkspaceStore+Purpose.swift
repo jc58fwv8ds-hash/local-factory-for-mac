@@ -171,7 +171,8 @@ extension WorkspaceStore {
             return
         }
         // The prompt writer follows the writing choice's roles (the "large" role), else the project's model.
-        let writer = settings.chosen(.writing).flatMap { settings.catalog.roleModel("large", chosen: $0) } ?? (project.selectedModel ?? WorkspaceStore.automaticModel)
+        // The chat's own model when one is chosen: it is usually already in memory, and swapping to another 27B costs 3 s (2026-11-05).
+        let writer = settings.chosen(.conversation)?.selection ?? settings.chosen(.writing).flatMap { settings.catalog.roleModel("large", chosen: $0) } ?? (project.selectedModel ?? WorkspaceStore.automaticModel)
         // The last output of the same kind in this conversation: a new instruction may be a change to it.
         let ids = Set(project.conversation.map(\.id))
         let previous: (prompt: String?, seed: Int)? = change.referenceImage != nil ? nil : imageChanges.values
@@ -220,6 +221,8 @@ extension WorkspaceStore {
         }
         let output = Self.imageFolder.appendingPathComponent(
             "\(change.id.uuidString.prefix(8))-\(option.id).\(change.isVideo ? "mp4" : "png")")
+        InferenceIndicator.shared.begin(.media)
+        defer { InferenceIndicator.shared.finish() }
         // The copy of the attached picture is only for this run; a stopped run leaves no half-made output behind.
         defer {
             if let reference { try? FileManager.default.removeItem(at: reference) }

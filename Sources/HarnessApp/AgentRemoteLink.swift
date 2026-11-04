@@ -45,7 +45,9 @@ final class AgentRemoteLink {
     init(agent: AgentStore) {
         self.agent = agent
         if let data = try? Data(contentsOf: devicesFile), let saved = try? JSONDecoder().decode([Device].self, from: data) {
-            devices = saved.filter { AgentDeviceKeys.key(for: $0.id) != nil }
+            // No Keychain here (2026-11-05): this runs while the screen is drawn, and macOS may be asking for the password,
+            // which froze the whole app on opening エージェント. The keys are read when the link opens, off the main thread.
+            devices = saved
         }
     }
 
@@ -131,8 +133,19 @@ final class AgentRemoteLink {
         listener?.cancel()
         listener = nil
         guard !devices.isEmpty else { message = "「iPhone をつなぐ」で最初の iPhone をつないでください"; return }
+        message = "準備しています"
+        let ids = devices.map(\.id)
+        Task.detached { [weak self] in
+            let keys = ids.compactMap { id in AgentDeviceKeys.key(for: id).map { (id, $0) } }
+            await self?.openListener(keys: keys)
+        }
+    }
+
+    private func openListener(keys: [(UUID, Data)]) {
+        guard isEnabled, listener == nil else { return }
+        guard !keys.isEmpty else { message = "iPhone の鍵を読めませんでした。もう一度つないでください"; return }
         do {
-            let listener = try NWListener(using: Self.tlsParameters(keys: devices.compactMap { device in AgentDeviceKeys.key(for: device.id).map { (device.id, $0) } }), on: NWEndpoint.Port(rawValue: AgentWire.port)!)
+            let listener = try NWListener(using: Self.tlsParameters(keys: keys))
             listener.service = NWListener.Service(name: Host.current().localizedName, type: AgentWire.bonjourType)
             listener.newConnectionHandler = { [weak self] connection in
                 Task { @MainActor in self?.accept(connection, pairing: false) }

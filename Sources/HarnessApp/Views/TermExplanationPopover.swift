@@ -28,12 +28,10 @@ struct TermExplanationPopover: View {
                     .textSelection(.enabled)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            Text("この文章での意味 · ローカルAIの解説は目安です")
-                .font(.harness(.caption2))
-                .foregroundStyle(.secondary)
         }
         .padding(16)
         .frame(width: 320, alignment: .leading)
+        .background(Color(nsColor: .windowBackgroundColor).ignoresSafeArea())
         .onHover(perform: onHover)
     }
 }

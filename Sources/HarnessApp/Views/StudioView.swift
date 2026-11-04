@@ -72,7 +72,7 @@ struct StudioView: View {
             }
         }
         .padding(16)
-        .frame(width: 420, height: 320)
+        .popupSurface(width: 420, maxHeight: 320)
     }
 
     private var scheduleList: some View {
@@ -102,7 +102,7 @@ struct StudioView: View {
             }
         }
         .padding(16)
-        .frame(width: 420, height: 320)
+        .popupSurface(width: 420, maxHeight: 320)
     }
 
     /// One slim bar instead of the large header: name, summary, stage, targets, and the panels that open on demand.
@@ -159,13 +159,13 @@ struct StudioView: View {
             .buttonStyle(.bordered)
             .controlSize(.small)
             .popover(isPresented: $isShowingWorkPlan, arrowEdge: .bottom) {
-                ScrollView { workPlan.padding(16) }.frame(width: 420, height: 460)
+                ScrollView { workPlan.padding(16) }.popupSurface(width: 420, maxHeight: 460)
             }
             Button { isShowingPreview.toggle() } label: { Label("プレビュー", systemImage: "eye") }
                 .buttonStyle(.bordered)
                 .controlSize(.small)
                 .popover(isPresented: $isShowingPreview, arrowEdge: .bottom) {
-                    ScrollView { ProductPreview().padding(16) }.frame(width: 460, height: 420)
+                    ScrollView { ProductPreview().padding(16) }.popupSurface(width: 460, maxHeight: 420)
                 }
             Button { store.openComputerOperator() } label: { Image(systemName: "desktopcomputer.and.macbook") }
                 .buttonStyle(.borderless)
@@ -228,4 +228,15 @@ enum StudioLayout {
     static let inspectorKey = "ui.studio.inspectorVisible"
     static let chatWidth: CGFloat = 760
     static let bottomID = "studio.chat.bottom"
+}
+
+extension View {
+    /// A pop-up's own surface (2026-11-05): opaque, so its text stays readable whatever the system's glass shows behind it,
+    /// and no taller than its content: a two-line plan stood in a 460-point empty box.
+    func popupSurface(width: CGFloat, maxHeight: CGFloat) -> some View {
+        frame(width: width)
+            .frame(idealHeight: maxHeight, maxHeight: maxHeight)
+            .fixedSize(horizontal: false, vertical: true)
+            .background(Color(nsColor: .windowBackgroundColor).ignoresSafeArea())
+    }
 }

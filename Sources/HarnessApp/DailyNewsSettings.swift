@@ -131,7 +131,9 @@ final class DailyNewsStore {
         log = ((try? String(contentsOf: logURL, encoding: .utf8)) ?? "").split(separator: "\n").suffix(12).joined(separator: "\n")
         let done = (try? JSONSerialization.jsonObject(with: Data(contentsOf: base.appendingPathComponent("uploaded.json")))) as? [String: [String: Any]] ?? [:]
         let movies = (try? FileManager.default.contentsOfDirectory(atPath: Self.moviesFolder.path)) ?? []
-        videos = Self.videoDates(in: movies).prefix(7).map { (date: $0, url: done[$0]?["url"] as? String) }
+        // A day on YouTube stays listed after its file is tidied away from the Mac.
+        videos = Array(Set(Self.videoDates(in: movies)).union(done.keys)).sorted(by: >).prefix(7)
+            .map { (date: $0, url: done[$0]?["url"] as? String) }
     }
 
     /// Saves the settings and replaces the launchd jobs with the ones they need.

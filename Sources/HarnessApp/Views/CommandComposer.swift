@@ -59,6 +59,7 @@ struct CommandComposer: View {
                         if let start = store.generationStartedAt { RemainingTimeLabel(kind: store.generationJobKind, startedAt: start) }
                     }
                 }
+                StageLine(indicator: .shared)
                 TextField(
                     store.workspaceMode == .chat ? "メッセージを入力" : "指示を入力",
                     text: $store.instruction,
@@ -243,6 +244,24 @@ struct CommandComposer: View {
             for (index, item) in items.enumerated() {
                 guard let data = try? await item.loadTransferable(type: Data.self) else { continue }
                 store.importVisualImageData(data, displayName: "写真 \(index + 1)", source: .photoLibrary)
+            }
+        }
+    }
+}
+
+/// Where the running job is spending its time; after it ends, how it went, until the next one begins.
+private struct StageLine: View {
+    var indicator: InferenceIndicator
+
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: indicator.isActive ? 0.25 : 3600)) { context in
+            let text = indicator.stages.summary(at: context.date)
+            if !text.isEmpty {
+                Text(text)
+                    .font(.harness(.caption2))
+                    .foregroundStyle(.secondary)
+                    .monospacedDigit()
+                    .lineLimit(1)
             }
         }
     }

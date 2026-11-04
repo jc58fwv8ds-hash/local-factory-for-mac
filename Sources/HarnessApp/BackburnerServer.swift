@@ -176,27 +176,35 @@ struct BackburnerAwareInferenceProvider: ModelInferenceProvider {
 
     func events(for request: InferenceRequest) async -> AsyncThrowingStream<String, Error> {
         guard let target = ModelRuntimes.target(for: request) else { return await base.events(for: request) }
+        await InferenceIndicator.shared.begin(.waiting)
         let lease: ModelRuntimeCoordinator.Lease
         do { lease = try await ModelRuntimes.shared.acquire(target) } catch {
             return AsyncThrowingStream { $0.finish(throwing: error) }
         }
         do {
+            await InferenceIndicator.shared.enter(.loading)
             // Under the lease the model stays; starting again only checks that it still answers (or restarts it after a crash).
             if target.backend == "strata" { try await ModelRuntimes.Strata().start(model: target.model) }
             else { try await ModelRuntimes.Backburner().start(model: target.model) }
         } catch {
             await ModelRuntimes.shared.release(lease)
+            await InferenceIndicator.shared.finish()
             return AsyncThrowingStream { $0.finish(throwing: error) }
         }
+        await InferenceIndicator.shared.enter(.reading)
         let upstream = await base.events(for: request)
         return AsyncThrowingStream { continuation in
             let task = Task {
                 do {
-                    for try await piece in upstream { continuation.yield(piece) }
+                    for try await piece in upstream {
+                        await InferenceIndicator.shared.piece()
+                        continuation.yield(piece)
+                    }
                     continuation.finish()
                 } catch {
                     continuation.finish(throwing: error)
                 }
+                await InferenceIndicator.shared.finish()
                 await ModelRuntimes.shared.release(lease)
             }
             continuation.onTermination = { _ in task.cancel() }

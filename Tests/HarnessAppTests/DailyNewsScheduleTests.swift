@@ -196,4 +196,17 @@ struct VideoOptionsTests {
         let saved = try #require(WorkspaceStore.savedRecipe(for: file))
         #expect(saved.prompt == "a black cat" && saved.seed == 7)
     }
+
+    @Test func theLineShowsWhereTheTimeWent() {
+        let start = Date(timeIntervalSince1970: 0)
+        var stages = InferenceStages()
+        stages.enter(.waiting, at: start)
+        stages.enter(.loading, at: start)
+        stages.enter(.reading, at: start.addingTimeInterval(3))
+        #expect(stages.summary(at: start.addingTimeInterval(4)) == "読み込み 3.0秒 · 入力 1.0秒")
+        stages.piece(at: start.addingTimeInterval(6.5))
+        for n in 1...20 { stages.piece(at: start.addingTimeInterval(6.5 + Double(n) / 10)) }
+        stages.finish(at: start.addingTimeInterval(8.5))
+        #expect(stages.summary(at: start.addingTimeInterval(9)) == "読み込み 3.0秒 · 入力 3.5秒 · 出力 2.0秒(10.5/秒)")
+    }
 }
