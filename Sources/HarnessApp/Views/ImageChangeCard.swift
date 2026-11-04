@@ -28,7 +28,7 @@ struct ImageChangeCard: View {
                 Text(message).font(.harness(.caption)).foregroundStyle(.secondary)
             case .ready(let url):
                 if change.isVideo {
-                    VideoPlayer(player: AVPlayer(url: url)).frame(height: 360)
+                    VideoPreview(url: url).frame(height: 360)
                         .clipShape(RoundedRectangle(cornerRadius: 8))
                 } else if let image = NSImage(contentsOf: url) {
                     Image(nsImage: image).resizable().scaledToFit().frame(maxHeight: 420)
@@ -48,4 +48,20 @@ struct ImageChangeCard: View {
         .background(.background, in: RoundedRectangle(cornerRadius: 12))
         .overlay(RoundedRectangle(cornerRadius: 12).stroke(.quaternary))
     }
+}
+
+/// The player, from AppKit (2026-11-05): SwiftUI's VideoPlayer aborted the whole app the moment a finished video was shown
+/// (getSuperclassMetadata inside _AVKit_SwiftUI on macOS 27.2).
+struct VideoPreview: NSViewRepresentable {
+    let url: URL
+
+    func makeNSView(context: Context) -> AVPlayerView {
+        let view = AVPlayerView()
+        view.player = AVPlayer(url: url)
+        return view
+    }
+
+    func updateNSView(_ view: AVPlayerView, context: Context) {}
+
+    static func dismantleNSView(_ view: AVPlayerView, coordinator: ()) { view.player?.pause() }
 }

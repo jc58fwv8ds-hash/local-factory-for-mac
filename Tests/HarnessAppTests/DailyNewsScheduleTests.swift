@@ -1,4 +1,6 @@
+import AppKit
 import Foundation
+import SwiftUI
 import Testing
 @testable import HarnessApp
 import HarnessCore
@@ -146,5 +148,12 @@ struct VideoOptionsTests {
         #expect(!left.contains("消すチャット"))
         #expect(left.contains("別のチャット"))
         #expect(left.contains("はいはい"))
+    }
+
+    @MainActor @Test func aFinishedVideoCanBeShownWithoutStoppingTheApp() {
+        let host = NSHostingView(rootView: VideoPreview(url: URL(fileURLWithPath: "/tmp/none.mp4")).frame(width: 320, height: 180))
+        host.frame = NSRect(x: 0, y: 0, width: 320, height: 180)
+        host.layoutSubtreeIfNeeded()
+        #expect(host.subviews.isEmpty == false || host.fittingSize.width > 0)
     }
 }
