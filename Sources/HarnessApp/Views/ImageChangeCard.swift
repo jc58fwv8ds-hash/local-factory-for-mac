@@ -1,5 +1,6 @@
 import AppKit
 import AVKit
+import HarnessCore
 import SwiftUI
 
 /// The card under an image request: progress, the finished picture (saved on this Mac), or why it failed.
@@ -29,10 +30,27 @@ struct ImageChangeCard: View {
                 Text("止めました。").font(.harness(.caption)).foregroundStyle(.secondary)
             case .failed(let message):
                 Text(message).font(.harness(.caption)).foregroundStyle(.secondary)
-            case .ready(let url):
-                if change.isVideo {
-                    VideoPreview(url: url).frame(height: 360)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
+            case .ready:
+                EmptyView()
+            }
+        }
+        .padding(12)
+        .background(.background, in: RoundedRectangle(cornerRadius: 12))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(.quaternary))
+    }
+}
+
+/// A finished picture or video inside the conversation, from the note's path, so it is there after the app restarts too.
+struct GeneratedMediaView: View {
+    let url: URL
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if !GeneratedMedia.exists(url) {
+                Text("ファイルが見つかりません: \(url.lastPathComponent)").font(.harness(.caption)).foregroundStyle(.secondary)
+            } else {
+                if url.pathExtension == "mp4" {
+                    VideoPreview(url: url).frame(height: 360).clipShape(RoundedRectangle(cornerRadius: 8))
                 } else if let image = NSImage(contentsOf: url) {
                     Image(nsImage: image).resizable().scaledToFit().frame(maxHeight: 420)
                         .clipShape(RoundedRectangle(cornerRadius: 8))
@@ -40,13 +58,13 @@ struct ImageChangeCard: View {
                 HStack(spacing: 8) {
                     Button("Finder で表示") { NSWorkspace.shared.activateFileViewerSelecting([url]) }
                     Button("開く") { NSWorkspace.shared.open(url) }
+                    if let recipe = WorkspaceStore.savedRecipe(for: url) {
+                        Image(systemName: "info.circle").foregroundStyle(.secondary).help(recipe.prompt)
+                    }
                 }
                 .controlSize(.small)
             }
         }
-        .padding(12)
-        .background(.background, in: RoundedRectangle(cornerRadius: 12))
-        .overlay(RoundedRectangle(cornerRadius: 12).stroke(.quaternary))
     }
 }
 

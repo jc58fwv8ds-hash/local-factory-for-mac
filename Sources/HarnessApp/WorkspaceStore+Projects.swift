@@ -121,6 +121,7 @@ extension WorkspaceStore {
               let record = library.records.first(where: { $0.id == id }) else { return }
         for file in Self.generatedFiles(in: record.project.conversation.map(\.content), folder: Self.imageFolder) {
             try? FileManager.default.removeItem(at: file)
+            try? FileManager.default.removeItem(at: file.appendingPathExtension("json"))
         }
         for message in record.project.conversation { imageChanges[message.id] = nil }
         ModelCallLog.remove(mentioning: record.project.conversation.map(\.content),

@@ -55,13 +55,16 @@ final class TermExplanationPresenter: NSObject, NSPopoverDelegate {
         panel.behavior = .transient
         panel.animates = false
         panel.delegate = self
-        panel.contentViewController = NSHostingController(rootView: TermExplanationPopover(
+        let content = NSHostingController(rootView: TermExplanationPopover(
             display: session.display,
             onHover: { [weak self] inside in self?.session.setPopoverHovered(inside) },
             onClose: { [weak self] in self?.dismiss() }
         ))
         popover = panel
         view.highlight(term)
+        // The explanation arrives word by word: the popover follows its height instead of cutting it off (2026-11-05).
+        content.sizingOptions = [.preferredContentSize]
+        panel.contentViewController = content
         panel.show(relativeTo: sourceRect, of: view, preferredEdge: .maxY)
     }
 

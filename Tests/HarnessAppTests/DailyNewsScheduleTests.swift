@@ -156,4 +156,38 @@ struct VideoOptionsTests {
         host.layoutSubtreeIfNeeded()
         #expect(host.subviews.isEmpty == false || host.fittingSize.width > 0)
     }
+
+    @Test func onlyTheAppCanSayAFileWasMade() {
+        let real = "動画ができました(Wan)。保存先: /tmp/App Support/Images/a.mp4"
+        #expect(GeneratedMedia.file(inNote: real)?.path == "/tmp/App Support/Images/a.mp4")
+        #expect(GeneratedMedia.claimsUnmadeFile(real, exists: { _ in false }))
+        #expect(!GeneratedMedia.claimsUnmadeFile(real, exists: { _ in true }))
+        #expect(GeneratedMedia.claimsUnmadeFile("はい。動画を生成しました。"))
+        #expect(!GeneratedMedia.claimsUnmadeFile("黒猫は静かに歩いていた。"))
+    }
+
+    @Test(arguments: [("上空からパンするようなカメラワークで再度動画を生成して", GeneratedMedia.Kind.video), ("この画像を動かして", .video),
+                      ("さっきの内容で画像にして(写実的に)", .image), ("猫の写真を作って", .image)])
+    func requestsInWordsGoToTheModelThatCanMakeThem(text: String, kind: GeneratedMedia.Kind) {
+        #expect(GeneratedMedia.requestedKind(text) == kind)
+    }
+
+    @Test(arguments: ["ニューヨークの雑踏のなかを歩く黒猫", "動画の作り方を教えて", "この画像は何ですか?", "画像を作った人は誰", "プログラムを動かして"])
+    func otherMessagesStayInTheChat(text: String) {
+        #expect(GeneratedMedia.requestedKind(text) == nil)
+    }
+
+    @Test func aVideoCanStartFromTheLastPictureThatStillExists() {
+        let notes = ["画像ができました(Z)。保存先: /tmp/a.png", "動画ができました(W)。保存先: /tmp/b.mp4", "画像ができました(Z)。保存先: /tmp/gone.png"]
+        #expect(GeneratedMedia.lastFile(.image, in: notes, exists: { $0.lastPathComponent != "gone.png" })?.lastPathComponent == "a.png")
+        #expect(GeneratedMedia.lastFile(.video, in: notes, exists: { _ in true })?.lastPathComponent == "b.mp4")
+    }
+
+    @Test func aRecipeSurvivesARestart() throws {
+        let file = FileManager.default.temporaryDirectory.appendingPathComponent("recipe-\(UUID().uuidString).mp4")
+        defer { try? FileManager.default.removeItem(at: file.appendingPathExtension("json")) }
+        WorkspaceStore.saveRecipe(prompt: "a black cat", seed: 7, for: file)
+        let saved = try #require(WorkspaceStore.savedRecipe(for: file))
+        #expect(saved.prompt == "a black cat" && saved.seed == 7)
+    }
 }

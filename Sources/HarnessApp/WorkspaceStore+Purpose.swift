@@ -51,14 +51,21 @@ extension WorkspaceStore {
     /// Writing and image messages: the two lines first (ContentGuard), then the purpose's own model. Returns false when the
     /// message is not for one of these purposes.
     func submitPurposeInstruction() -> Bool {
-        guard workspaceMode == .chat, composerPurpose != .conversation else { return false }
         let text = instruction.trimmingCharacters(in: .whitespacesAndNewlines)
+        // Asked in words while the menu says 会話: it goes where it can really be made, for this message only.
+        var routed = false
+        if workspaceMode == .chat, composerPurpose == .conversation, documentAttachments.isEmpty, let kind = GeneratedMedia.requestedKind(text) {
+            composerPurpose = kind == .video ? .video : .image
+            routed = true
+        }
+        guard workspaceMode == .chat, composerPurpose != .conversation else { return false }
         guard !text.isEmpty else { return true }
         // The last few instructions count too: an edit carries the earlier subject along (「小学生の写真」, then 「裸にして」).
         let recent = ProjectInstructionContext.userMessages(in: project).suffix(6).map(\.content) + [text]
         switch ContentGuardSettings().check(recent.joined(separator: "\n"), attachesPhoto: composerPurpose != .writing && !visualAttachments.items.isEmpty) {
         case .block(let reason):
             presentNotice(reason, kind: .information)
+            if routed { composerPurpose = .conversation }
             return true
         case .confirmConsent(let reason):
             pendingConsent = PendingConsent(instruction: text, reason: reason)
@@ -67,6 +74,7 @@ extension WorkspaceStore {
             break
         }
         continuePurposeInstruction(text)
+        if routed { composerPurpose = .conversation }
         return true
     }
 
@@ -98,6 +106,19 @@ extension WorkspaceStore {
         }
     }
 
+    /// What a file was made from, beside it: a change asked for after the app restarted still builds on it.
+    nonisolated static func saveRecipe(prompt: String, seed: Int, for output: URL) {
+        let data = try? JSONSerialization.data(withJSONObject: ["prompt": prompt, "seed": seed])
+        try? data?.write(to: output.appendingPathExtension("json"))
+    }
+
+    nonisolated static func savedRecipe(for output: URL) -> (prompt: String, seed: Int)? {
+        guard let data = try? Data(contentsOf: output.appendingPathExtension("json")),
+              let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
+              let prompt = json["prompt"] as? String, let seed = json["seed"] as? Int else { return nil }
+        return (prompt, seed)
+    }
+
     func startVideo(_ text: String) { startImage(text, isVideo: true) }
 
     func startImage(_ text: String, isVideo: Bool = false) {
@@ -105,7 +126,13 @@ extension WorkspaceStore {
         library.updateSelectedProject { $0.conversation.append(message) }
         persist()
         let change = ImageChange(id: message.id, instruction: text, isVideo: isVideo)
-        if isVideo { change.referenceImage = visualAttachments.items.first?.data }
+        if isVideo {
+            change.referenceImage = visualAttachments.items.first?.data
+            if change.referenceImage == nil, GeneratedMedia.pointsAtLastImage(text),
+               let last = GeneratedMedia.lastFile(.image, in: project.conversation.map(\.content)) {
+                change.referenceImage = try? Data(contentsOf: last)
+            }
+        }
         if imageChanges.values.contains(where: \.isRunning) { change.status = .running("順番待ち") }
         imageChanges[message.id] = change
         let before = ImageChange.lastInQueue
@@ -146,10 +173,13 @@ extension WorkspaceStore {
         let writer = settings.chosen(.writing).flatMap { settings.catalog.roleModel("large", chosen: $0) } ?? (project.selectedModel ?? WorkspaceStore.automaticModel)
         // The last output of the same kind in this conversation: a new instruction may be a change to it.
         let ids = Set(project.conversation.map(\.id))
-        let previous = change.referenceImage != nil ? nil : imageChanges.values
+        let previous: (prompt: String?, seed: Int)? = change.referenceImage != nil ? nil : imageChanges.values
             .filter { $0.id != change.id && $0.isVideo == change.isVideo && ids.contains($0.id) && $0.prompt != nil }
             .filter { if case .ready = $0.status { true } else { false } }
             .max { $0.startedAt < $1.startedAt }
+            .map { ($0.prompt, $0.seed) }
+            ?? GeneratedMedia.lastFile(change.isVideo ? .video : .image, in: project.conversation.map(\.content))
+                .flatMap(Self.savedRecipe).map { ($0.prompt, $0.seed) }
         var prompt = previous?.prompt.map { OutputFollowUp.fallback(instruction: change.instruction, previousPrompt: $0) } ?? change.instruction
         if let previous { change.seed = previous.seed }
         // A writer that refuses is replaced once by the refusal model (2026-11-02);
@@ -197,6 +227,7 @@ extension WorkspaceStore {
         do {
             try await imageGenerator.generate(option: option, prompt: prompt, output: output, options: ImageGenerationOptions(seed: change.seed, seconds: seconds, image: reference))
             guard !Task.isCancelled else { return }
+            Self.saveRecipe(prompt: prompt, seed: change.seed, for: output)
             change.status = .ready(output)
             if let kind = change.jobKind { JobTimeEstimates().record(kind, seconds: Date().timeIntervalSince(change.startedAt)) }
             appendAssistantNote("\(noun)ができました(\(option.label))。保存先: \(output.path)")

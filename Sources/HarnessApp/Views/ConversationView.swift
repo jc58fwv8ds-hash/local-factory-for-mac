@@ -62,7 +62,7 @@ struct ConversationView: View {
                             SpreadsheetChangeCard(change: sheet, store: store)
                         }
                         if let image = store.imageChanges[message.id] {
-                            ImageChangeCard(change: image) { store.stopImage(image) }
+                            if case .ready = image.status {} else { ImageChangeCard(change: image) { store.stopImage(image) } }
                         }
                     }
 
@@ -97,14 +97,18 @@ private struct ConversationBubble: View {
             if message.role == .user { Spacer(minLength: 70) }
 
             VStack(alignment: .leading, spacing: 5) {
-                HStack(spacing: 6) {
-                    Image(systemName: messageSymbol)
-                    Text(messageTitle)
+                if let messageTitle {
+                    HStack(spacing: 6) {
+                        Image(systemName: messageSymbol)
+                        Text(messageTitle)
+                    }
+                    .font(.harness(.caption, weight: .semibold))
+                    .foregroundStyle(.secondary)
                 }
-                .font(.harness(.caption, weight: .semibold))
-                .foregroundStyle(.secondary)
 
-                if message.role == .assistant {
+                if let media = GeneratedMedia.file(inNote: message.content) {
+                    GeneratedMediaView(url: media)
+                } else if message.role == .assistant {
                     ExplainedResponseText(
                         text: message.content,
                         model: store.effectiveModel,
@@ -140,14 +144,16 @@ private struct ConversationBubble: View {
         return message.role == .user ? "person.fill" : "sparkles"
     }
 
-    private var messageTitle: String {
+    /// Who said it, only where color and place do not already show it.
+    private var messageTitle: String? {
         if message.origin == .externalReview {
             return "外部レビュー（参考資料）"
         }
         if message.origin == .remoteUser {
             return "iPhoneからの指示"
         }
-        return message.role == .user ? "あなた" : (message.modelName ?? "Local Factory")
+        if message.role == .user || GeneratedMedia.isNote(message.content) { return nil }
+        return message.modelName?.components(separatedBy: "(").first
     }
 
     private var messageBackground: Color {

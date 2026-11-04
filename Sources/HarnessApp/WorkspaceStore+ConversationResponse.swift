@@ -86,6 +86,9 @@ extension WorkspaceStore {
         // A cancelled stream may finish normally; EOF is not proof of completion.
         try Task.checkCancellation()
         streamingResponse = ConversationResponseText.visibleText(rawResponse)
+        if GeneratedMedia.claimsUnmadeFile(streamingResponse) {
+            streamingResponse = "作っていません。下のメニューを「画像を作る」か「動画を作る」にして、もう一度送ってください。"
+        }
         timer.observe(hasVisibleContent: !streamingResponse.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
         generationTimings.append(timer.measurement())
     }

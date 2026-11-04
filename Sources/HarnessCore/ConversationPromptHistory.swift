@@ -17,6 +17,8 @@ public struct ConversationPromptHistory: Sendable {
         let latestUserID = ProjectInstructionContext.userMessages(in: project).last?.id
 
         for message in project.conversation.reversed() {
+            // The app's own notes are not the model's words: it copied them and claimed files it never made.
+            if GeneratedMedia.isNote(message.content) { continue }
             let isUser = message.role == .user && (message.origin == .user || message.origin == .remoteUser)
             let prompt: InferenceMessage
             if isUser {
