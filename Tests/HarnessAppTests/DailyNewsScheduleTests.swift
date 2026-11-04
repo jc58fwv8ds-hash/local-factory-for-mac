@@ -92,7 +92,7 @@ struct VideoOptionsTests {
 
     @Test func aLengthNeverMadeIsGuessedInProportion() {
         let estimates = JobTimeEstimates(defaults: UserDefaults(suiteName: "JobTimes-\(UUID().uuidString)")!)
-        #expect(estimates.expected("image:sulphur2-distilled@6s") == 660)
+        #expect(estimates.expected("image:wan22-5b@6s") == 1200)
     }
 
     @Test func finishedVideosAreListedNewestFirstWithoutTrialCuts() {

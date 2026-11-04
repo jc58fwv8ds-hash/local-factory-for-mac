@@ -6,7 +6,7 @@ import SwiftUI
 struct JobTimeEstimates {
     static let key = "harness.jobTimes"
     /// Measured on this Mac (2026-11-03/04) or noted in config/purpose-models.json.
-    static let measured: [String: Double] = ["image:z-image-turbo": 60, "image:sulphur2-distilled": 330, "image:wan22-5b": 600,
+    static let measured: [String: Double] = ["image:z-image-turbo": 60, "image:wan22-5b": 600,
                                              "image:wan22-5b-fast": 360, "agent": 15]
     let defaults: UserDefaults
 
@@ -22,7 +22,7 @@ struct JobTimeEstimates {
     func expected(_ kind: String) -> Double? {
         let runs = (defaults.dictionary(forKey: Self.key) as? [String: [Double]])?[kind]?.sorted() ?? []
         if !runs.isEmpty { return runs[runs.count / 2] }
-        // "image:sulphur2-distilled@10s", never made at this length: the 3-second figure, in proportion.
+        // "image:wan22-5b@10s", never made at this length: the 3-second figure, in proportion.
         let parts = kind.split(separator: "@")
         if parts.count == 2, let seconds = Double(parts[1].dropLast()), let base = Self.measured[String(parts[0])] { return base * seconds / 3 }
         return Self.measured[kind]
