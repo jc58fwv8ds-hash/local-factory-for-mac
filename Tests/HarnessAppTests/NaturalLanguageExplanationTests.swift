@@ -33,4 +33,15 @@ struct NaturalLanguageExplanationTests {
         #expect(contract.contains("指定された文数に収めて"))
         #expect(contract.contains("実行していない作業を、実行済みのように書かない"))
     }
+
+    @Test func theChatSideIsAConversationNotAProductionPlan() {
+        let project = HarnessProject.starter
+        let chat = ProjectPromptBuilder.messages(for: project, isChat: true)[0].content
+        #expect(chat.contains("普通に会話"))
+        #expect(chat.contains("完了条件を尋ねないで"))
+        #expect(!chat.contains("設計アシスタント"))
+        #expect(!chat.contains("制作段階"))
+        let code = ProjectPromptBuilder.messages(for: project)[0].content
+        #expect(code.contains("設計アシスタント"))
+    }
 }

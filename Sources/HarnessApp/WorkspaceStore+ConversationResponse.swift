@@ -23,7 +23,8 @@ extension WorkspaceStore {
                 deliveryMode: deliveryMode,
                 voiceProfile: deliveryMode == .voice
                     ? voiceLibrary.selectedProfile
-                    : nil
+                    : nil,
+                isChat: workspaceMode == .chat
             ),
             maximumOutputTokens: InferenceOutputBudget.conversation,
             images: images
