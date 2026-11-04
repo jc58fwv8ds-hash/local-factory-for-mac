@@ -72,6 +72,7 @@ struct ProjectSidebarRow: View {
 struct SidebarTrashSection: View {
     @Bindable var store: WorkspaceStore
     @State private var isOpen = false
+    @State private var deleting: ProjectRecord?
 
     private var records: [ProjectRecord] {
         store.library.trashedRecords.filter { $0.effectiveKind == store.workspaceMode.kind }
@@ -98,6 +99,7 @@ struct SidebarTrashSection: View {
                             Text(record.project.name).lineLimit(1)
                             Spacer()
                             Button("戻す") { store.restoreProject(record.id) }.buttonStyle(.borderless)
+                            Button("完全に削除", role: .destructive) { deleting = record }.buttonStyle(.borderless)
                         }
                         .padding(.leading, 16)
                     }
@@ -105,6 +107,12 @@ struct SidebarTrashSection: View {
             }
             .font(.harness(.caption))
             .padding(.horizontal, 6)
+            .alert("完全に削除しますか?", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }), presenting: deleting) { record in
+                Button("キャンセル", role: .cancel) {}
+                Button("完全に削除", role: .destructive) { store.deleteProjectCompletely(record.id) }
+            } message: { record in
+                Text("「\(record.project.name)」の会話と、その中で作った画像・動画を消します。元に戻せません。つないだフォルダの中身は消しません。")
+            }
         }
     }
 }

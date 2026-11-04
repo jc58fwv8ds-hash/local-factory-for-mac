@@ -103,6 +103,31 @@ extension WorkspaceStore {
         persist(successMessage: "プロジェクトを制作中へ戻しました")
     }
 
+    /// The sidebar trash's 完全に削除 (2026-11-04): the conversation and what it made in the app's own image folder. A connected
+    /// source folder is the user's and stays.
+    func deleteProjectCompletely(_ id: UUID) {
+        guard library.trashedRecords.contains(where: { $0.id == id }),
+              let record = library.records.first(where: { $0.id == id }) else { return }
+        for file in Self.generatedFiles(in: record.project.conversation.map(\.content), folder: Self.imageFolder) {
+            try? FileManager.default.removeItem(at: file)
+        }
+        for message in record.project.conversation { imageChanges[message.id] = nil }
+        removeProjectFromLibrary(id)
+    }
+
+    /// The images and videos a conversation names inside `folder` (「保存先: …/Images/abc-z-image-turbo.png」).
+    nonisolated static func generatedFiles(in contents: [String], folder: URL) -> [URL] {
+        let prefix = folder.path + "/"
+        var names = Set<String>()
+        for content in contents {
+            for part in content.components(separatedBy: prefix).dropFirst() {
+                let name = String(part.prefix { !$0.isWhitespace && $0 != "/" && !"。、)」".contains($0) })
+                if name.hasSuffix(".png") || name.hasSuffix(".mp4") { names.insert(name) }
+            }
+        }
+        return names.sorted().map { folder.appendingPathComponent($0) }
+    }
+
     func removeProjectFromLibrary(_ id: UUID) {
         guard library.selectedProjectID != id
             || allowInteraction(.changeSelectedProject) else { return }

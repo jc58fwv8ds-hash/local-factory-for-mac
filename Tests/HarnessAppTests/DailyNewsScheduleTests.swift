@@ -122,4 +122,14 @@ struct VideoOptionsTests {
         _ = try await run.value
         #expect(Date().timeIntervalSince(started) < 10)
     }
+
+    @Test func aDeletedChatTakesOnlyTheFilesItNamesInTheImageFolder() {
+        let folder = URL(fileURLWithPath: "/tmp/App Support/Images")
+        let files = WorkspaceStore.generatedFiles(in: [
+            "画像ができました(Z)。保存先: /tmp/App Support/Images/ab-z.png",
+            "/tmp/App Support/Images/cd-v.mp4。次へ",
+            "/tmp/App Support/Images/../secret.png と /tmp/other/x.png と /tmp/App Support/Images/note.txt"
+        ], folder: folder)
+        #expect(files.map(\.lastPathComponent) == ["ab-z.png", "cd-v.mp4"])
+    }
 }
