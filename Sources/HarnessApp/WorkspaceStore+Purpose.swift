@@ -108,6 +108,7 @@ extension WorkspaceStore {
 
     /// What a file was made from, beside it: a change asked for after the app restarted still builds on it.
     nonisolated static func saveRecipe(prompt: String, seed: Int, for output: URL) {
+        guard FileManager.default.fileExists(atPath: output.path) else { return }
         let data = try? JSONSerialization.data(withJSONObject: ["prompt": prompt, "seed": seed])
         try? data?.write(to: output.appendingPathExtension("json"))
     }

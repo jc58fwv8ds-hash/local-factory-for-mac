@@ -185,7 +185,13 @@ struct VideoOptionsTests {
 
     @Test func aRecipeSurvivesARestart() throws {
         let file = FileManager.default.temporaryDirectory.appendingPathComponent("recipe-\(UUID().uuidString).mp4")
-        defer { try? FileManager.default.removeItem(at: file.appendingPathExtension("json")) }
+        defer {
+            try? FileManager.default.removeItem(at: file)
+            try? FileManager.default.removeItem(at: file.appendingPathExtension("json"))
+        }
+        WorkspaceStore.saveRecipe(prompt: "no file yet", seed: 1, for: file)
+        #expect(WorkspaceStore.savedRecipe(for: file) == nil)
+        try Data().write(to: file)
         WorkspaceStore.saveRecipe(prompt: "a black cat", seed: 7, for: file)
         let saved = try #require(WorkspaceStore.savedRecipe(for: file))
         #expect(saved.prompt == "a black cat" && saved.seed == 7)
