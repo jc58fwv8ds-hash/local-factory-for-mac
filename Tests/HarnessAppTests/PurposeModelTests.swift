@@ -86,6 +86,7 @@ struct PurposeModelTests {
         #expect(change?.prompt == "a calm lake at dawn")
         #expect(await recorder.models == ["writer-large"])
         try? FileManager.default.removeItem(at: url)
+        try? FileManager.default.removeItem(at: url.appendingPathExtension("json"))
     }
 
     /// A follow-up on an image starts from its prompt and seed (2026-11-04), and the check counts the earlier instructions.
@@ -120,7 +121,7 @@ struct PurposeModelTests {
         #expect(store.instruction == "裸にして")   // stopped: the earlier instruction counts
         #expect(store.imageChanges.count == 3)
         _ = recorder
-        for change in store.imageChanges.values { if case .ready(let url) = change.status { try? FileManager.default.removeItem(at: url) } }
+        for change in store.imageChanges.values { if case .ready(let url) = change.status { try? FileManager.default.removeItem(at: url); try? FileManager.default.removeItem(at: url.appendingPathExtension("json")) } }
     }
 
     @Test func noImageModelChosenSaysWhereToChooseOne() async throws {
