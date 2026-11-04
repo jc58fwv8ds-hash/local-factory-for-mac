@@ -132,4 +132,19 @@ struct VideoOptionsTests {
         ], folder: folder)
         #expect(files.map(\.lastPathComponent) == ["ab-z.png", "cd-v.mp4"])
     }
+
+    @Test func aDeletedChatLeavesTheModelLogButOthersStay() throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("calls-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let file = folder.appendingPathComponent("2026-11-05.jsonl")
+        for (text, answer) in [("消すチャットの長い文章です", "答え"), ("別のチャット", "別の答え"), ("はい、消すチャットの長い文章ですを英語に", "x"), ("はいはい", "短い")] {
+            let request = InferenceRequest(runtime: .ollama, modelIdentifier: "m", messages: [InferenceMessage(role: .user, content: text)], maximumOutputTokens: 1)
+            ModelCallLog.record(request, response: answer, error: nil, seconds: 1, to: file)
+        }
+        ModelCallLog.remove(mentioning: ["消すチャットの長い文章です", "はい"], in: folder)
+        let left = try String(contentsOf: file, encoding: .utf8)
+        #expect(!left.contains("消すチャット"))
+        #expect(left.contains("別のチャット"))
+        #expect(left.contains("はいはい"))
+    }
 }

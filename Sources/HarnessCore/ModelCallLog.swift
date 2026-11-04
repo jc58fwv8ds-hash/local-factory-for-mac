@@ -34,6 +34,31 @@ public enum ModelCallLog {
         try? handle.write(contentsOf: data + Data("\n".utf8))
     }
 
+    /// Removes the lines about a chat the user deleted completely (2026-11-05): a message or answer equal to one of `texts`, or
+    /// containing one of 8 characters or more (requests wrap the user's words). Short words like 「はい」 count only when equal.
+    public static func remove(mentioning texts: [String], in folder: URL) {
+        let wanted = Set(texts.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty })
+        guard !wanted.isEmpty else { return }
+        let long = wanted.filter { $0.count >= 8 }
+        let matches = { (text: String) in
+            let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+            return wanted.contains(trimmed) || long.contains { trimmed.contains($0) }
+        }
+        lock.lock(); defer { lock.unlock() }
+        let files = (try? FileManager.default.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil)) ?? []
+        for file in files where file.pathExtension == "jsonl" {
+            guard let content = try? String(contentsOf: file, encoding: .utf8) else { continue }
+            let lines = content.split(separator: "\n", omittingEmptySubsequences: true)
+            let kept = lines.filter { line in
+                guard let entry = (try? JSONSerialization.jsonObject(with: Data(line.utf8))) as? [String: Any] else { return true }
+                let said = ((entry["messages"] as? [[String: Any]]) ?? []).compactMap { $0["content"] as? String }
+                return !(said + [entry["response"] as? String].compactMap { $0 }).contains(where: matches)
+            }
+            guard kept.count != lines.count else { continue }
+            try? (kept.joined(separator: "\n") + (kept.isEmpty ? "" : "\n")).write(to: file, atomically: true, encoding: .utf8)
+        }
+    }
+
     /// Removes daily files older than `days` in a folder of `YYYY-MM-DD.jsonl` logs.
     public static func prune(_ folder: URL, keepingDays days: Int = 14, now: Date = Date()) {
         let files = (try? FileManager.default.contentsOfDirectory(at: folder, includingPropertiesForKeys: [.contentModificationDateKey])) ?? []

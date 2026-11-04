@@ -112,7 +112,11 @@ extension WorkspaceStore {
             try? FileManager.default.removeItem(at: file)
         }
         for message in record.project.conversation { imageChanges[message.id] = nil }
+        ModelCallLog.remove(mentioning: record.project.conversation.map(\.content),
+                            in: Self.imageFolder.deletingLastPathComponent().appendingPathComponent("model-calls"))
         removeProjectFromLibrary(id, message: "完全に削除しました")
+        // The backup is the previous save, which still holds this chat: one more save replaces it.
+        persist()
     }
 
     /// The images and videos a conversation names inside `folder` (「保存先: …/Images/abc-z-image-turbo.png」).
