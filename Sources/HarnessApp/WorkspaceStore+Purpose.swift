@@ -14,7 +14,7 @@ final class ImageChange: Identifiable {
     var isRunning: Bool { if case .running = status { true } else { false } }
     let id: UUID
     let instruction: String
-    var status: Status = .running("指示を画像用の言葉にしています")
+    var status: Status = .running("準備しています")
     /// For the remaining time: what the time is filed under once the model is known, and when the job began.
     var jobKind: String?
     var startedAt = Date()
@@ -106,7 +106,7 @@ extension WorkspaceStore {
         persist()
         let change = ImageChange(id: message.id, instruction: text, isVideo: isVideo)
         if isVideo { change.referenceImage = visualAttachments.items.first?.data }
-        if imageChanges.values.contains(where: \.isRunning) { change.status = .running("順番を待っています。前の作業が終わると始めます") }
+        if imageChanges.values.contains(where: \.isRunning) { change.status = .running("順番待ち") }
         imageChanges[message.id] = change
         let before = ImageChange.lastInQueue
         change.task = Task {
@@ -126,7 +126,7 @@ extension WorkspaceStore {
 
     func runImage(_ change: ImageChange) async {
         change.startedAt = Date()
-        change.status = .running("指示を\(change.isVideo ? "動画" : "画像")用の言葉にしています")
+        change.status = .running("準備しています")
         let settings = purposeSettings
         let noun = change.isVideo ? "動画" : "画像"
         // A length or a character needs a model that takes them; the chosen one if it does, else the first that does.
@@ -180,7 +180,7 @@ extension WorkspaceStore {
         }
         guard !Task.isCancelled else { return }
         change.prompt = prompt
-        change.status = .running("\(noun)を作っています" + (seconds.map { "(\($0) 秒" + (change.referenceImage == nil ? "" : "、添付の画像から") + ")" } ?? "") + "。言語モデルをメモリから外しました")
+        change.status = .running("\(noun)を作っています" + (seconds.map { "(\($0) 秒" + (change.referenceImage == nil ? "" : "、添付の画像から") + ")" } ?? "") + "")
         var reference: URL?
         if let data = change.referenceImage {
             let file = Self.imageFolder.appendingPathComponent("\(change.id.uuidString.prefix(8))-reference.png")

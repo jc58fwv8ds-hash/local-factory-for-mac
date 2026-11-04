@@ -92,9 +92,6 @@ struct AppleAppLibraryView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("アプリを選ぶ")
                         .font(.harness(.title, weight: .bold))
-                    Text("iPhoneとApple Watchへ。難しい準備はLocal Factoryが整えます。")
-                        .font(.harness(.subheadline))
-                        .foregroundStyle(.secondary)
                 }
                 Spacer()
                 Button {
@@ -118,11 +115,6 @@ struct AppleAppLibraryView: View {
                     count: session.devices(for: .appleWatch).count
                 )
                 Spacer()
-                if !session.apps.isEmpty {
-                    Text("\(session.apps.count)個のアプリ")
-                        .font(.harness(.caption))
-                        .foregroundStyle(.secondary)
-                }
             }
         }
     }
@@ -148,11 +140,8 @@ struct AppleAppLibraryView: View {
         if session.phase == .loading && session.apps.isEmpty {
             VStack(spacing: 12) {
                 ProgressView().controlSize(.large)
-                Text("Xcodeプロジェクトからアプリを見つけています…")
+                Text("アプリを探しています…")
                     .font(.harness(.headline))
-                Text("schemeや対応端末は背後で確認します。")
-                    .font(.harness(.caption))
-                    .foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity, minHeight: 360)
         } else if store.appleAppSources.isEmpty {

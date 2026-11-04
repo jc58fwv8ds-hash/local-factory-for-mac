@@ -77,9 +77,6 @@ struct ConversationView: View {
                     ConversationPerformanceView(performance: performance)
                         .id(performance.responseID)
                 }
-                Text("分からない言葉に少しカーソルを合わせると、意味を説明します。右クリックからも開けます。")
-                    .font(.harness(.caption2))
-                    .foregroundStyle(.secondary)
                 if store.replySuggestionContext != nil {
                     ReplySuggestionsView(store: store)
                 }

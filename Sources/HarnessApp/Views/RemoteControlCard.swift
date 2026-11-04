@@ -53,10 +53,6 @@ struct RemoteControlCard: View {
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             } else {
-                Text("必要なときだけ有効にし、iPhoneへ表示中の6桁コードを入力します。")
-                    .font(.harness(.caption))
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
             }
         }
         .inspectorCard()

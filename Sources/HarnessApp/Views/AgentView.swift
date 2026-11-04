@@ -43,8 +43,6 @@ struct AgentView: View {
         HStack(alignment: .firstTextBaseline) {
             VStack(alignment: .leading, spacing: 3) {
                 Text("エージェント").font(.harness(.title2, weight: .bold))
-                Text("この Mac のアプリや Safari を、AI が画面を読みながら一手ずつ操作します。送信・購入・削除などの前には毎回確認し、パスワードは入力しません。")
-                    .font(.harness(.caption)).foregroundStyle(.secondary)
             }
             Spacer()
             VStack(alignment: .trailing, spacing: 3) {

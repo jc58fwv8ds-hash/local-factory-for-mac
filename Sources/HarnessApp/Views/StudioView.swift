@@ -120,12 +120,15 @@ struct StudioView: View {
                 Text(store.project.name)
                     .font(.harness(.headline))
                     .lineLimit(1)
+                if store.workspaceMode != .chat {
                 Text(((store.project.selectedModel?.displayName).map { "\($0) · " } ?? "") + store.project.summary)
                     .font(.harness(.caption))
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
+                }
             }
             Spacer(minLength: 12)
+            if store.workspaceMode != .chat {
             Text(store.project.stage.rawValue)
                 .font(.harness(.caption, weight: .medium))
                 .padding(.horizontal, 8)
@@ -171,6 +174,7 @@ struct StudioView: View {
             Button { isInspectorVisible.toggle() } label: { Image(systemName: "sidebar.right") }
                 .buttonStyle(.borderless)
                 .help(isInspectorVisible ? "詳細パネルを閉じる" : "詳細パネルを開く")
+            }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)

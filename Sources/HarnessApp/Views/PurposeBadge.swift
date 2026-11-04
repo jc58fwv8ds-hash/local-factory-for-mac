@@ -25,8 +25,7 @@ struct PurposeModelChip: View {
     var body: some View {
         if let option = modelPurpose.flatMap(settings.chosen) {
             HStack(spacing: 5) {
-                if let badge = option.badge { PurposeBadge(text: badge) }
-                Text(option.label).font(.harness(.caption2)).foregroundStyle(.secondary).lineLimit(1)
+                Text(option.label.components(separatedBy: "(").first ?? option.label).font(.harness(.caption2)).foregroundStyle(.secondary).lineLimit(1)
             }
             .help(option.note ?? option.label)
         }

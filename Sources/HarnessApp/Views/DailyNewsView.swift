@@ -4,6 +4,8 @@ import SwiftUI
 /// The daily AI research news (2026-11-02): when it is made and uploaded, and what happened lately.
 struct DailyNewsView: View {
     @State private var isConfirmingStop = false
+    /// The log is for when something went wrong.
+    private var showsLog: Bool { store.progress.map { $0.state == "failed" || $0.isStopped() } ?? false }
     @State private var store = DailyNewsStore()
 
     var body: some View {
@@ -11,8 +13,6 @@ struct DailyNewsView: View {
             VStack(alignment: .leading, spacing: 20) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("毎日のニュース").font(.harness(.title2, weight: .bold))
-                    Text("Mac が起きている日は、新しい AI の論文を京子と春日部つむぎが紹介する動画を作ります。眠っていた時刻の予約は、起きたときに実行します。")
-                        .font(.harness(.caption)).foregroundStyle(.secondary)
                 }
                 GroupBox("制作") {
                     VStack(alignment: .leading, spacing: 10) {
@@ -62,10 +62,12 @@ struct DailyNewsView: View {
                         }.frame(maxWidth: .infinity, alignment: .leading).padding(6)
                     }
                 }
+                if showsLog {
                 GroupBox("ログ(最後の12行)") {
                     Text(store.log.isEmpty ? "まだありません" : store.log)
                         .font(.system(.caption, design: .monospaced)).textSelection(.enabled)
                         .frame(maxWidth: .infinity, alignment: .leading).padding(6)
+                }
                 }
             }
             .padding(24)

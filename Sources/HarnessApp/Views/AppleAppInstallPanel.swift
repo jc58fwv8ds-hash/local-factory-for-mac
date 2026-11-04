@@ -94,9 +94,6 @@ struct AppleAppInstallPanel: View {
             if session.selectedPlatforms.contains(.appleWatch),
                app.configuration(for: .appleWatch)?.watchRelationship == .requiresCompanion,
                app.configuration(for: .iPhone) != nil {
-                Label("このWatchアプリはiPhone版を先に自動インストールします。", systemImage: "link")
-                    .font(.harness(.caption2))
-                    .foregroundStyle(.secondary)
             }
         }
     }
@@ -184,7 +181,7 @@ struct AppleAppInstallPanel: View {
         if !missing.isEmpty {
             return "\(missing.map(\.displayName).joined(separator: "と"))を接続して一覧を更新してください"
         }
-        return "署名・ビルド・転送・起動はLocal Factoryが背後で行います"
+        return ""
     }
 }
 

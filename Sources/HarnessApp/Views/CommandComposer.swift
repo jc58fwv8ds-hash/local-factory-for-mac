@@ -60,7 +60,7 @@ struct CommandComposer: View {
                     }
                 }
                 TextField(
-                    store.workspaceMode == .chat ? "メッセージを入力" : "このアプリをどう育てますか？",
+                    store.workspaceMode == .chat ? "メッセージを入力" : "指示を入力",
                     text: $store.instruction,
                     axis: .vertical
                 )

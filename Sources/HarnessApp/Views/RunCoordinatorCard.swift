@@ -25,10 +25,6 @@ struct RunCoordinatorCard: View {
                     .foregroundStyle(.secondary)
             }
 
-            Text("1項目ずつ、差分確認と検証を通して進めます。保存や完了は確認なしでは行いません。")
-                .font(.harness(.caption))
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(state.phase.displayName)

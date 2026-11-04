@@ -67,7 +67,6 @@ struct ActivityInspectorView: View {
                         onDisconnect: { sourceDisconnectProjectID = record.id }
                     )
                 }
-                safetyCard
                 RecentProjectActivitySection(
                     events: store.project.activity,
                     showsDetails: $store.showsDetails
@@ -172,17 +171,6 @@ struct ActivityInspectorView: View {
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.small)
-        }
-        .inspectorCard()
-    }
-
-    private var safetyCard: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Label("人が主導権を持つ", systemImage: "hand.raised.fill")
-                .font(.harness(.subheadline, weight: .semibold))
-            SafetyRow(title: "読み取り・診断", isAutomatic: true)
-            SafetyRow(title: "ファイル変更", isAutomatic: false)
-            SafetyRow(title: "削除・署名・公開", isAutomatic: false)
         }
         .inspectorCard()
     }

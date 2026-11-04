@@ -41,7 +41,7 @@ struct JobTimeEstimatesTests {
     @Test func theTextNeverCountsBelowZero() {
         #expect(JobTimeEstimates.text(expected: 300, elapsed: 100) == "残り およそ 4 分")
         #expect(JobTimeEstimates.text(expected: 30, elapsed: 21) == "残り およそ 9 秒")
-        #expect(JobTimeEstimates.text(expected: 60, elapsed: 90) == "目安の 1 分 を過ぎています(経過 2 分)")
+        #expect(JobTimeEstimates.text(expected: 60, elapsed: 90) == "経過 2 分")
         #expect(JobTimeEstimates.text(expected: nil, elapsed: 5).hasPrefix("経過 5 秒"))
     }
 }

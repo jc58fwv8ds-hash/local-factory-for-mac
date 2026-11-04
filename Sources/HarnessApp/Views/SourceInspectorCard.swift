@@ -175,10 +175,6 @@ struct SourceInspectorCard: View {
 
     private var disconnectedContent: some View {
         VStack(alignment: .leading, spacing: 9) {
-            Text("制作物のフォルダを接続すると、構成と利用技術を安全に確認できます。")
-                .font(.harness(.caption))
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
             Label("ファイルは変更しません", systemImage: "eye")
                 .font(.harness(.caption2, weight: .medium))
                 .foregroundStyle(.green)

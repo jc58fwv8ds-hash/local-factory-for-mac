@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import HarnessCore
 
@@ -89,6 +90,16 @@ extension WorkspaceStore {
     }
 
     /// Deleted from the sidebar: the next chat or project of this mode opens, not one of the other mode.
+    /// The sidebar's 出力フォルダ (2026-11-05): where this chat's images and videos go, or the connected folder of a code project.
+    func openOutputFolder() {
+        if workspaceMode == .code, let path = library.selectedRecord?.sourceLocation {
+            NSWorkspace.shared.open(URL(fileURLWithPath: path))
+            return
+        }
+        try? FileManager.default.createDirectory(at: Self.imageFolder, withIntermediateDirectories: true)
+        NSWorkspace.shared.open(Self.imageFolder)
+    }
+
     func deleteFromSidebar(_ id: UUID) {
         moveProjectToTrash(id)
         guard !selectedProjectIsInMode, let next = modeRecords.first else { return }

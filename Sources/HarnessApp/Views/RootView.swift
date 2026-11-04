@@ -44,7 +44,7 @@ struct RootView: View {
                 StudioView(store: store)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-                if isInspectorVisible {
+                if isInspectorVisible, store.workspaceMode != .chat {
                     Divider().opacity(0.55)
 
                     ActivityInspectorView(store: store)
@@ -170,6 +170,12 @@ private struct SidebarView: View {
                 }
                 }
                 SidebarButton(
+                    title: "出力フォルダ",
+                    systemImage: "folder",
+                    accessibilityID: "sidebar-output-folder",
+                    isSelected: false
+                ) { store.openOutputFolder() }
+                SidebarButton(
                     title: "毎日のニュース",
                     systemImage: "play.rectangle",
                     accessibilityID: "sidebar-daily-news",
@@ -237,7 +243,7 @@ private struct SidebarView: View {
                 Circle()
                     .fill(store.hasConfiguredModel ? .green : .orange)
                     .frame(width: 8, height: 8)
-                Text(store.project.selectedModel != nil ? "AI 接続済み" : store.hasConfiguredModel ? "AI 自動(使うときに読み込み)" : "AI 未接続")
+                Text(store.hasConfiguredModel || store.project.selectedModel != nil ? "AI" : "AI 未接続")
                     .font(.harness(.caption))
                     .foregroundStyle(.secondary)
                 Spacer()

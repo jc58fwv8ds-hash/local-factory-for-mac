@@ -30,9 +30,9 @@ struct JobTimeEstimates {
 
     /// "残り およそ 3 分". Past the guess it says so instead of counting below zero; with no guess, the time so far.
     static func text(expected: Double?, elapsed: Double) -> String {
-        guard let expected else { return "経過 \(duration(elapsed))(初めての作業なので、残り時間の目安はまだありません)" }
+        guard let expected else { return "経過 \(duration(elapsed))" }
         let left = expected - elapsed
-        return left > 0 ? "残り およそ \(duration(left))" : "目安の \(duration(expected)) を過ぎています(経過 \(duration(elapsed)))"
+        return left > 0 ? "残り およそ \(duration(left))" : "経過 \(duration(elapsed))"
     }
 
     static func duration(_ seconds: Double) -> String {

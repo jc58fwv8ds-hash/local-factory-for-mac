@@ -13,6 +13,9 @@ struct ImageChangeCard: View {
                 Image(systemName: change.isVideo ? "film" : "photo.artframe")
                 Text(change.isVideo ? "動画" : "画像").font(.harness(.subheadline, weight: .semibold))
                 Spacer()
+                if let prompt = change.prompt, prompt != change.instruction {
+                    Image(systemName: "info.circle").foregroundStyle(.secondary).help(prompt)
+                }
                 if change.isRunning { Button("止める", systemImage: "stop.fill", action: stop).controlSize(.small) }
             }
             switch change.status {
@@ -39,9 +42,6 @@ struct ImageChangeCard: View {
                     Button("開く") { NSWorkspace.shared.open(url) }
                 }
                 .controlSize(.small)
-            }
-            if let prompt = change.prompt, prompt != change.instruction {
-                Text((change.isVideo ? "動画モデルへの指示: " : "画像モデルへの指示: ") + prompt).font(.harness(.caption2)).foregroundStyle(.secondary).textSelection(.enabled)
             }
         }
         .padding(12)
