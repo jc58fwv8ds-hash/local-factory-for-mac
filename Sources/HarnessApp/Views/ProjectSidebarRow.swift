@@ -79,12 +79,27 @@ struct SidebarTrashSection: View {
 
     var body: some View {
         if !records.isEmpty {
-            DisclosureGroup("ゴミ箱(\(records.count))", isExpanded: $isOpen) {
-                ForEach(records) { record in
-                    HStack(spacing: 6) {
-                        Text(record.project.name).font(.harness(.caption)).lineLimit(1)
+            // The whole row opens it (2026-11-04: a DisclosureGroup opens only from its small triangle on the Mac, so clicking
+            // 「ゴミ箱」 did nothing).
+            VStack(alignment: .leading, spacing: 4) {
+                Button { isOpen.toggle() } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: isOpen ? "chevron.down" : "chevron.right").frame(width: 12)
+                        Text("ゴミ箱(\(records.count))")
                         Spacer()
-                        Button("戻す") { store.restoreProject(record.id) }.buttonStyle(.borderless)
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.secondary)
+                if isOpen {
+                    ForEach(records) { record in
+                        HStack(spacing: 6) {
+                            Text(record.project.name).lineLimit(1)
+                            Spacer()
+                            Button("戻す") { store.restoreProject(record.id) }.buttonStyle(.borderless)
+                        }
+                        .padding(.leading, 16)
                     }
                 }
             }

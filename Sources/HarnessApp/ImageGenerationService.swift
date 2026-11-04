@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import HarnessCore
 
@@ -113,6 +114,7 @@ struct ImageGenerationService: ImageGenerating {
             pipe.fileHandleForReading.readabilityHandler = { collected.append($0.availableData) }
             running.attach(process)
             process.terminationHandler = { _ in
+                running.finished()
                 pipe.fileHandleForReading.readabilityHandler = nil
                 collected.append(pipe.fileHandleForReading.readDataToEndOfFile())
                 continuation.resume(returning: collected.text)
@@ -143,7 +145,20 @@ private final class OutputTail: @unchecked Sendable {
 private final class RunningProcess: @unchecked Sendable {
     private let lock = NSLock()
     private var process: Process?
-    func attach(_ process: Process) { lock.lock(); defer { lock.unlock() }; self.process = process }
+    private var quitting: (any NSObjectProtocol)?
+    /// Quitting the app stops the tool too: otherwise it keeps the memory and its result reaches no card.
+    func attach(_ process: Process) {
+        lock.lock(); defer { lock.unlock() }
+        self.process = process
+        quitting = NotificationCenter.default.addObserver(forName: NSApplication.willTerminateNotification, object: nil, queue: nil) { [weak self] _ in
+            self?.stopIfRunning()
+        }
+    }
+    func finished() {
+        lock.lock(); defer { lock.unlock() }
+        if let quitting { NotificationCenter.default.removeObserver(quitting) }
+        quitting = nil
+    }
     func stopIfRunning() {
         lock.lock(); defer { lock.unlock() }
         if process?.isRunning == true { process?.terminate() }

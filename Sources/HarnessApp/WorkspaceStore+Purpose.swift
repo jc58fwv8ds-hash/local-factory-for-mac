@@ -189,6 +189,11 @@ extension WorkspaceStore {
         }
         let output = Self.imageFolder.appendingPathComponent(
             "\(change.id.uuidString.prefix(8))-\(option.id).\(change.isVideo ? "mp4" : "png")")
+        // The copy of the attached picture is only for this run; a stopped run leaves no half-made output behind.
+        defer {
+            if let reference { try? FileManager.default.removeItem(at: reference) }
+            if Task.isCancelled { try? FileManager.default.removeItem(at: output) }
+        }
         do {
             try await imageGenerator.generate(option: option, prompt: prompt, output: output, options: ImageGenerationOptions(seed: change.seed, seconds: seconds, image: reference))
             guard !Task.isCancelled else { return }
