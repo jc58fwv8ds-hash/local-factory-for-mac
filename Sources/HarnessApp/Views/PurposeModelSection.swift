@@ -16,7 +16,7 @@ struct PurposeModelSection: View {
                 Text("追加のモデルの一覧(purpose-models.json)がありません。")
                     .font(.harness(.caption)).foregroundStyle(.secondary)
             } else {
-                ForEach(ModelPurpose.allCases.filter { ($0 != .video && $0 != .conversation) || !settings.catalog.options(for: $0).isEmpty },
+                ForEach(ModelPurpose.allCases.filter { $0 != .writing && (($0 != .video && $0 != .conversation) || !settings.catalog.options(for: $0).isEmpty) },
                         id: \.self) { purpose in
                     picker(purpose)
                 }

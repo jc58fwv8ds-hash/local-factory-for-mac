@@ -26,7 +26,8 @@ extension WorkspaceStore {
     /// The purposes the composer offers: all of them in chat (video once a video model is listed), conversation in code.
     var availablePurposes: [ComposerPurpose] {
         guard workspaceMode == .chat else { return [.conversation] }
-        return ComposerPurpose.allCases.filter { $0 != .video || !purposeSettings.catalog.options(for: .video).isEmpty }
+        // 文章を書く left the menu (2026-11-07, the user: not needed; 会話 writes too).
+        return ComposerPurpose.allCases.filter { $0 != .writing && ($0 != .video || !purposeSettings.catalog.options(for: .video).isEmpty) }
     }
 
     func switchMode(_ mode: WorkspaceMode) {

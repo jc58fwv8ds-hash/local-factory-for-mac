@@ -209,4 +209,9 @@ struct VideoOptionsTests {
         stages.finish(at: start.addingTimeInterval(8.5))
         #expect(stages.summary(at: start.addingTimeInterval(9)) == "読み込み 3.0秒 · 入力 3.5秒 · 出力 2.0秒(10.5/秒)")
     }
+
+    @Test func aWritersRefusalNeverBecomesThePicture() {
+        #expect(ModelRefusal.looksLikeRefusal("I cannot fulfill the request to generate an image involving sexual acts or explicit content. I am designed to be a helpful and harmless AI assistant"))
+        #expect(!ModelRefusal.looksLikeRefusal("A seductive married woman in an abandoned building, soft light"))
+    }
 }

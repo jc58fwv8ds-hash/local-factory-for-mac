@@ -37,7 +37,7 @@ struct WorkspaceModeTests {
         #expect(chat.effectiveKind == .chat && chat.sourceLocation == nil)
         #expect(chat.project.selectedModel?.identifier == "fixture")
         #expect(store.modeRecords.map(\.id) == [chat.id])
-        #expect(store.availablePurposes.contains(.writing) && store.availablePurposes.contains(.image))
+        #expect(!store.availablePurposes.contains(.writing) && store.availablePurposes.contains(.image))
 
         store.composerPurpose = .image
         store.switchMode(.code)

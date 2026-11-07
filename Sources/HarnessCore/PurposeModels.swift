@@ -97,7 +97,8 @@ public struct PurposeModelCatalog: Codable, Equatable, Sendable {
 public enum ModelRefusal {
     static let phrases = ["申し訳ありませんが", "お手伝いできません", "お応えできません", "対応できません", "提供できません",
                           "I can't help with", "I cannot help with", "I can't assist", "I cannot assist", "I'm not able to help",
-                          "I won't be able to"]
+                          "I won't be able to", "I cannot fulfill", "I can't fulfill", "I cannot create", "I can't create",
+                          "I cannot generate", "I can't generate", "I cannot provide", "I can't provide", "I'm sorry, but", "I am designed to be a helpful and harmless"]
 
     public static func looksLikeRefusal(_ text: String) -> Bool {
         let head = String(text.prefix(400))

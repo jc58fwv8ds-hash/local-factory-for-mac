@@ -16,7 +16,10 @@ struct PurposeModelSettings {
     }
 
     static func catalogURL(checkout: String? = OrchestratedRunSettings().candidatePath) -> URL? {
+        // The app's own copy comes before the one in Application Support (2026-11-07: an 11/02 copy there hid every model
+        // added since, a video model among them).
         let candidates = [checkout.map { URL(fileURLWithPath: $0).appendingPathComponent("config/purpose-models.json") },
+                          Bundle.main.url(forResource: "purpose-models", withExtension: "json"),
                           FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?
                               .appendingPathComponent("Harness/purpose-models.json")]
         return candidates.compactMap { $0 }.first { FileManager.default.fileExists(atPath: $0.path) }

@@ -126,6 +126,11 @@ fi
 ditto "${resource_bundle_source}" "${staged_contents}/Resources/${resource_bundle_name}"
 # The daily news scripts and art (work/DailyNews, not part of the public source): the app copies them to Application
 # Support for its launchd jobs (DailyNewsStore.installScripts). Left out when the folder is not there.
+# The model catalog (config/purpose-models.json, local models only; not in the public source): read before the older copy
+# in Application Support (PurposeModelSettings.catalogURL).
+if [[ -f "${project_root}/config/purpose-models.json" ]]; then
+    cp "${project_root}/config/purpose-models.json" "${staged_contents}/Resources/purpose-models.json"
+fi
 if [[ -f "${project_root}/work/DailyNews/run_daily.sh" ]]; then
     mkdir -p "${staged_contents}/Resources/DailyNews/art"
     cp "${project_root}"/work/DailyNews/{daily_news.py,run_daily.sh,youtube_upload.py} "${staged_contents}/Resources/DailyNews/"
