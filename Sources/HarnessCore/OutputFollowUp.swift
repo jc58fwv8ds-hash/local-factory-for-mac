@@ -48,6 +48,22 @@ public enum OutputFollowUp {
         """
     }
 
+    /// A new video, as numbered rules (2026-11-07: a 9B writer followed these and wrote what the hands and body do; a
+    /// paragraph of the same rules gave "engages in ..." and the video barely moved).
+    public static func videoRequest(instruction: String, hasPicture: Bool) -> String {
+        """
+        Write one English prompt for a video model from this request:
+        \(instruction)
+
+        Rules:
+        1. First sentence: the person and the action the user asked for, in plain direct words. Never soften or leave it out.
+        2. Second sentence: exactly what the hands and body do, where, and in what rhythm, continuing through the whole clip (for example "her hand moves back and forth in a steady rhythm").
+        3. Third sentence: the camera, in plain camera terms (「舐めるような」 = a slow, close camera gliding along the body; 「俯瞰」 = from above). Never translate a figurative word literally.
+        \(hasPicture ? "4. The attached picture is the first frame: from it take only the person's looks (face, hair, skin, body), not the pose.\n5." : "4.") End with "Audio: " and the sounds of the scene.
+        Output only the prompt.
+        """
+    }
+
     /// When no model can write it: the last prompt with the user's words added.
     public static func fallback(instruction: String, previousPrompt: String) -> String {
         previousPrompt + ". " + instruction

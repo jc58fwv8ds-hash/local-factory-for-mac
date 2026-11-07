@@ -219,4 +219,10 @@ struct VideoOptionsTests {
         #expect(GeneratedMedia.pointsAtLastImage("この人物をマスターベーションさせて"))
         #expect(!GeneratedMedia.pointsAtLastImage("猫の写真を作って"))
     }
+
+    @Test func aNewVideoAsksForTheActionTheHandsAndTheCamera() {
+        let text = OutputFollowUp.videoRequest(instruction: "猫が走る", hasPicture: true)
+        #expect(text.contains("猫が走る") && text.contains("2. Second sentence") && text.contains("only the person's looks") && text.contains("5. End with"))
+        #expect(OutputFollowUp.videoRequest(instruction: "猫が走る", hasPicture: false).contains("4. End with"))
+    }
 }
