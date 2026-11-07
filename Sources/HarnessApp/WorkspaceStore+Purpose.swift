@@ -233,7 +233,8 @@ extension WorkspaceStore {
         change.prompt = prompt
         change.status = .running("\(noun)を作っています" + (seconds.map { "(\($0) 秒" + (change.referenceImage == nil ? "" : "、添付の画像から") + ")" } ?? "") + "")
         var reference: URL?
-        if let data = change.referenceImage {
+        // A picture model that keeps a person (its command takes {image}) gets the attached or last picture too (2026-11-07).
+        if let data = change.referenceImage ?? (option.command?.contains("{image}") == true ? personData : nil) {
             let file = Self.imageFolder.appendingPathComponent("\(change.id.uuidString.prefix(8))-reference.png")
             try? FileManager.default.createDirectory(at: Self.imageFolder, withIntermediateDirectories: true)
             if (try? data.write(to: file)) != nil { reference = file }
