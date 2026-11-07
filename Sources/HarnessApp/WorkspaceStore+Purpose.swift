@@ -197,11 +197,13 @@ extension WorkspaceStore {
         let personData = change.referenceImage
             ?? ((previous != nil && !change.isVideo) || GeneratedMedia.pointsAtLastImage(change.instruction) ? lastPicture.flatMap { try? Data(contentsOf: $0) } : nil)
         let personImages = await ComputerUseScreenshot.inferenceImages(personData)
-        let keepPerson = personImages.isEmpty ? "" : "The attached picture shows the person from before. Describe that same person in the prompt (face, age, ethnicity, hair, skin, body, clothing) so the new \(noun == "動画" ? "video" : "image") keeps them. "
+        // Only the person's looks come from the picture: its pose must not replace what was asked (2026-11-07: 「自慰をさせて」
+        // became "hands resting near her chest", the pose the picture had).
+        let keepPerson = personImages.isEmpty ? "" : "The attached picture shows the person from before. Keep the same person: describe only their looks (face, age, ethnicity, hair, skin, body). Do not describe the pose or action in the picture; the action is the one the user asks for above, and it must be the main, clearly stated content of the prompt. "
         for model in [writer, fallback].compactMap({ $0 }).reduce(into: [ModelSelection](), { if !$0.contains($1) { $0.append($1) } }) {
             let request = InferenceRequest(runtime: model.runtime, modelIdentifier: model.identifier, messages: [
                 InferenceMessage(role: .user, content: earlier + (previous?.prompt.map { OutputFollowUp.request(instruction: change.instruction, previousPrompt: $0, kind: noun == "動画" ? "video" : "image") } ?? """
-                Rewrite this request as one English prompt for \(change.isVideo ? "a video model (describe the motion too, and end with \"Audio: \" and the sounds of the scene, which the model makes with the picture)" : "an image model"). Keep every detail the user gave (subject, \
+                Rewrite this request as one English prompt for \(change.isVideo ? "a video model. Start with the action the user asks for, and describe it as continuous motion that keeps going through the whole clip; give the camera movement in plain camera terms (for example 「舐めるような」 means a slow, close camera gliding along the body, 「俯瞰」 means from above). End with \"Audio: \" and the sounds of the scene, which the model makes with the picture" : "an image model"). State the requested action plainly and first; never soften, leave out or replace it. Keep every detail the user gave (subject, \
                 style, composition, colors, mood); add nothing they did not ask for. \(change.referenceImage == nil ? "" : "A picture of the character is the first frame: describe what the character does and how the scene moves, keeping the character as in the picture. ")Output only the prompt.
                 \(change.instruction)
                 """) + (keepPerson.isEmpty ? "" : "\n\n" + keepPerson))], maximumOutputTokens: 400, images: personImages, temperature: 0)
