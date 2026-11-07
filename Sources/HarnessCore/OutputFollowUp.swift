@@ -57,9 +57,9 @@ public enum OutputFollowUp {
 
         Rules:
         1. First sentence: the person and the action the user asked for, in plain direct words. Never soften or leave it out.
-        2. Second sentence: exactly what the hands and body do, where, and in what rhythm, continuing through the whole clip (for example "her hand moves back and forth in a steady rhythm").
+        2. Second sentence: exactly what the hands and body do, where, and in what rhythm, as large, clearly visible movement that keeps going through the whole clip (for example "her hand moves back and forth in a steady rhythm, her hips rocking"). Never write that the body or the hands stay still, rest or remain relaxed.
         3. Third sentence: the camera, in plain camera terms (「舐めるような」 = a slow, close camera gliding along the body; 「俯瞰」 = from above). Never translate a figurative word literally.
-        \(hasPicture ? "4. The attached picture is the first frame: from it take only the person's looks (face, hair, skin, body), not the pose.\n5." : "4.") End with "Audio: " and the sounds of the scene.
+        \(hasPicture ? "4. The attached picture is the first frame: from it take only the person's looks (face, hair, skin, body, clothing). Do not describe its pose or where its hands are; the movement starts from it and becomes the requested action.\n5." : "4.") End with "Audio: " and the sounds of the scene.
         Output only the prompt.
         """
     }

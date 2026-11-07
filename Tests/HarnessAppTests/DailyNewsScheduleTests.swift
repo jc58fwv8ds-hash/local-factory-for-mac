@@ -225,4 +225,11 @@ struct VideoOptionsTests {
         #expect(text.contains("猫が走る") && text.contains("2. Second sentence") && text.contains("only the person's looks") && text.contains("5. End with"))
         #expect(OutputFollowUp.videoRequest(instruction: "猫が走る", hasPicture: false).contains("4. End with"))
     }
+
+    @Test func aWordInTheRequestAlwaysAddsItsMotion() {
+        var catalog = PurposeModelCatalog()
+        catalog.motionHints = ["走る": "She runs fast.", "疾走": "She runs fast.", "踊る": "She dances."]
+        #expect(catalog.motionHints(for: "猫と走る、疾走する") == ["She runs fast."])
+        #expect(catalog.motionHints(for: "座る").isEmpty)
+    }
 }

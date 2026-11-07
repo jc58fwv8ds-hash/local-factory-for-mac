@@ -57,6 +57,16 @@ public struct PurposeModelCatalog: Codable, Equatable, Sendable {
     public var roles: [String: String]?
     /// A code change the normal model refuses is retried once with this writing option (id).
     public var codeRefusalFallback: String?
+    /// Words in a request and the motion sentence always added to the picture or video prompt for them (2026-11-07: the
+    /// prompt writer softened acts into still poses; a direct motion sentence made the video model draw them). The user's
+    /// to edit in the catalog file.
+    public var motionHints: [String: String]?
+
+    /// The motion sentences for the words in `request`, each once, in the catalog's key order.
+    public func motionHints(for request: String) -> [String] {
+        guard let motionHints else { return [] }
+        return Array(Set(motionHints.keys.filter { request.contains($0) }.compactMap { motionHints[$0] })).sorted()
+    }
 
     public init(writing: [PurposeModelOption] = [], image: [PurposeModelOption] = [], video: [PurposeModelOption]? = nil,
                 roles: [String: String]? = nil, codeRefusalFallback: String? = nil, conversation: [PurposeModelOption]? = nil) {

@@ -227,6 +227,8 @@ extension WorkspaceStore {
             }
         }
         guard !Task.isCancelled else { return }
+        let hints = settings.catalog.motionHints(for: change.instruction).filter { !prompt.contains($0) }
+        if !hints.isEmpty { prompt += " " + hints.joined(separator: " ") }
         change.prompt = prompt
         change.status = .running("\(noun)を作っています" + (seconds.map { "(\($0) 秒" + (change.referenceImage == nil ? "" : "、添付の画像から") + ")" } ?? "") + "")
         var reference: URL?
