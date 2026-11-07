@@ -35,7 +35,9 @@ struct ImageGenerationService: ImageGenerating {
 
     func generate(option: PurposeModelOption, prompt: String, output: URL, options: ImageGenerationOptions) async throws {
         guard let template = option.command, let tool = template.first else { throw Failure.noCommand }
-        guard let executable = Self.resolve(tool) else { throw Failure.notInstalled(tool) }
+        // {home} in the program's own path too (2026-11-07: a video model's Python was looked up as 「{home}/Tools/…」 and never ran).
+        let program = tool.replacingOccurrences(of: "{home}", with: FileManager.default.homeDirectoryForCurrentUser.path)
+        guard let executable = Self.resolve(program) else { throw Failure.notInstalled(program) }
         // "No model" under a lease for the whole run: running language requests finish first, and a chat request that comes
         // in meanwhile waits instead of loading the 27B beside the image model.
         let log = try await ModelRuntimes.shared.withLease(.none) {

@@ -10,7 +10,7 @@ struct PurposeModelSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Label("用途ごとのモデル", systemImage: "square.stack.3d.up").font(.harness(.headline))
-            Text("チャットの会話と、入力欄で「文章を書く」「画像を作る」「動画を作る」を選んだときに使うモデルです。印の付いたモデルは安全のための制限が少ないものです。コードのモードでは使いません。")
+            Text("チャットの会話と、入力欄で「画像を作る」「動画を作る」を選んだときに使うモデルです。印の付いたモデルは安全のための制限が少ないものです。コードのモードでは使いません。")
                 .font(.harness(.caption)).foregroundStyle(.secondary)
             if settings.catalog == .empty {
                 Text("追加のモデルの一覧(purpose-models.json)がありません。")

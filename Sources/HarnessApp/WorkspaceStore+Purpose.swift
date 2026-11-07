@@ -172,7 +172,10 @@ extension WorkspaceStore {
         }
         // The prompt writer follows the writing choice's roles (the "large" role), else the project's model.
         // The chat's own model when one is chosen: it is usually already in memory, and swapping to another 27B costs 3 s (2026-11-05).
-        let writer = settings.chosen(.conversation)?.selection ?? settings.chosen(.writing).flatMap { settings.catalog.roleModel("large", chosen: $0) } ?? (project.selectedModel ?? WorkspaceStore.automaticModel)
+        // The prompt writer of the catalog's roles (2026-11-07: a 9B model that also sees pictures, 22 tokens/s),
+        // else the chat's own model.
+        let writer = settings.catalog.roles?["promptWriter"].flatMap { settings.catalog.option(id: $0, for: .writing)?.selection }
+            ?? settings.chosen(.conversation)?.selection ?? settings.chosen(.writing).flatMap { settings.catalog.roleModel("large", chosen: $0) } ?? (project.selectedModel ?? WorkspaceStore.automaticModel)
         // The last output of the same kind in this conversation: a new instruction may be a change to it.
         let ids = Set(project.conversation.map(\.id))
         let previous: (prompt: String?, seed: Int)? = change.referenceImage != nil ? nil : imageChanges.values
@@ -188,13 +191,20 @@ extension WorkspaceStore {
         // if that refuses too, the user's own words go to the model.
         let fallback = ContentGuardSettings().refusalFallback(catalog: settings.catalog)
         let earlier = OutputFollowUp.earlierConversation(project.conversation, before: change.id)
+        // The person from before, shown to the writer so the new prompt describes the same person (2026-11-07: a follow-up
+        // drew someone else). The video's own picture, else the last picture when the request points at it or changes it.
+        let lastPicture = GeneratedMedia.lastFile(.image, in: project.conversation.map(\.content))
+        let personData = change.referenceImage
+            ?? ((previous != nil && !change.isVideo) || GeneratedMedia.pointsAtLastImage(change.instruction) ? lastPicture.flatMap { try? Data(contentsOf: $0) } : nil)
+        let personImages = await ComputerUseScreenshot.inferenceImages(personData)
+        let keepPerson = personImages.isEmpty ? "" : "The attached picture shows the person from before. Describe that same person in the prompt (face, age, ethnicity, hair, skin, body, clothing) so the new \(noun == "動画" ? "video" : "image") keeps them. "
         for model in [writer, fallback].compactMap({ $0 }).reduce(into: [ModelSelection](), { if !$0.contains($1) { $0.append($1) } }) {
             let request = InferenceRequest(runtime: model.runtime, modelIdentifier: model.identifier, messages: [
                 InferenceMessage(role: .user, content: earlier + (previous?.prompt.map { OutputFollowUp.request(instruction: change.instruction, previousPrompt: $0, kind: noun == "動画" ? "video" : "image") } ?? """
                 Rewrite this request as one English prompt for \(change.isVideo ? "a video model (describe the motion too, and end with \"Audio: \" and the sounds of the scene, which the model makes with the picture)" : "an image model"). Keep every detail the user gave (subject, \
                 style, composition, colors, mood); add nothing they did not ask for. \(change.referenceImage == nil ? "" : "A picture of the character is the first frame: describe what the character does and how the scene moves, keeping the character as in the picture. ")Output only the prompt.
                 \(change.instruction)
-                """))], maximumOutputTokens: 300, temperature: 0)
+                """) + (keepPerson.isEmpty ? "" : "\n\n" + keepPerson))], maximumOutputTokens: 400, images: personImages, temperature: 0)
             guard !Task.isCancelled else { return }
             var english = ""
             do {

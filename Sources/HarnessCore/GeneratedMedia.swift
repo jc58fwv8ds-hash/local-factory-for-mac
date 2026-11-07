@@ -45,6 +45,6 @@ public enum GeneratedMedia {
 
     /// 「この画像を動かして」: the video starts from the last picture without attaching it again.
     public static func pointsAtLastImage(_ text: String) -> Bool {
-        ["この画像", "この写真", "この絵", "さっきの画像", "さっきの写真", "今の画像", "生成した画像"].contains(where: text.contains)
+        ["この画像", "この写真", "この絵", "さっきの画像", "さっきの写真", "今の画像", "生成した画像", "この人物", "この女性", "この男性", "この人"].contains(where: text.contains)
     }
 }

@@ -214,4 +214,9 @@ struct VideoOptionsTests {
         #expect(ModelRefusal.looksLikeRefusal("I cannot fulfill the request to generate an image involving sexual acts or explicit content. I am designed to be a helpful and harmless AI assistant"))
         #expect(!ModelRefusal.looksLikeRefusal("A seductive married woman in an abandoned building, soft light"))
     }
+
+    @Test func aRequestAboutThisPersonStartsFromTheLastPicture() {
+        #expect(GeneratedMedia.pointsAtLastImage("この人物をマスターベーションさせて"))
+        #expect(!GeneratedMedia.pointsAtLastImage("猫の写真を作って"))
+    }
 }
