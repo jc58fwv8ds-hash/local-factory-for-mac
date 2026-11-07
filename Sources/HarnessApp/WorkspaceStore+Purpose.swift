@@ -21,6 +21,9 @@ final class ImageChange: Identifiable {
     var prompt: String?
     /// A video's character: the attached picture (a generated image attached again), which becomes its first frame.
     var referenceImage: Data?
+    /// A picture attached to an image request: its person is described to the prompt writer (2026-11-07: an attached person
+    /// was ignored and the prompt said only "a person").
+    var personPicture: Data?
     /// The seed it was made with; a follow-up that changes this output uses it again.
     var seed = Int.random(in: 1...999_999)
     /// A video request (2026-10-19): the same flow with the 動画を作る model, saved as .mp4.
@@ -127,6 +130,7 @@ extension WorkspaceStore {
         library.updateSelectedProject { $0.conversation.append(message) }
         persist()
         let change = ImageChange(id: message.id, instruction: text, isVideo: isVideo)
+        if !isVideo { change.personPicture = visualAttachments.items.first?.data }
         if isVideo {
             change.referenceImage = visualAttachments.items.first?.data
             if change.referenceImage == nil, GeneratedMedia.pointsAtLastImage(text),
@@ -178,7 +182,7 @@ extension WorkspaceStore {
             ?? settings.chosen(.conversation)?.selection ?? settings.chosen(.writing).flatMap { settings.catalog.roleModel("large", chosen: $0) } ?? (project.selectedModel ?? WorkspaceStore.automaticModel)
         // The last output of the same kind in this conversation: a new instruction may be a change to it.
         let ids = Set(project.conversation.map(\.id))
-        let previous: (prompt: String?, seed: Int)? = change.referenceImage != nil ? nil : imageChanges.values
+        let previous: (prompt: String?, seed: Int)? = change.referenceImage != nil || change.personPicture != nil ? nil : imageChanges.values
             .filter { $0.id != change.id && $0.isVideo == change.isVideo && ids.contains($0.id) && $0.prompt != nil }
             .filter { if case .ready = $0.status { true } else { false } }
             .max { $0.startedAt < $1.startedAt }
@@ -194,7 +198,7 @@ extension WorkspaceStore {
         // The person from before, shown to the writer so the new prompt describes the same person (2026-11-07: a follow-up
         // drew someone else). The video's own picture, else the last picture when the request points at it or changes it.
         let lastPicture = GeneratedMedia.lastFile(.image, in: project.conversation.map(\.content))
-        let personData = change.referenceImage
+        let personData = change.referenceImage ?? change.personPicture
             ?? ((previous != nil && !change.isVideo) || GeneratedMedia.pointsAtLastImage(change.instruction) ? lastPicture.flatMap { try? Data(contentsOf: $0) } : nil)
         let personImages = await ComputerUseScreenshot.inferenceImages(personData)
         // Only the person's looks come from the picture: its pose must not replace what was asked (2026-11-07: 「自慰をさせて」
