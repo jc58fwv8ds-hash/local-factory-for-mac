@@ -21,11 +21,7 @@ struct ImageChangeCard: View {
             }
             switch change.status {
             case .running(let step):
-                HStack(spacing: 8) {
-                    ProgressView().controlSize(.small)
-                    Text(step).font(.harness(.caption)).foregroundStyle(.secondary)
-                }
-                if let kind = change.jobKind { RemainingTimeLabel(kind: kind, startedAt: change.startedAt) }
+                JobProgress(step: step, kind: change.jobKind, startedAt: change.startedAt, output: change.output)
             case .stopped:
                 Text("止めました。").font(.harness(.caption)).foregroundStyle(.secondary)
             case .failed(let message):
@@ -37,6 +33,40 @@ struct ImageChangeCard: View {
         .padding(12)
         .background(.background, in: RoundedRectangle(cornerRadius: 12))
         .overlay(RoundedRectangle(cornerRadius: 12).stroke(.quaternary))
+    }
+}
+
+/// A running job, updated every second (2026-11-08, the user: show progress as a bar or a turning mark). A bar of the
+/// script's own steps when it reports them; else a bar of the time so far against the usual time, which stops short of the
+/// end and says so when the job runs longer; else a turning mark with the time so far.
+private struct JobProgress: View {
+    let step: String
+    let kind: String?
+    let startedAt: Date
+    let output: URL?
+
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 1)) { context in
+            let elapsed = context.date.timeIntervalSince(startedAt)
+            let reported = output.flatMap(GenerationProgress.read(for:))
+            let expected = kind.flatMap { JobTimeEstimates().expected($0) }
+            VStack(alignment: .leading, spacing: 6) {
+                if let reported {
+                    ProgressView(value: reported.fraction)
+                    Text("\(reported.label)(\(reported.step)/\(reported.of))・経過 \(JobTimeEstimates.duration(elapsed))")
+                } else if let expected {
+                    ProgressView(value: min(elapsed / expected, 0.95))
+                    Text(step + "・" + (elapsed < expected ? "残り およそ \(JobTimeEstimates.duration(expected - elapsed))"
+                                        : "いつもより長くかかっています(経過 \(JobTimeEstimates.duration(elapsed)))"))
+                } else {
+                    HStack(spacing: 8) {
+                        ProgressView().controlSize(.small)
+                        Text(step + "・経過 \(JobTimeEstimates.duration(elapsed))")
+                    }
+                }
+            }
+            .font(.harness(.caption)).foregroundStyle(.secondary).monospacedDigit()
+        }
     }
 }
 

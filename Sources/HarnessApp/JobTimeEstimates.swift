@@ -32,7 +32,7 @@ struct JobTimeEstimates {
     static func text(expected: Double?, elapsed: Double) -> String {
         guard let expected else { return "経過 \(duration(elapsed))" }
         let left = expected - elapsed
-        return left > 0 ? "残り およそ \(duration(left))" : "経過 \(duration(elapsed))"
+        return left > 0 ? "残り およそ \(duration(left))" : "いつもより長くかかっています(経過 \(duration(elapsed)))"
     }
 
     static func duration(_ seconds: Double) -> String {

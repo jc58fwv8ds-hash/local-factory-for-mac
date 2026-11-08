@@ -18,6 +18,8 @@ final class ImageChange: Identifiable {
     /// For the remaining time: what the time is filed under once the model is known, and when the job began.
     var jobKind: String?
     var startedAt = Date()
+    /// Where the output will be, once the model runs: its script may write how far it has got beside it.
+    var output: URL?
     var prompt: String?
     /// A video's character: the attached picture (a generated image attached again), which becomes its first frame.
     var referenceImage: Data?
@@ -57,7 +59,8 @@ extension WorkspaceStore {
         let text = instruction.trimmingCharacters(in: .whitespacesAndNewlines)
         // Asked in words while the menu says 会話: it goes where it can really be made, for this message only.
         var routed = false
-        if workspaceMode == .chat, composerPurpose == .conversation, documentAttachments.isEmpty, let kind = GeneratedMedia.requestedKind(text) {
+        if workspaceMode == .chat, composerPurpose == .conversation, documentAttachments.isEmpty,
+           let kind = GeneratedMedia.requestedKind(text, lastMade: GeneratedMedia.lastMadeKind(in: project.conversation.map(\.content))) {
             composerPurpose = kind == .video ? .video : .image
             routed = true
         }
@@ -204,13 +207,15 @@ extension WorkspaceStore {
         // Only the person's looks come from the picture: its pose must not replace what was asked (2026-11-07: 「自慰をさせて」
         // became "hands resting near her chest", the pose the picture had).
         let keepPerson = personImages.isEmpty ? "" : "The attached picture shows the person from before. Keep the same person: describe only their looks (face, age, ethnicity, hair, skin, body). Do not describe the pose or action in the picture; the action is the one the user asks for above, and it must be the main, clearly stated content of the prompt. "
+        let terms = settings.catalog.termHints(for: change.instruction)
+        let glossary = terms.isEmpty ? "" : "\n\nIn this request these words mean: " + terms.joined(separator: "; ") + ". Write them with these meanings."
         for model in [writer, fallback].compactMap({ $0 }).reduce(into: [ModelSelection](), { if !$0.contains($1) { $0.append($1) } }) {
             let request = InferenceRequest(runtime: model.runtime, modelIdentifier: model.identifier, messages: [
                 InferenceMessage(role: .user, content: earlier + (change.isVideo && previous == nil ? OutputFollowUp.videoRequest(instruction: change.instruction, hasPicture: !personImages.isEmpty) : previous?.prompt.map { OutputFollowUp.request(instruction: change.instruction, previousPrompt: $0, kind: noun == "動画" ? "video" : "image") } ?? """
                 Rewrite this request as one English prompt for \(change.isVideo ? "a video model. Start with the action the user asks for, and describe it as continuous motion that keeps going through the whole clip; give the camera movement the user asks for in plain camera terms (for example 「舐めるような」 means a slow, close camera gliding along the body, 「俯瞰」 means from above), and when they ask for none, a steady camera with the whole body and face in frame. End with \"Audio: \" and the sounds of the scene, which the model makes with the picture" : "an image model"). State the requested action plainly and first; never soften, leave out or replace it. Name bodies and acts with plain, direct words, and describe what the hands and body physically do, where and in what rhythm (for example "her hand moves back and forth between her legs in a steady rhythm"); no euphemisms. Never translate a figurative word literally. Keep every detail the user gave (subject, \
                 style, composition, colors, mood); add nothing they did not ask for. \(change.referenceImage == nil ? "" : "A picture of the character is the first frame: describe what the character does and how the scene moves, keeping the character as in the picture. ")Output only the prompt.
                 \(change.instruction)
-                """) + (keepPerson.isEmpty || (change.isVideo && previous == nil) ? "" : "\n\n" + keepPerson))], maximumOutputTokens: 400, images: personImages, temperature: 0)
+                """) + (keepPerson.isEmpty || (change.isVideo && previous == nil) ? "" : "\n\n" + keepPerson) + glossary)], maximumOutputTokens: 400, images: personImages, temperature: 0)
             guard !Task.isCancelled else { return }
             var english = ""
             do {
@@ -232,7 +237,8 @@ extension WorkspaceStore {
         // follow-up to the person's picture lost 「自慰」 in the writer and the result was only a change of clothes).
         let throughVideo = option.command?.contains { $0.contains("keep_person") } == true
         let hints = change.isVideo || throughVideo ? settings.catalog.motionHints(for: change.instruction).filter { !prompt.contains($0) } : []
-        if !hints.isEmpty { prompt += " " + hints.joined(separator: " ") }
+        // First, where the video model weighs words most (2026-11-08: at the end of the prompt, she sat still for ten seconds).
+        if !hints.isEmpty { prompt = hints.joined(separator: " ") + " " + prompt }
         change.prompt = prompt
         change.status = .running("\(noun)を作っています" + (seconds.map { "(\($0) 秒" + (change.referenceImage == nil ? "" : "、添付の画像から") + ")" } ?? "") + "")
         var reference: URL?
@@ -244,16 +250,24 @@ extension WorkspaceStore {
         }
         let output = Self.imageFolder.appendingPathComponent(
             "\(change.id.uuidString.prefix(8))-\(option.id).\(change.isVideo ? "mp4" : "png")")
+        change.output = output
+        change.startedAt = Date()   // the time counts from here, not from when the request waited in the queue
         InferenceIndicator.shared.begin(.media)
         defer { InferenceIndicator.shared.finish() }
         // The copy of the attached picture is only for this run; a stopped run leaves no half-made output behind.
         defer {
             if let reference { try? FileManager.default.removeItem(at: reference) }
             if Task.isCancelled { try? FileManager.default.removeItem(at: output) }
+            try? FileManager.default.removeItem(at: GenerationProgress.file(for: output))
         }
         do {
             try await imageGenerator.generate(option: option, prompt: prompt, output: output, options: ImageGenerationOptions(seed: change.seed, seconds: seconds, image: reference))
             guard !Task.isCancelled else { return }
+            if change.isVideo, VoiceLine.wanted(change.instruction), let command = settings.catalog.voiceCommand, let writer {
+                change.status = .running("声を付けています")
+                await addVoice(command: command, to: output, instruction: change.instruction, videoPrompt: prompt, seed: change.seed, writer: writer)
+                guard !Task.isCancelled else { return }
+            }
             Self.saveRecipe(prompt: prompt, seed: change.seed, for: output)
             change.status = .ready(output)
             if let kind = change.jobKind { JobTimeEstimates().record(kind, seconds: Date().timeIntervalSince(change.startedAt)) }
@@ -261,6 +275,34 @@ extension WorkspaceStore {
         } catch {
             guard !Task.isCancelled else { return }
             change.status = .failed(error.localizedDescription)
+        }
+    }
+
+    /// Lays a Japanese voice over a finished video (2026-11-08): the prompt writer writes the words and describes the voice,
+    /// the voice command reads them and mixes them over the video's own sound. Any failure leaves the video as it was.
+    private func addVoice(command: [String], to video: URL, instruction: String, videoPrompt: String, seed: Int, writer: ModelSelection) async {
+        let request = InferenceRequest(runtime: writer.runtime, modelIdentifier: writer.identifier, messages: [
+            InferenceMessage(role: .user, content: VoiceLine.writerRequest(instruction: instruction, videoPrompt: videoPrompt))
+        ], maximumOutputTokens: 200, temperature: 0)
+        var reply = ""
+        do {
+            for try await piece in await inferenceProvider.events(for: request) { reply += piece }
+        } catch { return }
+        let parsed = ModelRefusal.looksLikeRefusal(reply) ? nil : VoiceLine.parse(reply)
+        let caption = parsed?.caption ?? "吐息まじりの、近い距離感の大人の女性の声"
+        guard let text = VoiceLine.words(parsed?.text ?? "", instruction: instruction).flatMap({ $0.isEmpty ? nil : $0 })
+                ?? (parsed == nil && ["喘", "あえぎ"].contains(where: instruction.contains) ? VoiceLine.moaning : nil) else { return }
+        let line = (text: text, caption: caption)
+        let voiced = video.deletingPathExtension().appendingPathExtension("voiced.mp4")
+        let home = FileManager.default.homeDirectoryForCurrentUser.path
+        let values = ["{video}": video.path, "{text}": line.text, "{caption}": line.caption, "{output}": voiced.path, "{seed}": String(seed)]
+        let arguments = command.map { values[$0] ?? $0.replacingOccurrences(of: "{home}", with: home) }
+        guard let program = arguments.first else { return }
+        do {
+            _ = try await ImageGenerationService.run(URL(fileURLWithPath: program), Array(arguments.dropFirst()), limit: 600)
+            _ = try FileManager.default.replaceItemAt(video, withItemAt: voiced)
+        } catch {
+            try? FileManager.default.removeItem(at: voiced)
         }
     }
 }

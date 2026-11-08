@@ -41,7 +41,7 @@ struct JobTimeEstimatesTests {
     @Test func theTextNeverCountsBelowZero() {
         #expect(JobTimeEstimates.text(expected: 300, elapsed: 100) == "残り およそ 4 分")
         #expect(JobTimeEstimates.text(expected: 30, elapsed: 21) == "残り およそ 9 秒")
-        #expect(JobTimeEstimates.text(expected: 60, elapsed: 90) == "経過 2 分")
+        #expect(JobTimeEstimates.text(expected: 60, elapsed: 90) == "いつもより長くかかっています(経過 2 分)")
         #expect(JobTimeEstimates.text(expected: nil, elapsed: 5).hasPrefix("経過 5 秒"))
     }
 }
@@ -236,6 +236,18 @@ struct VideoOptionsTests {
         #expect(catalog.motionHints(for: "猫と走る、疾走する") == ["She runs fast."])
         #expect(catalog.motionHints(for: "座る").isEmpty)
     }
+
+    @Test func aJapaneseWordInTheRequestGetsItsMeaning() {
+        var catalog = PurposeModelCatalog()
+        catalog.termHints = ["アトリエ": "an artist's studio", "浴衣": "a cotton yukata"]
+        #expect(catalog.termHints(for: "浴衣でアトリエに") == ["「アトリエ」 = an artist's studio", "「浴衣」 = a cotton yukata"])
+        #expect(catalog.termHints(for: "公園").isEmpty)
+        // The bundled catalog carries the words that went wrong in the app test (2026-11-08).
+        let bundled = PurposeModelCatalog.load(from: URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+            .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("config/purpose-models.json"))
+        // The public export ships its own catalog without these; the check is for the full one.
+        if bundled.termHints != nil { #expect(bundled.termHints?["アトリエ"] != nil && bundled.termHints?["浴衣"] != nil) }
+    }
 }
 
 struct GeneratedStepsTests {
@@ -250,5 +262,80 @@ struct GeneratedStepsTests {
         }
         #expect(GeneratedMedia.steps(of: picture).map(\.lastPathComponent) == ["1-着替え.png", "2-はだけ.mp4", "3-はだけ.png"])
         #expect(GeneratedMedia.steps(of: folder.appendingPathComponent("none.png")).isEmpty)
+    }
+}
+
+struct VoiceLineTests {
+    @Test func aVoiceIsAddedOnlyWhenTheRequestAsksForOne() {
+        #expect(VoiceLine.wanted("この画像を動画にして、喘ぎ声も入れて"))
+        #expect(VoiceLine.wanted("動画にして「おはよう」と言わせて"))
+        #expect(!VoiceLine.wanted("猫が走る動画を作って"))
+    }
+
+    @Test func theWordsAndTheVoiceComeFromTwoLines() {
+        let line = VoiceLine.parse("TEXT: 🥵あっ…はぁ…\nCAPTION: 吐息まじりの三十代の女性の声")
+        #expect(line?.text == "🥵あっ…はぁ…" && line?.caption == "吐息まじりの三十代の女性の声")
+        #expect(VoiceLine.parse("TEXT: こんにちは") == nil)
+        // The request read out as the words is replaced (2026-11-08).
+        let request = "この画像を動画にして、自慰を続けさせて喘ぎ声も入れて"
+        #expect(VoiceLine.words("自慰を続けさせて喘ぎ声も入れて", instruction: request) == VoiceLine.moaning)
+        #expect(VoiceLine.words("🥵あっ…んっ…はぁ…", instruction: request) == "🥵あっ…んっ…はぁ…")
+        #expect(VoiceLine.words("おはようと言わせて", instruction: "動画にして、おはようと言わせて") == nil)
+        #expect(VoiceLine.writerRequest(instruction: "「好き」と言って", videoPrompt: "a woman").contains("「」 exactly"))
+    }
+
+    @Test func theBundledCatalogHasTheVoiceCommand() {
+        let bundled = PurposeModelCatalog.load(from: URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+            .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("config/purpose-models.json"))
+        if bundled.voiceCommand != nil { #expect(bundled.voiceCommand?.contains("{caption}") == true) }
+    }
+}
+
+struct FollowUpRoutingTests {
+    @Test func aChangeToTheLastPictureIsAPictureEvenWithoutTheWord() {
+        #expect(GeneratedMedia.requestedKind("この人物を全裸にして", lastMade: .image) == .image)
+        #expect(GeneratedMedia.requestedKind("さっきの条件で生成", lastMade: .image) == .image)
+        #expect(GeneratedMedia.requestedKind("さっきの条件で生成", lastMade: .video) == .video)
+        #expect(GeneratedMedia.requestedKind("この人物を全裸にして") == nil)
+        #expect(GeneratedMedia.requestedKind("この人物について教えて", lastMade: .image) == nil)
+        #expect(GeneratedMedia.requestedKind("今日の予定をまとめて", lastMade: .image) == nil)
+    }
+
+    @Test func theLastMadeKindComesFromTheNotes() {
+        let notes = ["画像ができました(x)。保存先: /tmp/a.png", "こんにちは", "動画ができました(y)。保存先: /tmp/b.mp4"]
+        #expect(GeneratedMedia.lastMadeKind(in: notes) == .video)
+        #expect(GeneratedMedia.lastMadeKind(in: ["こんにちは"]) == nil)
+    }
+}
+
+struct TimeLimitTests {
+    @Test func thePictureModelThatKeepsAPersonMayRunAnHour() {
+        let bundled = PurposeModelCatalog.load(from: URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+            .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("config/purpose-models.json"))
+        if bundled.option(id: "keep-person", for: .image) != nil { #expect(bundled.option(id: "keep-person", for: .image)?.timeLimit == 3600) }
+        #expect(bundled.option(id: "z-image-turbo", for: .image)?.timeLimit == nil)
+    }
+}
+
+struct GenerationProgressTests {
+    @Test func theScriptsStepsBecomeABarAndAMissingFileIsNone() throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("progress-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let output = folder.appendingPathComponent("a.png")
+        try Data(#"{"step": 3, "of": 6, "label": "顔を元の人物に"}"#.utf8).write(to: GenerationProgress.file(for: output))
+        let read = try #require(GenerationProgress.read(for: output))
+        #expect(read.label == "顔を元の人物に" && abs(read.fraction - 2.5 / 6) < 0.001)
+        #expect(GenerationProgress.read(for: folder.appendingPathComponent("b.png")) == nil)
+    }
+}
+
+struct StillVideoTests {
+    @Test func theVideoModelRemakesAStillClipAndTheActionComesFirst() {
+        let bundled = PurposeModelCatalog.load(from: URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+            .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("config/purpose-models.json"))
+        // Every video model that starts from a picture with the motion check has it (the bundled catalog's own names).
+        if bundled.motionHints != nil { #expect(bundled.video?.contains { $0.command?.contains("--min-motion") == true } == true) }
+        if bundled.motionHints != nil { #expect(bundled.motionHints(for: "自慰").first?.hasPrefix("She slides one hand down between her thighs") == true) }
     }
 }

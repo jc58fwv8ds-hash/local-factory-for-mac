@@ -35,6 +35,11 @@ public enum GeneratedMedia {
         contents.reversed().compactMap(file(inNote:)).first { ($0.pathExtension == "mp4") == (kind == .video) && exists($0) }
     }
 
+    /// The kind of the last picture or video the conversation made, from its notes.
+    public static func lastMadeKind(in contents: [String]) -> Kind? {
+        contents.reversed().compactMap(file(inNote:)).first.map { $0.pathExtension == "mp4" ? .video : .image }
+    }
+
     /// A model's reply that says a file was made, or names one that does not exist. Only the app can make one.
     public static func claimsUnmadeFile(_ reply: String, exists: (URL) -> Bool = { FileManager.default.fileExists(atPath: $0.path) }) -> Bool {
         if let file = file(inNote: reply) { return !exists(file) }
@@ -43,14 +48,20 @@ public enum GeneratedMedia {
     }
 
     /// A chat message that asks for a picture or a video, sent while the menu says 会話. Questions about them stay in the chat.
-    public static func requestedKind(_ text: String) -> Kind? {
+    /// `lastMade` is the kind of the conversation's last picture or video, if it has one: a change to it or a 「生成」 that
+    /// refers back asks for the same kind (2026-11-08: after a picture, 「この人物を全裸にして」 and 「さっきの条件で生成」
+    /// reached the chat model, which answered that it cannot make files).
+    public static func requestedKind(_ text: String, lastMade: Kind? = nil) -> Kind? {
         let asking = ["教えて", "とは", "方法", "作り方", "どうやって", "できますか", "？", "?"]
         guard !asking.contains(where: text.contains) else { return nil }
-        let making = ["生成", "作って", "作成", "にして", "出して", "描いて", "撮って"]
+        let making = ["生成", "作って", "作成", "にして", "出して", "描いて", "撮って", "作り直", "変えて", "させて"]
         let makes = making.contains(where: text.contains)
         if (["動画", "ムービー"].contains(where: text.contains) && makes)
             || ["画像を動かして", "写真を動かして", "絵を動かして", "これを動かして"].contains(where: text.contains) { return .video }
         if ["画像", "写真", "イラスト", "絵を"].contains(where: text.contains) && makes { return .image }
+        guard makes, let lastMade else { return nil }
+        if pointsAtLastImage(text) { return .image }
+        if ["生成", "作り直", "もう一度", "さっきの", "同じ条件"].contains(where: text.contains) { return lastMade }
         return nil
     }
 

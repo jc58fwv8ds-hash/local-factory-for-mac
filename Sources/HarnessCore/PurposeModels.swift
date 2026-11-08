@@ -32,6 +32,10 @@ public struct PurposeModelOption: Codable, Equatable, Identifiable, Sendable {
     /// A short mark shown wherever this option is picked or in use (2026-10-19, the user's request: options with fewer
     /// safety limits must be easy to tell apart). The words come from the local catalog, not from the app.
     public var badge: String?
+    /// How long one run may take, in seconds, before it is stopped; absent means 20 minutes (more for a long video).
+    /// (2026-11-08: the picture model that keeps a person remakes clips that did not open or move, and was stopped at 20
+    /// minutes in the middle of its last clip.)
+    public var timeLimit: Double?
 
     public init(id: String, label: String, note: String? = nil, runtime: RuntimeKind? = nil, model: String? = nil,
                 command: [String]? = nil, badge: String? = nil) {
@@ -66,6 +70,20 @@ public struct PurposeModelCatalog: Codable, Equatable, Sendable {
     public func motionHints(for request: String) -> [String] {
         guard let motionHints else { return [] }
         return Array(Set(motionHints.keys.filter { request.contains($0) }.compactMap { motionHints[$0] })).sorted()
+    }
+
+    /// The command that lays a Japanese voice over a finished video when the request asks for one (2026-11-08), with
+    /// {home}, {video}, {text}, {caption}, {output} and {seed}.
+    public var voiceCommand: [String]?
+
+    /// Japanese words and the English the prompt writer must use for them (2026-11-08: 「アトリエ」 became a white photo
+    /// studio and 「浴衣」 a bathrobe). The user's to edit in the catalog file.
+    public var termHints: [String: String]?
+
+    /// "word = meaning" for each word of `request` in `termHints`, sorted.
+    public func termHints(for request: String) -> [String] {
+        guard let termHints else { return [] }
+        return termHints.keys.filter { request.contains($0) }.sorted().compactMap { key in termHints[key].map { "「\(key)」 = \($0)" } }
     }
 
     public init(writing: [PurposeModelOption] = [], image: [PurposeModelOption] = [], video: [PurposeModelOption]? = nil,

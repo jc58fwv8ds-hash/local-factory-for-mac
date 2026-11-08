@@ -45,7 +45,7 @@ struct ImageGenerationService: ImageGenerating {
             await Self.releaseLanguageModels()
             let arguments = Self.arguments(template.dropFirst(), prompt: prompt, output: output, seed: options.seed, seconds: options.seconds, image: options.image)
             try FileManager.default.createDirectory(at: output.deletingLastPathComponent(), withIntermediateDirectories: true)
-            return try await Self.run(executable, arguments, limit: 1200 + Double(options.seconds ?? 0) * 150)
+            return try await Self.run(executable, arguments, limit: option.timeLimit ?? (1200 + Double(options.seconds ?? 0) * 150))
         }
         try Task.checkCancellation()
         guard FileManager.default.fileExists(atPath: output.path) else {
@@ -124,7 +124,12 @@ struct ImageGenerationService: ImageGenerating {
             do {
                 try process.run()
                 if Task.isCancelled { running.stopIfRunning() }
-                DispatchQueue.global().asyncAfter(deadline: .now() + limit) { running.stopIfRunning() }
+                // Said in the log when it is the limit that stops it (2026-11-08: a run stopped at 20 minutes showed only
+                // its last lines, as if it had failed).
+                DispatchQueue.global().asyncAfter(deadline: .now() + limit) {
+                    if running.isRunning { collected.append(Data("\n時間の上限(\(Int(limit / 60)) 分)を超えたので止めました。".utf8)) }
+                    running.stopIfRunning()
+                }
             } catch {
                 continuation.resume(throwing: Failure.failed(error.localizedDescription))
             }
@@ -164,5 +169,9 @@ private final class RunningProcess: @unchecked Sendable {
     func stopIfRunning() {
         lock.lock(); defer { lock.unlock() }
         if process?.isRunning == true { process?.terminate() }
+    }
+    var isRunning: Bool {
+        lock.lock(); defer { lock.unlock() }
+        return process?.isRunning == true
     }
 }
