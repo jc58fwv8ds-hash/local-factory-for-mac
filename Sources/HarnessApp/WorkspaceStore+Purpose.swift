@@ -206,7 +206,7 @@ extension WorkspaceStore {
         let personImages = await ComputerUseScreenshot.inferenceImages(personData)
         // Only the person's looks come from the picture: its pose must not replace what was asked (2026-11-07: 「自慰をさせて」
         // became "hands resting near her chest", the pose the picture had).
-        let keepPerson = personImages.isEmpty ? "" : "The attached picture shows the person from before. Keep the same person: describe only their looks (face, age, ethnicity, hair, skin, body). Do not describe the pose or action in the picture; the action is the one the user asks for above, and it must be the main, clearly stated content of the prompt. "
+        let keepPerson = personImages.isEmpty ? "" : "The attached picture shows the person from before. Keep the same person: describe only their looks (face, age, ethnicity, hair, skin, body), and the hair exactly as it is in the picture: its length (for example shoulder-length), waves or curls, parting and colour. Do not describe the pose or action in the picture; the action is the one the user asks for above, and it must be the main, clearly stated content of the prompt. "
         let terms = settings.catalog.termHints(for: change.instruction)
         let glossary = terms.isEmpty ? "" : "\n\nIn this request these words mean: " + terms.joined(separator: "; ") + ". Write them with these meanings."
         for model in [writer, fallback].compactMap({ $0 }).reduce(into: [ModelSelection](), { if !$0.contains($1) { $0.append($1) } }) {

@@ -12,7 +12,7 @@ public enum PictureCheck {
         \(prompt)
 
         First line: in one short sentence, what the picture shows: how much clothing she wears, her pose, and what her hands are doing.
-        Second line: MATCH: YES only if the state of dress, the pose and the action the request asks for are all clearly visible in the picture; otherwise MATCH: NO.
+        Second line: MATCH: YES only if the state of dress, the pose and the action the request asks for are all clearly visible in the picture; otherwise MATCH: NO. Also MATCH: NO if the clothing has a hole, a cut or an opening no real garment has, or if she is still dressed where the request asks her to be bare or the clothing to be open.
         """
     }
 
