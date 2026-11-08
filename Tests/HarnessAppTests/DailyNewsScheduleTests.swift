@@ -72,6 +72,8 @@ struct OutputFollowUpTests {
         #expect(OutputFollowUp.fallback(instruction: "もっと赤く", previousPrompt: "a cat") == "a cat. もっと赤く")
         let request = OutputFollowUp.request(instruction: "もっと赤く", previousPrompt: "a cat", kind: "image")
         #expect(request.contains("a cat") && request.contains("もっと赤く"))
+        // A follow-up must keep the asked action (2026-11-08: 「自慰に耽らせた画像」 after a picture became a change of clothes).
+        #expect(request.contains("never soften, leave out or replace it"))
     }
 }
 
@@ -224,6 +226,8 @@ struct VideoOptionsTests {
         let text = OutputFollowUp.videoRequest(instruction: "猫が走る", hasPicture: true)
         #expect(text.contains("猫が走る") && text.contains("2. Second sentence") && text.contains("only the person's looks") && text.contains("5. End with"))
         #expect(OutputFollowUp.videoRequest(instruction: "猫が走る", hasPicture: false).contains("4. End with"))
+        // No camera move the request did not ask for (2026-11-08: an unasked close glide cut the face out of the frame).
+        #expect(text.contains("The camera stays steady, with her whole body and face in frame."))
     }
 
     @Test func aWordInTheRequestAlwaysAddsItsMotion() {
@@ -231,5 +235,20 @@ struct VideoOptionsTests {
         catalog.motionHints = ["走る": "She runs fast.", "疾走": "She runs fast.", "踊る": "She dances."]
         #expect(catalog.motionHints(for: "猫と走る、疾走する") == ["She runs fast."])
         #expect(catalog.motionHints(for: "座る").isEmpty)
+    }
+}
+
+struct GeneratedStepsTests {
+    @Test func theStepsBesideAPictureAreListedInOrderAndAMissingFolderIsNone() throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("steps-test-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let picture = folder.appendingPathComponent("A-keep-person.png")
+        let steps = GeneratedMedia.stepsFolder(of: picture)
+        try FileManager.default.createDirectory(at: steps, withIntermediateDirectories: true)
+        for name in ["3-はだけ.png", "1-着替え.png", "2-はだけ.mp4", ".DS_Store"] {
+            try Data().write(to: steps.appendingPathComponent(name))
+        }
+        #expect(GeneratedMedia.steps(of: picture).map(\.lastPathComponent) == ["1-着替え.png", "2-はだけ.mp4", "3-はだけ.png"])
+        #expect(GeneratedMedia.steps(of: folder.appendingPathComponent("none.png")).isEmpty)
     }
 }

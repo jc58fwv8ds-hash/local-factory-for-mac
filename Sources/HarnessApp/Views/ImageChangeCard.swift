@@ -43,6 +43,9 @@ struct ImageChangeCard: View {
 /// A finished picture or video inside the conversation, from the note's path, so it is there after the app restarts too.
 struct GeneratedMediaView: View {
     let url: URL
+    @State private var showsSteps = false
+
+    private var steps: [URL] { GeneratedMedia.steps(of: url) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -61,8 +64,36 @@ struct GeneratedMediaView: View {
                     if let recipe = WorkspaceStore.savedRecipe(for: url) {
                         Image(systemName: "info.circle").foregroundStyle(.secondary).help(recipe.prompt)
                     }
+                    if !steps.isEmpty { Toggle("途中", isOn: $showsSteps).toggleStyle(.button) }
                 }
                 .controlSize(.small)
+                if showsSteps { StepsRow(steps: steps) }
+            }
+        }
+    }
+}
+
+/// The steps a picture went through, side by side, each with its name (1-着替え, 2-はだけ, …).
+private struct StepsRow: View {
+    let steps: [URL]
+
+    var body: some View {
+        ScrollView(.horizontal) {
+            HStack(alignment: .top, spacing: 8) {
+                ForEach(steps, id: \.self) { step in
+                    VStack(alignment: .leading, spacing: 4) {
+                        Group {
+                            if step.pathExtension == "mp4" {
+                                VideoPreview(url: step).frame(width: 140, height: 200)
+                            } else if let image = NSImage(contentsOf: step) {
+                                Image(nsImage: image).resizable().scaledToFit().frame(width: 140, height: 200)
+                            }
+                        }
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                        .onTapGesture { NSWorkspace.shared.open(step) }
+                        Text(step.deletingPathExtension().lastPathComponent).font(.harness(.caption)).foregroundStyle(.secondary)
+                    }
+                }
             }
         }
     }

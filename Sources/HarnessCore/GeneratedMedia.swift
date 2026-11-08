@@ -12,6 +12,17 @@ public enum GeneratedMedia {
 
     public static func exists(_ file: URL) -> Bool { FileManager.default.fileExists(atPath: file.path) }
 
+    /// The steps a picture went through, kept beside it as `<file>.steps/` by the picture model that keeps a person
+    /// (2026-11-08: a broken first step never reached the app, so where it went wrong could not be seen). In name order.
+    public static func steps(of file: URL) -> [URL] {
+        let folder = stepsFolder(of: file)
+        return ((try? FileManager.default.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil)) ?? [])
+            .filter { !$0.lastPathComponent.hasPrefix(".") }
+            .sorted { $0.lastPathComponent < $1.lastPathComponent }
+    }
+
+    public static func stepsFolder(of file: URL) -> URL { file.appendingPathExtension("steps") }
+
     /// The file a note names.
     public static func file(inNote text: String) -> URL? {
         guard isNote(text), let range = text.range(of: "保存先: ") else { return nil }

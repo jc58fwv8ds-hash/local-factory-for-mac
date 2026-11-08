@@ -207,7 +207,7 @@ extension WorkspaceStore {
         for model in [writer, fallback].compactMap({ $0 }).reduce(into: [ModelSelection](), { if !$0.contains($1) { $0.append($1) } }) {
             let request = InferenceRequest(runtime: model.runtime, modelIdentifier: model.identifier, messages: [
                 InferenceMessage(role: .user, content: earlier + (change.isVideo && previous == nil ? OutputFollowUp.videoRequest(instruction: change.instruction, hasPicture: !personImages.isEmpty) : previous?.prompt.map { OutputFollowUp.request(instruction: change.instruction, previousPrompt: $0, kind: noun == "動画" ? "video" : "image") } ?? """
-                Rewrite this request as one English prompt for \(change.isVideo ? "a video model. Start with the action the user asks for, and describe it as continuous motion that keeps going through the whole clip; give the camera movement in plain camera terms (for example 「舐めるような」 means a slow, close camera gliding along the body, 「俯瞰」 means from above). End with \"Audio: \" and the sounds of the scene, which the model makes with the picture" : "an image model"). State the requested action plainly and first; never soften, leave out or replace it. Name bodies and acts with plain, direct words, and describe what the hands and body physically do, where and in what rhythm (for example "her hand moves back and forth between her legs in a steady rhythm"); no euphemisms. Never translate a figurative word literally. Keep every detail the user gave (subject, \
+                Rewrite this request as one English prompt for \(change.isVideo ? "a video model. Start with the action the user asks for, and describe it as continuous motion that keeps going through the whole clip; give the camera movement the user asks for in plain camera terms (for example 「舐めるような」 means a slow, close camera gliding along the body, 「俯瞰」 means from above), and when they ask for none, a steady camera with the whole body and face in frame. End with \"Audio: \" and the sounds of the scene, which the model makes with the picture" : "an image model"). State the requested action plainly and first; never soften, leave out or replace it. Name bodies and acts with plain, direct words, and describe what the hands and body physically do, where and in what rhythm (for example "her hand moves back and forth between her legs in a steady rhythm"); no euphemisms. Never translate a figurative word literally. Keep every detail the user gave (subject, \
                 style, composition, colors, mood); add nothing they did not ask for. \(change.referenceImage == nil ? "" : "A picture of the character is the first frame: describe what the character does and how the scene moves, keeping the character as in the picture. ")Output only the prompt.
                 \(change.instruction)
                 """) + (keepPerson.isEmpty || (change.isVideo && previous == nil) ? "" : "\n\n" + keepPerson))], maximumOutputTokens: 400, images: personImages, temperature: 0)
@@ -227,8 +227,11 @@ extension WorkspaceStore {
             }
         }
         guard !Task.isCancelled else { return }
-        // Motion sentences are for videos only: in a picture prompt they made stiff, broken bodies (2026-11-07).
-        let hints = change.isVideo ? settings.catalog.motionHints(for: change.instruction).filter { !prompt.contains($0) } : []
+        // Motion sentences are for videos only: in a picture prompt they made stiff, broken bodies (2026-11-07). The picture
+        // model that keeps a person makes its picture through video clips, so it gets them too (2026-11-08: in the app, a
+        // follow-up to the person's picture lost 「自慰」 in the writer and the result was only a change of clothes).
+        let throughVideo = option.command?.contains { $0.contains("keep_person") } == true
+        let hints = change.isVideo || throughVideo ? settings.catalog.motionHints(for: change.instruction).filter { !prompt.contains($0) } : []
         if !hints.isEmpty { prompt += " " + hints.joined(separator: " ") }
         change.prompt = prompt
         change.status = .running("\(noun)を作っています" + (seconds.map { "(\($0) 秒" + (change.referenceImage == nil ? "" : "、添付の画像から") + ")" } ?? "") + "")
