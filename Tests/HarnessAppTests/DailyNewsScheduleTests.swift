@@ -367,9 +367,11 @@ struct LongVideoPlanTests {
     @Test func aLengthBeyondOneClipBecomesScenes() {
         #expect(LongVideoPlan.requestedSeconds(in: "1分の動画にして") == 60)
         #expect(LongVideoPlan.requestedSeconds(in: "10分の動画") == 300)
-        #expect(LongVideoPlan.sceneCount(seconds: 60) == 6)
-        #expect(LongVideoPlan.sceneCount(seconds: 10) == nil)
-        #expect(LongVideoPlan.sceneCount(seconds: 30) == 3)
+        #expect(LongVideoPlan.sceneCount(seconds: 60) == 20)
+        #expect(LongVideoPlan.sceneCount(seconds: 10) == 3)
+        #expect(LongVideoPlan.sceneCount(seconds: 3) == nil)
+        #expect(LongVideoPlan.sceneCount(seconds: 30) == 10)
+        #expect(LongVideoPlan.intensity(scene: 0, of: 10).contains("slow") && LongVideoPlan.intensity(scene: 9, of: 10).contains("frantic"))
     }
 
     @Test func theScenesComeFromTheWritersJSONAndTheRestIsFilled() {

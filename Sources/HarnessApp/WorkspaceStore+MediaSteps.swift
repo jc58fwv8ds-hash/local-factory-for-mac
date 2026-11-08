@@ -70,9 +70,11 @@ extension WorkspaceStore {
             } catch { reply = "" }
         }
         let hints = purposeSettings.catalog.motionHints(for: instruction)
-        let plan = LongVideoPlan.parse(reply, scenes: scenes, fallback: prompt).map { scene -> LongVideoPlan.Scene in
+        let plan = LongVideoPlan.parse(reply, scenes: scenes, fallback: prompt).enumerated().map { index, scene -> LongVideoPlan.Scene in
             var scene = scene
-            if let first = hints.first, !scene.prompt.contains(first) { scene.prompt = hints.joined(separator: " ") + " " + scene.prompt }
+            if let first = hints.first, !scene.prompt.contains(first) {
+                scene.prompt = hints.joined(separator: " ") + " " + LongVideoPlan.intensity(scene: index, of: scenes) + " " + scene.prompt
+            }
             scene.text = withVoice ? (VoiceLine.words(scene.text, instruction: instruction) ?? "") : ""
             return scene
         }

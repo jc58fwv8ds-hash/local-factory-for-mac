@@ -3,8 +3,10 @@ import Foundation
 /// A long video as a row of short scenes (2026-11-08, the user: make short clips one after another into a long video). The
 /// prompt writer splits the request into scenes; each becomes a clip that starts where the one before ended.
 public enum LongVideoPlan {
-    /// One clip's length in seconds.
-    public static let sceneSeconds = 10
+    /// One clip's length in seconds. Three (2026-11-08): the video model puts its motion into the first two or three
+    /// seconds and then nearly stops (hand-area motion per second over a 10-second clip: 37.8, 12.9, 9.5, 6.4 … 3.2;
+    /// a 3-second clip averaged 41.5, a 10-second one 8.9), for about the same time per second of video.
+    public static let sceneSeconds = 3
     /// The longest video made this way (5 minutes, about 30 scenes).
     public static let longestSeconds = 300
 
@@ -38,7 +40,18 @@ public enum LongVideoPlan {
 
     /// How many scenes a length needs, or nil when one clip is enough.
     public static func sceneCount(seconds: Int) -> Int? {
-        seconds > sceneSeconds * 3 / 2 ? Int((Double(seconds) / Double(sceneSeconds)).rounded()) : nil
+        seconds > sceneSeconds + 1 ? Int((Double(seconds) / Double(sceneSeconds)).rounded()) : nil
+    }
+
+    /// Words for how strong the motion is, rising from the first scene to the last (2026-11-08, Muse's review: 「だんだん
+    /// 激しく」 measured weaker scene by scene; the writer is not left to say it).
+    public static func intensity(scene: Int, of scenes: Int) -> String {
+        let levels = ["Her movements are slow and gentle, her breathing soft.",
+                      "Her movements grow faster and stronger, her breathing heavy.",
+                      "Her movements are fast and hard, her hips bucking, her breathing ragged.",
+                      "Her movements are frantic, her whole body shaking, at the edge of climax."]
+        guard scenes > 1 else { return levels[1] }
+        return levels[min(levels.count - 1, scene * levels.count / scenes)]
     }
 
     public static func writerRequest(instruction: String, videoPrompt: String, scenes: Int, withVoice: Bool) -> String {

@@ -267,8 +267,9 @@ extension WorkspaceStore {
             var line: (text: String, caption: String)?
             var speech: URL?
             // A length beyond one clip becomes scenes made one after another (2026-11-08); each scene has its own voice.
+            // A length beyond a few seconds, asked in words or chosen beside the input, is made from short scenes.
             let longScenes = change.isVideo && option.longCommand != nil
-                ? LongVideoPlan.requestedSeconds(in: change.instruction).flatMap(LongVideoPlan.sceneCount) : nil
+                ? (LongVideoPlan.requestedSeconds(in: change.instruction) ?? seconds).flatMap(LongVideoPlan.sceneCount) : nil
             if change.isVideo, longScenes == nil, VoiceLine.wanted(change.instruction), let writer {
                 change.status = .running("声を作っています")
                 line = await voiceLine(instruction: change.instruction, videoPrompt: prompt, writer: writer)
