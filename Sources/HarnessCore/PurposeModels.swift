@@ -39,6 +39,9 @@ public struct PurposeModelOption: Codable, Equatable, Identifiable, Sendable {
     /// A quicker command tried first (2026-11-08): its picture is shown to the prompt writer, and `command` runs only when
     /// the writer says it does not show what was asked. Same placeholders as `command`.
     public var firstTry: [String]?
+    /// A video longer than one clip, made scene by scene (2026-11-08): {plan} (the scenes, JSON), {image}, {output},
+    /// {seed}, {seconds} (one scene), {home}.
+    public var longCommand: [String]?
 
     public init(id: String, label: String, note: String? = nil, runtime: RuntimeKind? = nil, model: String? = nil,
                 command: [String]? = nil, badge: String? = nil) {

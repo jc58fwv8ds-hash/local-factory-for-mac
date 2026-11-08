@@ -53,4 +53,37 @@ extension WorkspaceStore {
         try? FileManager.default.removeItem(at: GeneratedMedia.stepsFolder(of: output))
         return false
     }
+
+    /// A video longer than one clip: the prompt writer splits it into scenes, each made from where the one before ended
+    /// with its own voice, and joined into one file (2026-11-08).
+    func makeLongVideo(_ command: [String], scenes: Int, option: PurposeModelOption, prompt: String, instruction: String,
+                       output: URL, image: URL?, seed: Int, writer: ModelSelection?) async throws {
+        let withVoice = VoiceLine.wanted(instruction)
+        var reply = ""
+        if let writer {
+            let request = InferenceRequest(runtime: writer.runtime, modelIdentifier: writer.identifier, messages: [
+                InferenceMessage(role: .user, content: LongVideoPlan.writerRequest(instruction: instruction, videoPrompt: prompt,
+                                                                                    scenes: scenes, withVoice: withVoice))
+            ], maximumOutputTokens: 260 * scenes, temperature: 0)
+            do {
+                for try await piece in await inferenceProvider.events(for: request) { reply += piece }
+            } catch { reply = "" }
+        }
+        let hints = purposeSettings.catalog.motionHints(for: instruction)
+        let plan = LongVideoPlan.parse(reply, scenes: scenes, fallback: prompt).map { scene -> LongVideoPlan.Scene in
+            var scene = scene
+            if let first = hints.first, !scene.prompt.contains(first) { scene.prompt = hints.joined(separator: " ") + " " + scene.prompt }
+            scene.text = withVoice ? (VoiceLine.words(scene.text, instruction: instruction) ?? "") : ""
+            return scene
+        }
+        let file = Self.imageFolder.appendingPathComponent("\(output.deletingPathExtension().lastPathComponent)-plan.json")
+        try JSONEncoder().encode(["scenes": plan]).write(to: file)
+        defer { try? FileManager.default.removeItem(at: file) }
+        var long = option
+        long.command = command
+        long.firstTry = nil
+        long.timeLimit = Double(scenes) * 900
+        try await imageGenerator.generate(option: long, prompt: prompt, output: output,
+                                          options: ImageGenerationOptions(seed: seed, seconds: LongVideoPlan.sceneSeconds, image: image, plan: file))
+    }
 }

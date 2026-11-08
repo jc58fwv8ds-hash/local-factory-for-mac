@@ -362,3 +362,33 @@ struct PictureCheckTests {
         #expect(PictureCheck.request(prompt: "a cat on a sofa").contains("a cat on a sofa"))
     }
 }
+
+struct LongVideoPlanTests {
+    @Test func aLengthBeyondOneClipBecomesScenes() {
+        #expect(LongVideoPlan.requestedSeconds(in: "1分の動画にして") == 60)
+        #expect(LongVideoPlan.requestedSeconds(in: "10分の動画") == 300)
+        #expect(LongVideoPlan.sceneCount(seconds: 60) == 6)
+        #expect(LongVideoPlan.sceneCount(seconds: 10) == nil)
+        #expect(LongVideoPlan.sceneCount(seconds: 30) == 3)
+    }
+
+    @Test func theScenesComeFromTheWritersJSONAndTheRestIsFilled() {
+        let reply = #"Here: {"scenes": [{"prompt": "a", "text": "やあ", "caption": "声"}, {"prompt": "b"}]}"#
+        let scenes = LongVideoPlan.parse(reply, scenes: 3, fallback: "whole")
+        #expect(scenes.map(\.prompt) == ["a", "b", "whole"])
+        #expect(scenes[0].text == "やあ" && scenes[1].text == "")
+        #expect(LongVideoPlan.parse("no json", scenes: 2, fallback: "whole").map(\.prompt) == ["whole", "whole"])
+    }
+}
+
+struct LongVideoCommandTests {
+    @Test func thePlanGoesOnlyToACommandThatTakesIt() {
+        let template: ArraySlice<String> = ["--plan", "{plan}", "--image", "{image}", "--output", "{output}"]
+        let output = URL(fileURLWithPath: "/tmp/v.mp4")
+        #expect(ImageGenerationService.arguments(template, prompt: "p", output: output, plan: URL(fileURLWithPath: "/tmp/p.json"))
+                == ["--plan", "/tmp/p.json", "--output", "/tmp/v.mp4"])
+        let bundled = PurposeModelCatalog.load(from: URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+            .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("config/purpose-models.json"))
+        if bundled.motionHints != nil { #expect(bundled.video?.contains { $0.longCommand?.contains("{plan}") == true } == true) }
+    }
+}

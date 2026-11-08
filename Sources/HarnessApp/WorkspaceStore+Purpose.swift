@@ -266,7 +266,10 @@ extension WorkspaceStore {
             // {audio} gets it laid over its finished video.
             var line: (text: String, caption: String)?
             var speech: URL?
-            if change.isVideo, VoiceLine.wanted(change.instruction), let writer {
+            // A length beyond one clip becomes scenes made one after another (2026-11-08); each scene has its own voice.
+            let longScenes = change.isVideo && option.longCommand != nil
+                ? LongVideoPlan.requestedSeconds(in: change.instruction).flatMap(LongVideoPlan.sceneCount) : nil
+            if change.isVideo, longScenes == nil, VoiceLine.wanted(change.instruction), let writer {
                 change.status = .running("声を作っています")
                 line = await voiceLine(instruction: change.instruction, videoPrompt: prompt, writer: writer)
                 if let line, option.command?.contains("{audio}") == true, let command = settings.catalog.speechCommand {
@@ -279,7 +282,10 @@ extension WorkspaceStore {
             }
             defer { if let speech { try? FileManager.default.removeItem(at: speech) } }
             let options = ImageGenerationOptions(seed: change.seed, seconds: seconds, image: reference, audio: speech)
-            if let first = option.firstTry, !change.isVideo, await quickPictureHolds(first, option: option, prompt: prompt, output: output, options: options, writer: writer) {
+            if let longScenes, let command = option.longCommand {
+                try await makeLongVideo(command, scenes: longScenes, option: option, prompt: prompt, instruction: change.instruction,
+                                        output: output, image: reference, seed: change.seed, writer: writer)
+            } else if let first = option.firstTry, !change.isVideo, await quickPictureHolds(first, option: option, prompt: prompt, output: output, options: options, writer: writer) {
                 // the quick picture shows what was asked
             } else {
                 try await imageGenerator.generate(option: option, prompt: prompt, output: output, options: options)
@@ -299,7 +305,7 @@ extension WorkspaceStore {
             change.status = .ready(output)
             if let kind = change.jobKind { JobTimeEstimates().record(kind, seconds: Date().timeIntervalSince(change.startedAt)) }
             // Said when a voice was asked for and none could be made, instead of a silent video passing for one.
-            let voiceMissing = change.isVideo && VoiceLine.wanted(change.instruction) && line == nil ? "声は作れませんでした。" : ""
+            let voiceMissing = change.isVideo && longScenes == nil && VoiceLine.wanted(change.instruction) && line == nil ? "声は作れませんでした。" : ""
             appendAssistantNote("\(noun)ができました(\(option.label))。\(voiceMissing)保存先: \(output.path)")
         } catch {
             guard !Task.isCancelled else { return }

@@ -16,6 +16,8 @@ struct ImageGenerationOptions: Sendable {
     var image: URL?
     /// A voice the video keeps and moves the mouth to; reaches only commands with {audio}.
     var audio: URL? = nil
+    /// A long video's scene plan (JSON); reaches only commands with {plan}.
+    var plan: URL? = nil
 }
 
 struct ImageGenerationService: ImageGenerating {
@@ -45,7 +47,7 @@ struct ImageGenerationService: ImageGenerating {
         let log = try await ModelRuntimes.shared.withLease(.none) {
             try Task.checkCancellation()
             await Self.releaseLanguageModels()
-            let arguments = Self.arguments(template.dropFirst(), prompt: prompt, output: output, seed: options.seed, seconds: options.seconds, image: options.image, audio: options.audio)
+            let arguments = Self.arguments(template.dropFirst(), prompt: prompt, output: output, seed: options.seed, seconds: options.seconds, image: options.image, audio: options.audio, plan: options.plan)
             try FileManager.default.createDirectory(at: output.deletingLastPathComponent(), withIntermediateDirectories: true)
             return try await Self.run(executable, arguments, limit: option.timeLimit ?? (1200 + Double(options.seconds ?? 0) * 150))
         }
@@ -56,12 +58,12 @@ struct ImageGenerationService: ImageGenerating {
     }
 
     static func arguments(_ template: ArraySlice<String>, prompt: String, output: URL, seed: Int = Int.random(in: 1...999_999),
-                          seconds: Int? = nil, image: URL? = nil, audio: URL? = nil) -> [String] {
+                          seconds: Int? = nil, image: URL? = nil, audio: URL? = nil, plan: URL? = nil) -> [String] {
         // A flag whose value was not given goes with it: ["--image", "{image}"] without an image is left out.
         var kept: [String] = []
         for argument in template {
             if (argument.contains("{image}") && image == nil) || (argument.contains("{seconds}") && seconds == nil)
-                || (argument.contains("{audio}") && audio == nil) { _ = kept.popLast(); continue }
+                || (argument.contains("{audio}") && audio == nil) || (argument.contains("{plan}") && plan == nil) { _ = kept.popLast(); continue }
             kept.append(argument)
         }
         return kept.map {
@@ -70,6 +72,7 @@ struct ImageGenerationService: ImageGenerating {
                 .replacingOccurrences(of: "{seconds}", with: seconds.map(String.init) ?? "")
                 .replacingOccurrences(of: "{image}", with: image?.path ?? "")
                 .replacingOccurrences(of: "{audio}", with: audio?.path ?? "")
+                .replacingOccurrences(of: "{plan}", with: plan?.path ?? "")
                 .replacingOccurrences(of: "{width}", with: "1024").replacingOccurrences(of: "{height}", with: "1024")
                 .replacingOccurrences(of: "{home}", with: FileManager.default.homeDirectoryForCurrentUser.path)
         }
