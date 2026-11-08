@@ -278,7 +278,12 @@ extension WorkspaceStore {
                 change.status = .running("\(noun)を作っています")
             }
             defer { if let speech { try? FileManager.default.removeItem(at: speech) } }
-            try await imageGenerator.generate(option: option, prompt: prompt, output: output, options: ImageGenerationOptions(seed: change.seed, seconds: seconds, image: reference, audio: speech))
+            let options = ImageGenerationOptions(seed: change.seed, seconds: seconds, image: reference, audio: speech)
+            if let first = option.firstTry, !change.isVideo, await quickPictureHolds(first, option: option, prompt: prompt, output: output, options: options, writer: writer) {
+                // the quick picture shows what was asked
+            } else {
+                try await imageGenerator.generate(option: option, prompt: prompt, output: output, options: options)
+            }
             guard !Task.isCancelled else { return }
             if let line, speech == nil, let command = settings.catalog.voiceCommand {
                 change.status = .running("声を付けています")
@@ -302,28 +307,4 @@ extension WorkspaceStore {
         }
     }
 
-    /// The words she says and the voice they are read in, from the prompt writer (2026-11-08); moaning when the request asks
-    /// for it and the writer gave nothing usable; nil when there is nothing to say.
-    private func voiceLine(instruction: String, videoPrompt: String, writer: ModelSelection) async -> (text: String, caption: String)? {
-        let request = InferenceRequest(runtime: writer.runtime, modelIdentifier: writer.identifier, messages: [
-            InferenceMessage(role: .user, content: VoiceLine.writerRequest(instruction: instruction, videoPrompt: videoPrompt))
-        ], maximumOutputTokens: 200, temperature: 0)
-        var reply = ""
-        do {
-            for try await piece in await inferenceProvider.events(for: request) { reply += piece }
-        } catch { reply = "" }
-        let parsed = ModelRefusal.looksLikeRefusal(reply) ? nil : VoiceLine.parse(reply)
-        let caption = parsed?.caption ?? "吐息まじりの、近い距離感の大人の女性の声"
-        guard let text = VoiceLine.words(parsed?.text ?? "", instruction: instruction).flatMap({ $0.isEmpty ? nil : $0 })
-                ?? (["喘", "あえぎ"].contains(where: instruction.contains) ? VoiceLine.moaning : nil) else { return nil }
-        return (text, caption)
-    }
-
-    /// Runs a voice command (catalog `speechCommand` or `voiceCommand`) with its values; true when it finished.
-    private func runVoice(_ command: [String], _ values: [String: String]) async -> Bool {
-        let home = FileManager.default.homeDirectoryForCurrentUser.path
-        let arguments = command.map { values[$0] ?? $0.replacingOccurrences(of: "{home}", with: home) }
-        guard let program = arguments.first else { return false }
-        return (try? await ImageGenerationService.run(URL(fileURLWithPath: program), Array(arguments.dropFirst()), limit: 600)) != nil
-    }
 }

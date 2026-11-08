@@ -351,3 +351,14 @@ struct SpeechFirstTests {
         #expect(ImageGenerationService.arguments(template, prompt: "p", output: output) == ["--output", "/tmp/v.mp4"])
     }
 }
+
+struct PictureCheckTests {
+    @Test func onlyAPlainYesKeepsTheQuickPicture() {
+        #expect(PictureCheck.passed("She sits naked with a hand between her legs.\nMATCH: YES"))
+        #expect(PictureCheck.passed("naked on a bed\nmatch: yes"))
+        #expect(!PictureCheck.passed("She stands in a sweater.\nMATCH: NO"))
+        #expect(!PictureCheck.passed("YES"))
+        #expect(!PictureCheck.passed(""))
+        #expect(PictureCheck.request(prompt: "a cat on a sofa").contains("a cat on a sofa"))
+    }
+}

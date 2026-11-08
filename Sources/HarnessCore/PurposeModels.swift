@@ -36,6 +36,9 @@ public struct PurposeModelOption: Codable, Equatable, Identifiable, Sendable {
     /// (2026-11-08: the picture model that keeps a person remakes clips that did not open or move, and was stopped at 20
     /// minutes in the middle of its last clip.)
     public var timeLimit: Double?
+    /// A quicker command tried first (2026-11-08): its picture is shown to the prompt writer, and `command` runs only when
+    /// the writer says it does not show what was asked. Same placeholders as `command`.
+    public var firstTry: [String]?
 
     public init(id: String, label: String, note: String? = nil, runtime: RuntimeKind? = nil, model: String? = nil,
                 command: [String]? = nil, badge: String? = nil) {
