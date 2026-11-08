@@ -75,6 +75,9 @@ public struct PurposeModelCatalog: Codable, Equatable, Sendable {
     /// The command that lays a Japanese voice over a finished video when the request asks for one (2026-11-08), with
     /// {home}, {video}, {text}, {caption}, {output} and {seed}.
     public var voiceCommand: [String]?
+    /// The command that only speaks: {text}, {caption}, {output} (a .wav), {seed}, {home}. Its voice goes to a video model
+    /// whose command takes {audio}, which moves the mouth with it (2026-11-08).
+    public var speechCommand: [String]?
 
     /// Japanese words and the English the prompt writer must use for them (2026-11-08: 「アトリエ」 became a white photo
     /// studio and 「浴衣」 a bathrobe). The user's to edit in the catalog file.

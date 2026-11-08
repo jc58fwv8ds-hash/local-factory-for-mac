@@ -261,48 +261,69 @@ extension WorkspaceStore {
             try? FileManager.default.removeItem(at: GenerationProgress.file(for: output))
         }
         do {
-            try await imageGenerator.generate(option: option, prompt: prompt, output: output, options: ImageGenerationOptions(seed: change.seed, seconds: seconds, image: reference))
+            // A voice the request asks for is made first and given to a video model that takes {audio}, so the mouth moves
+            // with it (2026-11-08, the user: the voice laid over afterwards did not match the mouth); a model without
+            // {audio} gets it laid over its finished video.
+            var line: (text: String, caption: String)?
+            var speech: URL?
+            if change.isVideo, VoiceLine.wanted(change.instruction), let writer {
+                change.status = .running("声を作っています")
+                line = await voiceLine(instruction: change.instruction, videoPrompt: prompt, writer: writer)
+                if let line, option.command?.contains("{audio}") == true, let command = settings.catalog.speechCommand {
+                    let file = Self.imageFolder.appendingPathComponent("\(change.id.uuidString.prefix(8))-voice.wav")
+                    if await runVoice(command, ["{text}": line.text, "{caption}": line.caption, "{output}": file.path,
+                                                "{seed}": String(change.seed)]), FileManager.default.fileExists(atPath: file.path) { speech = file }
+                }
+                guard !Task.isCancelled else { return }
+                change.status = .running("\(noun)を作っています")
+            }
+            defer { if let speech { try? FileManager.default.removeItem(at: speech) } }
+            try await imageGenerator.generate(option: option, prompt: prompt, output: output, options: ImageGenerationOptions(seed: change.seed, seconds: seconds, image: reference, audio: speech))
             guard !Task.isCancelled else { return }
-            if change.isVideo, VoiceLine.wanted(change.instruction), let command = settings.catalog.voiceCommand, let writer {
+            if let line, speech == nil, let command = settings.catalog.voiceCommand {
                 change.status = .running("声を付けています")
-                await addVoice(command: command, to: output, instruction: change.instruction, videoPrompt: prompt, seed: change.seed, writer: writer)
+                let voiced = output.deletingPathExtension().appendingPathExtension("voiced.mp4")
+                if await runVoice(command, ["{video}": output.path, "{text}": line.text, "{caption}": line.caption,
+                                            "{output}": voiced.path, "{seed}": String(change.seed)]) {
+                    _ = try? FileManager.default.replaceItemAt(output, withItemAt: voiced)
+                }
+                try? FileManager.default.removeItem(at: voiced)
                 guard !Task.isCancelled else { return }
             }
             Self.saveRecipe(prompt: prompt, seed: change.seed, for: output)
             change.status = .ready(output)
             if let kind = change.jobKind { JobTimeEstimates().record(kind, seconds: Date().timeIntervalSince(change.startedAt)) }
-            appendAssistantNote("\(noun)ができました(\(option.label))。保存先: \(output.path)")
+            // Said when a voice was asked for and none could be made, instead of a silent video passing for one.
+            let voiceMissing = change.isVideo && VoiceLine.wanted(change.instruction) && line == nil ? "声は作れませんでした。" : ""
+            appendAssistantNote("\(noun)ができました(\(option.label))。\(voiceMissing)保存先: \(output.path)")
         } catch {
             guard !Task.isCancelled else { return }
             change.status = .failed(error.localizedDescription)
         }
     }
 
-    /// Lays a Japanese voice over a finished video (2026-11-08): the prompt writer writes the words and describes the voice,
-    /// the voice command reads them and mixes them over the video's own sound. Any failure leaves the video as it was.
-    private func addVoice(command: [String], to video: URL, instruction: String, videoPrompt: String, seed: Int, writer: ModelSelection) async {
+    /// The words she says and the voice they are read in, from the prompt writer (2026-11-08); moaning when the request asks
+    /// for it and the writer gave nothing usable; nil when there is nothing to say.
+    private func voiceLine(instruction: String, videoPrompt: String, writer: ModelSelection) async -> (text: String, caption: String)? {
         let request = InferenceRequest(runtime: writer.runtime, modelIdentifier: writer.identifier, messages: [
             InferenceMessage(role: .user, content: VoiceLine.writerRequest(instruction: instruction, videoPrompt: videoPrompt))
         ], maximumOutputTokens: 200, temperature: 0)
         var reply = ""
         do {
             for try await piece in await inferenceProvider.events(for: request) { reply += piece }
-        } catch { return }
+        } catch { reply = "" }
         let parsed = ModelRefusal.looksLikeRefusal(reply) ? nil : VoiceLine.parse(reply)
         let caption = parsed?.caption ?? "吐息まじりの、近い距離感の大人の女性の声"
         guard let text = VoiceLine.words(parsed?.text ?? "", instruction: instruction).flatMap({ $0.isEmpty ? nil : $0 })
-                ?? (parsed == nil && ["喘", "あえぎ"].contains(where: instruction.contains) ? VoiceLine.moaning : nil) else { return }
-        let line = (text: text, caption: caption)
-        let voiced = video.deletingPathExtension().appendingPathExtension("voiced.mp4")
+                ?? (["喘", "あえぎ"].contains(where: instruction.contains) ? VoiceLine.moaning : nil) else { return nil }
+        return (text, caption)
+    }
+
+    /// Runs a voice command (catalog `speechCommand` or `voiceCommand`) with its values; true when it finished.
+    private func runVoice(_ command: [String], _ values: [String: String]) async -> Bool {
         let home = FileManager.default.homeDirectoryForCurrentUser.path
-        let values = ["{video}": video.path, "{text}": line.text, "{caption}": line.caption, "{output}": voiced.path, "{seed}": String(seed)]
         let arguments = command.map { values[$0] ?? $0.replacingOccurrences(of: "{home}", with: home) }
-        guard let program = arguments.first else { return }
-        do {
-            _ = try await ImageGenerationService.run(URL(fileURLWithPath: program), Array(arguments.dropFirst()), limit: 600)
-            _ = try FileManager.default.replaceItemAt(video, withItemAt: voiced)
-        } catch {
-            try? FileManager.default.removeItem(at: voiced)
-        }
+        guard let program = arguments.first else { return false }
+        return (try? await ImageGenerationService.run(URL(fileURLWithPath: program), Array(arguments.dropFirst()), limit: 600)) != nil
     }
 }

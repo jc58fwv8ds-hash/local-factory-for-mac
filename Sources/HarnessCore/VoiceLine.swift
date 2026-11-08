@@ -32,6 +32,9 @@ public enum VoiceLine {
     /// The words to read: the writer's, unless they repeat the request (2026-11-08: the voice read out
     /// 「自慰を続けさせて喘ぎ声も入れて」), in which case moaning when moaning was asked for, else nothing.
     public static func words(_ text: String, instruction: String) -> String? {
+        // The user's own lines in 「」 are meant to be read; only the rest of the request must not be (2026-11-08:
+        // 「ねえ、こっちを見て。」 was taken for the request read out, and the video got no voice).
+        let instruction = instruction.replacingOccurrences(of: "「[^」]*」", with: "", options: .regularExpression)
         let plain = text.filter { !$0.isPunctuation && !$0.isWhitespace && !($0.unicodeScalars.first?.properties.isEmojiPresentation ?? false) }
         let repeats = plain.count >= 6 && (0...(plain.count - 6)).contains { start in
             let piece = String(Array(plain)[start..<(start + 6)])

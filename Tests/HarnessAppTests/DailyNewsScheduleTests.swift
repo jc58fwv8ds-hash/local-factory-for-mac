@@ -281,6 +281,8 @@ struct VoiceLineTests {
         #expect(VoiceLine.words("自慰を続けさせて喘ぎ声も入れて", instruction: request) == VoiceLine.moaning)
         #expect(VoiceLine.words("🥵あっ…んっ…はぁ…", instruction: request) == "🥵あっ…んっ…はぁ…")
         #expect(VoiceLine.words("おはようと言わせて", instruction: "動画にして、おはようと言わせて") == nil)
+        #expect(VoiceLine.words("ねえ、こっちを見て。ずっと待ってたの。", instruction: "動画にして「ねえ、こっちを見て。ずっと待ってたの。」と話しかけさせて")
+                == "ねえ、こっちを見て。ずっと待ってたの。")
         #expect(VoiceLine.writerRequest(instruction: "「好き」と言って", videoPrompt: "a woman").contains("「」 exactly"))
     }
 
@@ -337,5 +339,15 @@ struct StillVideoTests {
         // Every video model that starts from a picture with the motion check has it (the bundled catalog's own names).
         if bundled.motionHints != nil { #expect(bundled.video?.contains { $0.command?.contains("--min-motion") == true } == true) }
         if bundled.motionHints != nil { #expect(bundled.motionHints(for: "自慰").first?.hasPrefix("She slides one hand down between her thighs") == true) }
+    }
+}
+
+struct SpeechFirstTests {
+    @Test func theVoiceGoesToTheVideoCommandOnlyWhenThereIsOne() {
+        let template: ArraySlice<String> = ["--image", "{image}", "--audio", "{audio}", "--output", "{output}"]
+        let output = URL(fileURLWithPath: "/tmp/v.mp4")
+        #expect(ImageGenerationService.arguments(template, prompt: "p", output: output, audio: URL(fileURLWithPath: "/tmp/a.wav"))
+                == ["--audio", "/tmp/a.wav", "--output", "/tmp/v.mp4"])
+        #expect(ImageGenerationService.arguments(template, prompt: "p", output: output) == ["--output", "/tmp/v.mp4"])
     }
 }
