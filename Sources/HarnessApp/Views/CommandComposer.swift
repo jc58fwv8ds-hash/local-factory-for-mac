@@ -13,6 +13,8 @@ struct CommandComposer: View {
     @State private var photoItems: [PhotosPickerItem] = []
     @FocusState private var fieldIsFocused: Bool
     @AppStorage(VideoLength.settingKey) private var videoSeconds = VideoLength.defaultSeconds
+    @AppStorage(VideoSpeech.settingKey) private var videoSpeech = VideoSpeech.auto
+    @AppStorage(VideoSpeech.scriptKey) private var videoScript = ""
 
     private var instructionIsEmpty: Bool {
         store.instruction.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -30,6 +32,9 @@ struct CommandComposer: View {
             }
             if !store.documentAttachments.isEmpty { documentStrip }
             if let voice = store.attachedVoice { voiceChip(voice) }
+            if store.workspaceMode == .chat, store.composerPurpose == .video, videoSpeech == .script, store.attachedVoice == nil {
+                scriptEditor
+            }
             if let folder = store.attachedFolder {
                 HStack(spacing: 6) {
                     Image(systemName: "folder")
@@ -135,6 +140,24 @@ struct CommandComposer: View {
                         .fixedSize()
                         .font(.harness(.caption))
                         .help("動画の長さ。指示に「10秒」と書いても指定できます。画像を添付すると、その画像の人物から始まる動画を作ります(対応するモデル)")
+                        // What the video says and whether a voice file goes with it, in sight (2026-11-10, the user: 「音声を
+                        // 添付の有無とセリフ設定の有無を選べると良いね」).
+                        Picker("セリフ", selection: $videoSpeech) {
+                            ForEach(VideoSpeech.allCases, id: \.self) { Text($0.title).tag($0) }
+                        }
+                        .labelsHidden()
+                        .fixedSize()
+                        .font(.harness(.caption))
+                        .disabled(store.attachedVoice != nil)
+                        .help("おまかせ: 指示にセリフや声があれば作ります。セリフなし: 動画の音だけ。セリフを入力: 書いたセリフを話す人ごとに別の声で読みます。音声ファイルを添付したときはそれを使います")
+                        .accessibilityIdentifier(HarnessAccessibilityID.composerVideoSpeech)
+                        Button { isShowingVoiceImporter = true } label: {
+                            Label(store.attachedVoice == nil ? "音声を添付" : "音声あり", systemImage: "waveform")
+                                .font(.harness(.caption))
+                        }
+                        .buttonStyle(.borderless)
+                        .disabled(store.isGenerating)
+                        .help("セリフの音声ファイルを添付します。動画の口をその声に合わせます")
                     }
                 }
 
@@ -219,6 +242,30 @@ struct CommandComposer: View {
             if !images.isEmpty { store.importVisualFiles(images, source: .dragAndDrop) }
             return true
         }
+    }
+
+    /// The lines for the next video, one per row as 「名前: セリフ」; each name gets a voice of their own.
+    private var scriptEditor: some View {
+        let lines = VideoScript.parse(videoScript)
+        let speakers = VideoScript.speakers(lines).filter { !$0.isEmpty }
+        return VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 6) {
+                Image(systemName: "text.bubble")
+                Text("セリフ").font(.harness(.caption, weight: .medium))
+                Text(speakers.isEmpty ? "1行に「名前: セリフ」。名前ごとに別の声になります(男・夫・彼氏などの名前は男性の声)"
+                     : "\(lines.count) 行・\(speakers.count) 人(\(speakers.joined(separator: "、")))")
+                    .font(.harness(.caption2)).foregroundStyle(.secondary)
+            }
+            TextEditor(text: $videoScript)
+                .font(.harness(.body))
+                .frame(minHeight: 54, maxHeight: 110)
+                .scrollContentBackground(.hidden)
+                .padding(4)
+                .background(.quaternary.opacity(0.4), in: RoundedRectangle(cornerRadius: 6))
+                .accessibilityIdentifier(HarnessAccessibilityID.composerVideoScript)
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 8)
     }
 
     /// The attached voice file: its name and length; the next video's mouth moves to it.

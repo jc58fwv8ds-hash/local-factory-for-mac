@@ -12,6 +12,9 @@ struct TrainingView: View {
     @State private var newName = ""
     @State private var isTargeted = false
     @State private var message: String?
+    /// The face check (2026-11-10, the user: 「学習で入れた動画を音声はそのままで顔だけスワップできる様な機能」).
+    @State private var swapVideo: URL?
+    @State private var swapRunning: Task<Void, Never>?
 
     private let materials = TrainingMaterials.standard
 
@@ -54,14 +57,21 @@ struct TrainingView: View {
                     } else {
                         ScrollView {
                             LazyVGrid(columns: [GridItem(.adaptive(minimum: 120), spacing: 10)], spacing: 10) {
-                                ForEach(current.files, id: \.self) { file in MaterialTile(file: file) { remove(file) } }
+                                ForEach(current.files, id: \.self) { file in
+                                    MaterialTile(file: file, swapFace: swapRunning == nil ? { swapVideo = file } : nil) { remove(file) }
+                                }
                             }
                         }
                     }
                 } else {
                     dropHint
                 }
-                if let message { Text(message).font(.harness(.caption)).foregroundStyle(.secondary) }
+                if let message {
+                    HStack {
+                        Text(message).font(.harness(.caption)).foregroundStyle(.secondary)
+                        if let running = swapRunning { Button("止める") { running.cancel() }.font(.harness(.caption)) }
+                    }
+                }
             }
             .padding(16)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -69,6 +79,31 @@ struct TrainingView: View {
             .onDrop(of: [.fileURL], isTargeted: $isTargeted, perform: drop)
         }
         .onAppear(perform: reload)
+        .alert("顔だけ入れ替えて確かめる", isPresented: Binding(get: { swapVideo != nil }, set: { if !$0 { swapVideo = nil } }),
+               presenting: swapVideo) { video in
+            Button("顔の画像を選ぶ") { chooseFace(for: video) }
+            Button("やめる", role: .cancel) {}
+        } message: { video in
+            Text("「\(video.lastPathComponent)」の顔を、選んだ画像の人物の顔に入れ替えた動画を作ります。声や音はそのままです。入れ替える顔は、あなたが作った CG の人物など、使ってよい顔に限ります。実在の人の顔は使えません。")
+        }
+    }
+
+    private func chooseFace(for video: URL) {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.image]
+        panel.message = "入れ替える顔の画像(あなたが作った CG の人物)を選びます"
+        guard panel.runModal() == .OK, let face = panel.url else { return }
+        message = "顔を入れ替えています…"
+        swapRunning = Task {
+            let made = await TrainingFaceCheck.make(face: face, video: video) { line in message = "顔を入れ替えています(\(line))" }
+            swapRunning = nil
+            if let made {
+                message = "できました: \(made.lastPathComponent)(出力フォルダ)"
+                NSWorkspace.shared.activateFileViewerSelecting([made])
+            } else {
+                message = Task.isCancelled ? "止めました。" : "顔を入れ替えられませんでした。顔が写っていないか、顔のモデルがありません。"
+            }
+        }
     }
 
     private var dropHint: some View {
@@ -146,6 +181,8 @@ private final class URLBox: @unchecked Sendable {
 /// One picture or video: its picture (a video's first frame), its name, and × to put it in the Trash.
 private struct MaterialTile: View {
     let file: URL
+    /// For a video: makes a copy with the face swapped (nil while one is being made).
+    var swapFace: (() -> Void)?
     let remove: () -> Void
     @State private var image: NSImage?
 
@@ -164,9 +201,22 @@ private struct MaterialTile: View {
                 Button(action: remove) { Image(systemName: "xmark.circle.fill").font(.harness(.title3)) }
                     .buttonStyle(.plain).padding(4).help("ゴミ箱に入れる")
             }
+            .overlay(alignment: .bottomTrailing) {
+                if TrainingMaterials.videoTypes.contains(file.pathExtension.lowercased()), let swapFace {
+                    Button(action: swapFace) { Image(systemName: "face.dashed").font(.harness(.title3)) }
+                        .buttonStyle(.plain).padding(6).foregroundStyle(.white).shadow(radius: 2)
+                        .help("音はそのままで、顔だけ入れ替えた動画を作って確かめる")
+                        .accessibilityIdentifier(HarnessAccessibilityID.trainingFaceSwap)
+                }
+            }
             Text(file.lastPathComponent).font(.harness(.caption)).lineLimit(1).truncationMode(.middle).frame(width: 120)
         }
         .onTapGesture(count: 2) { NSWorkspace.shared.open(file) }
+        .contextMenu {
+            if TrainingMaterials.videoTypes.contains(file.pathExtension.lowercased()), let swapFace {
+                Button("顔だけ入れ替えて確かめる…", action: swapFace)
+            }
+        }
         .task(id: file) { image = await Self.thumbnail(file) }
     }
 

@@ -18,6 +18,9 @@ struct ImageGenerationOptions: Sendable {
     var audio: URL? = nil
     /// A long video's scene plan (JSON); reaches only commands with {plan}.
     var plan: URL? = nil
+    /// More pictures for a video (2026-11-10, the user: 「複数の画像を読み込ませてそれを元に動画に」): keyframes spread over the
+    /// clip after the first; reach only commands with {keyframes}, which becomes one argument per picture.
+    var keyframes: [URL] = []
 }
 
 struct ImageGenerationService: ImageGenerating {
@@ -47,7 +50,7 @@ struct ImageGenerationService: ImageGenerating {
         let log = try await ModelRuntimes.shared.withLease(.none) {
             try Task.checkCancellation()
             await Self.releaseLanguageModels()
-            let arguments = Self.arguments(template.dropFirst(), prompt: prompt, output: output, seed: options.seed, seconds: options.seconds, image: options.image, audio: options.audio, plan: options.plan)
+            let arguments = Self.arguments(template.dropFirst(), prompt: prompt, output: output, seed: options.seed, seconds: options.seconds, image: options.image, audio: options.audio, plan: options.plan, keyframes: options.keyframes)
             try FileManager.default.createDirectory(at: output.deletingLastPathComponent(), withIntermediateDirectories: true)
             return try await Self.run(executable, arguments, limit: option.timeLimit ?? (1200 + Double(options.seconds ?? 0) * 150))
         }
@@ -58,12 +61,14 @@ struct ImageGenerationService: ImageGenerating {
     }
 
     static func arguments(_ template: ArraySlice<String>, prompt: String, output: URL, seed: Int = Int.random(in: 1...999_999),
-                          seconds: Int? = nil, image: URL? = nil, audio: URL? = nil, plan: URL? = nil) -> [String] {
+                          seconds: Int? = nil, image: URL? = nil, audio: URL? = nil, plan: URL? = nil, keyframes: [URL] = []) -> [String] {
         // A flag whose value was not given goes with it: ["--image", "{image}"] without an image is left out.
         var kept: [String] = []
         for argument in template {
             if (argument.contains("{image}") && image == nil) || (argument.contains("{seconds}") && seconds == nil)
-                || (argument.contains("{audio}") && audio == nil) || (argument.contains("{plan}") && plan == nil) { _ = kept.popLast(); continue }
+                || (argument.contains("{audio}") && audio == nil) || (argument.contains("{plan}") && plan == nil)
+                || (argument == "{keyframes}" && keyframes.isEmpty) { _ = kept.popLast(); continue }
+            if argument == "{keyframes}" { kept += keyframes.map(\.path); continue }
             kept.append(argument)
         }
         return kept.map {

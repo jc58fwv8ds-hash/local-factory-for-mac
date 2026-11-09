@@ -112,6 +112,62 @@ extension WorkspaceStore {
     }
 
     /// How long a sound file plays, in seconds.
+    /// The user's own lines, one voice per speaker, joined into the voice the mouth moves to (2026-11-10).
+    func voiceTheScript(_ change: ImageChange, noun: String) async {
+        guard change.isVideo, change.voiceFile == nil, change.speech == .script, let command = purposeSettings.catalog.speechCommand else { return }
+        change.status = .running("セリフの声を作っています")
+        change.voiceFile = await scriptVoice(change.script, command: command, seed: change.seed, name: String(change.id.uuidString.prefix(8)))
+        change.status = .running("\(noun)を作っています")
+    }
+
+    /// A video's extra pictures written beside the reference, as the keyframes its command is given (2026-11-10).
+    static func keyframeFiles(_ change: ImageChange) -> [URL] {
+        guard change.isVideo else { return [] }
+        return change.keyframeImages.enumerated().compactMap { index, data in
+            let file = imageFolder.appendingPathComponent("\(change.id.uuidString.prefix(8))-key\(index + 1).png")
+            return (try? data.write(to: file)) != nil ? file : nil
+        }
+    }
+
+    /// The user's lines read by one voice per speaker and joined in order with a short pause between them (2026-11-10, the
+    /// user: 「セリフは複数人分を読み込んでも分けて音声でつくと良いかな」); nil when no line could be read.
+    func scriptVoice(_ script: String, command: [String], seed: Int, name: String) async -> URL? {
+        let lines = VideoScript.parse(script)
+        let speakers = VideoScript.speakers(lines)
+        var pieces: [URL] = []
+        defer { for piece in pieces { try? FileManager.default.removeItem(at: piece) } }
+        for (index, line) in lines.enumerated() {
+            guard !Task.isCancelled else { return nil }
+            let piece = Self.imageFolder.appendingPathComponent("\(name)-line\(index + 1).wav")
+            let values = ["{text}": line.text, "{caption}": VideoScript.caption(for: line.speaker, among: speakers),
+                          "{output}": piece.path, "{seed}": String(VideoScript.seed(seed, speaker: line.speaker, among: speakers))]
+            if await runVoice(command, values), FileManager.default.fileExists(atPath: piece.path) { pieces.append(piece) }
+        }
+        guard !pieces.isEmpty else { return nil }
+        let joined = Self.imageFolder.appendingPathComponent("\(name)-script-voice.m4a")
+        return await Self.join(pieces, pause: 0.35, into: joined) ? joined : nil
+    }
+
+    /// Sound files one after another with `pause` seconds of silence between them, written as .m4a.
+    nonisolated static func join(_ files: [URL], pause: Double, into output: URL) async -> Bool {
+        let composition = AVMutableComposition()
+        guard let track = composition.addMutableTrack(withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid) else { return false }
+        var at = CMTime.zero
+        let gap = CMTime(seconds: pause, preferredTimescale: 48_000)
+        for (index, file) in files.enumerated() {
+            let asset = AVURLAsset(url: file)
+            guard let source = try? await asset.loadTracks(withMediaType: .audio).first,
+                  let duration = try? await asset.load(.duration) else { continue }
+            if index > 0 { track.insertEmptyTimeRange(CMTimeRange(start: at, duration: gap)); at = at + gap }
+            try? track.insertTimeRange(CMTimeRange(start: .zero, duration: duration), of: source, at: at)
+            at = at + duration
+        }
+        try? FileManager.default.removeItem(at: output)
+        guard at > .zero, let export = AVAssetExportSession(asset: composition, presetName: AVAssetExportPresetAppleM4A) else { return false }
+        do { try await export.export(to: output, as: .m4a) } catch { return false }
+        return FileManager.default.fileExists(atPath: output.path)
+    }
+
     nonisolated static func seconds(of file: URL) async -> Double? {
         guard let duration = try? await AVURLAsset(url: file).load(.duration) else { return nil }
         let value = duration.seconds

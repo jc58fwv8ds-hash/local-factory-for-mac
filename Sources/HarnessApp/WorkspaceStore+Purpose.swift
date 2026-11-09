@@ -23,11 +23,16 @@ final class ImageChange: Identifiable {
     var prompt: String?
     /// A video's character: the attached picture (a generated image attached again), which becomes its first frame.
     var referenceImage: Data?
+    /// More attached pictures for a video: keyframes after the first (2026-11-10).
+    var keyframeImages: [Data] = []
     /// A picture attached to an image request: its person is described to the prompt writer (2026-11-07: an attached person
     /// was ignored and the prompt said only "a person").
     var personPicture: Data?
     /// The lines as a voice file made elsewhere (a copy, removed once done): the mouth moves to it.
     var voiceFile: URL?
+    /// What the video says (2026-11-10): lines as the request asks, none, or the user's own script read by one voice each.
+    var speech: VideoSpeech = .auto
+    var script = ""
     /// The seed it was made with; a follow-up that changes this output uses it again.
     var seed = Int.random(in: 1...999_999)
     /// A video request (2026-10-19): the same flow with the 動画を作る model, saved as .mp4.
@@ -148,7 +153,10 @@ extension WorkspaceStore {
         if !isVideo { change.personPicture = visualAttachments.items.first?.data }
         if isVideo {
             change.referenceImage = visualAttachments.items.first?.data
+            change.keyframeImages = visualAttachments.items.dropFirst().map(\.data)
             change.voiceFile = attachedVoice?.file; attachedVoice = nil
+            change.speech = UserDefaults.standard.string(forKey: VideoSpeech.settingKey).flatMap(VideoSpeech.init(rawValue:)) ?? .auto
+            change.script = UserDefaults.standard.string(forKey: VideoSpeech.scriptKey) ?? ""
             if change.referenceImage == nil, GeneratedMedia.pointsAtLastImage(text),
                let last = GeneratedMedia.lastFile(.image, in: project.conversation.map(\.content)) {
                 change.referenceImage = try? Data(contentsOf: last)
@@ -261,6 +269,7 @@ extension WorkspaceStore {
             try? FileManager.default.createDirectory(at: Self.imageFolder, withIntermediateDirectories: true)
             if (try? data.write(to: file)) != nil { reference = file }
         }
+        let keyframes = reference == nil ? [] : Self.keyframeFiles(change)
         let output = Self.imageFolder.appendingPathComponent(
             "\(change.id.uuidString.prefix(8))-\(option.id).\(change.isVideo ? "mp4" : "png")")
         change.output = output
@@ -270,6 +279,7 @@ extension WorkspaceStore {
         // The copy of the attached picture is only for this run; a stopped run leaves no half-made output behind.
         defer {
             if let reference { try? FileManager.default.removeItem(at: reference) }
+            for file in keyframes { try? FileManager.default.removeItem(at: file) }
             if Task.isCancelled { try? FileManager.default.removeItem(at: output) }
             try? FileManager.default.removeItem(at: GenerationProgress.file(for: output))
         }
@@ -281,10 +291,12 @@ extension WorkspaceStore {
             var speech: URL?
             // A length beyond one clip becomes scenes made one after another (2026-11-08); each scene has its own voice.
             // A length beyond a few seconds, asked in words or chosen beside the input, is made from short scenes.
+            await voiceTheScript(change, noun: noun)
+            guard !Task.isCancelled else { return }
             let longScenes = await longSceneCount(change, option: option, seconds: seconds)
             defer { if let file = change.voiceFile { try? FileManager.default.removeItem(at: file) } }
             if longScenes == nil, let file = change.voiceFile { speech = file }
-            if change.isVideo, longScenes == nil, change.voiceFile == nil, VoiceLine.wanted(change.instruction), let writer {
+            if change.isVideo, longScenes == nil, change.voiceFile == nil, change.speech == .auto, VoiceLine.wanted(change.instruction), let writer {
                 change.status = .running("声を作っています")
                 line = await voiceLine(instruction: change.instruction, videoPrompt: prompt, writer: writer)
                 if let line, option.command?.contains("{audio}") == true, let command = settings.catalog.speechCommand {
@@ -299,7 +311,7 @@ extension WorkspaceStore {
             // The clip lasts as long as the voice (2026-11-08: a 12-second line in a 10-second clip lost its last words).
             let voiced = await speech.asyncMap(Self.seconds(of:))
             let clipSeconds = voiced.flatMap { $0 }.map { max(seconds ?? 0, Int($0.rounded(.up)) + 1) } ?? seconds
-            let options = ImageGenerationOptions(seed: change.seed, seconds: clipSeconds, image: reference, audio: speech)
+            let options = ImageGenerationOptions(seed: change.seed, seconds: clipSeconds, image: reference, audio: speech, keyframes: keyframes)
             if let longScenes, let command = option.longCommand {
                 try await makeLongVideo(command, scenes: longScenes, option: option, prompt: prompt, instruction: change.instruction,
                                         output: output, image: reference, seed: change.seed, writer: writer, voice: change.voiceFile)
@@ -323,7 +335,8 @@ extension WorkspaceStore {
             change.status = .ready(output)
             if let kind = change.jobKind { JobTimeEstimates().record(kind, seconds: Date().timeIntervalSince(change.startedAt)) }
             // Said when a voice was asked for and none could be made, instead of a silent video passing for one.
-            let voiceMissing = change.isVideo && longScenes == nil && change.voiceFile == nil && VoiceLine.wanted(change.instruction) && line == nil ? "声は作れませんでした。" : ""
+            let voiceMissing = change.isVideo && longScenes == nil && change.voiceFile == nil
+                && ((change.speech == .auto && VoiceLine.wanted(change.instruction) && line == nil) || change.speech == .script) ? "声は作れませんでした。" : ""
             appendAssistantNote("\(noun)ができました(\(option.label))。\(voiceMissing)保存先: \(output.path)")
         } catch {
             guard !Task.isCancelled else { return }
