@@ -73,6 +73,7 @@ struct SidebarTrashSection: View {
     @Bindable var store: WorkspaceStore
     @State private var isOpen = false
     @State private var deleting: ProjectRecord?
+    @State private var emptying = false
 
     private var records: [ProjectRecord] {
         store.library.trashedRecords.filter { $0.effectiveKind == store.workspaceMode.kind }
@@ -94,6 +95,11 @@ struct SidebarTrashSection: View {
                 .buttonStyle(.plain)
                 .foregroundStyle(.secondary)
                 if isOpen {
+                    // All at once (2026-11-10, the user: 「サイドバーのゴミ箱を空にする機能が見当たらない」).
+                    Button("ゴミ箱を空にする", role: .destructive) { emptying = true }
+                        .buttonStyle(.borderless)
+                        .padding(.leading, 16)
+                        .accessibilityIdentifier(HarnessAccessibilityID.sidebarEmptyTrash)
                     ForEach(records) { record in
                         // The name on its own line: beside the two buttons every チャット row was cut to 「チャット 11…」.
                         VStack(alignment: .leading, spacing: 2) {
@@ -114,6 +120,12 @@ struct SidebarTrashSection: View {
                 Button("完全に削除", role: .destructive) { store.deleteProjectCompletely(record.id) }
             } message: { record in
                 Text("「\(record.project.name)」の会話と、その中で作った画像・動画を消します。元に戻せません。つないだフォルダの中身は消しません。")
+            }
+            .alert("ゴミ箱を空にしますか?", isPresented: $emptying) {
+                Button("キャンセル", role: .cancel) {}
+                Button("空にする", role: .destructive) { store.emptyTrash(records.map(\.id)) }
+            } message: {
+                Text("ゴミ箱の \(records.count) 件の会話と、その中で作った画像・動画を消します。元に戻せません。つないだフォルダの中身は消しません。")
             }
         }
     }

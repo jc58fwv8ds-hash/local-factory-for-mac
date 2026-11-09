@@ -132,6 +132,11 @@ extension WorkspaceStore {
         persist()
     }
 
+    /// Every chat in `ids` removed for good, as 「完全に削除」 does one by one (2026-11-10: 「ゴミ箱を空にする」).
+    func emptyTrash(_ ids: [UUID]) {
+        for id in ids { deleteProjectCompletely(id) }
+    }
+
     /// The images and videos a conversation names inside `folder` (「保存先: …/Images/abc-z-image-turbo.png」).
     nonisolated static func generatedFiles(in contents: [String], folder: URL) -> [URL] {
         let prefix = folder.path + "/"

@@ -3,6 +3,7 @@ import Foundation
 enum HarnessAccessibilityID {
     static let root = "harness.root"
     static let sidebarHome = "harness.sidebar.home"
+    static let sidebarEmptyTrash = "harness.sidebar.empty-trash"
     static let sidebarProjects = "harness.sidebar.projects"
     static let sidebarApps = "harness.sidebar.apps"
     static let sidebarModels = "harness.sidebar.models"
