@@ -124,6 +124,7 @@ extension WorkspaceStore {
             try? FileManager.default.removeItem(at: file.appendingPathExtension("json"))
             try? FileManager.default.removeItem(at: GeneratedMedia.stepsFolder(of: file))
         }
+        try? FileManager.default.removeItem(at: Self.imageFolder.appendingPathComponent("face-\(record.project.id.uuidString).png"))
         for message in record.project.conversation { imageChanges[message.id] = nil }
         ModelCallLog.remove(mentioning: record.project.conversation.map(\.content),
                             in: Self.imageFolder.deletingLastPathComponent().appendingPathComponent("model-calls"))

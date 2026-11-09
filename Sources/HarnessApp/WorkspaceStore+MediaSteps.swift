@@ -120,6 +120,16 @@ extension WorkspaceStore {
         change.status = .running("\(noun)を作っています")
     }
 
+    /// The face every picture and video of the conversation is put back to: the first person picture attached in it, kept
+    /// as face-<conversation>.png, replaced only when another picture is attached (2026-11-10, the user: 「画像生成を続けると
+    /// 顔面の固定がブレる」: each follow-up took the last result as the person, so the face drifted a little more each time).
+    static func originalFace(_ change: ImageChange) -> URL? {
+        guard let face = change.face else { return nil }
+        let file = imageFolder.appendingPathComponent("face-\(face.project.uuidString).png")
+        if let data = face.attached { try? data.write(to: file) }
+        return FileManager.default.fileExists(atPath: file.path) ? file : nil
+    }
+
     /// A video's extra pictures written beside the reference, as the keyframes its command is given (2026-11-10).
     static func keyframeFiles(_ change: ImageChange) -> [URL] {
         guard change.isVideo else { return [] }

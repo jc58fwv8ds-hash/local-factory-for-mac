@@ -21,6 +21,8 @@ struct ImageGenerationOptions: Sendable {
     /// More pictures for a video (2026-11-10, the user: 「複数の画像を読み込ませてそれを元に動画に」): keyframes spread over the
     /// clip after the first; reach only commands with {keyframes}, which becomes one argument per picture.
     var keyframes: [URL] = []
+    /// The conversation's first face, which results are compared with and put back to; reaches only commands with {face}.
+    var face: URL? = nil
 }
 
 struct ImageGenerationService: ImageGenerating {
@@ -50,7 +52,7 @@ struct ImageGenerationService: ImageGenerating {
         let log = try await ModelRuntimes.shared.withLease(.none) {
             try Task.checkCancellation()
             await Self.releaseLanguageModels()
-            let arguments = Self.arguments(template.dropFirst(), prompt: prompt, output: output, seed: options.seed, seconds: options.seconds, image: options.image, audio: options.audio, plan: options.plan, keyframes: options.keyframes)
+            let arguments = Self.arguments(template.dropFirst(), prompt: prompt, output: output, seed: options.seed, seconds: options.seconds, image: options.image, audio: options.audio, plan: options.plan, keyframes: options.keyframes, face: options.face)
             try FileManager.default.createDirectory(at: output.deletingLastPathComponent(), withIntermediateDirectories: true)
             return try await Self.run(executable, arguments, limit: option.timeLimit ?? (1200 + Double(options.seconds ?? 0) * 150))
         }
@@ -61,13 +63,13 @@ struct ImageGenerationService: ImageGenerating {
     }
 
     static func arguments(_ template: ArraySlice<String>, prompt: String, output: URL, seed: Int = Int.random(in: 1...999_999),
-                          seconds: Int? = nil, image: URL? = nil, audio: URL? = nil, plan: URL? = nil, keyframes: [URL] = []) -> [String] {
+                          seconds: Int? = nil, image: URL? = nil, audio: URL? = nil, plan: URL? = nil, keyframes: [URL] = [], face: URL? = nil) -> [String] {
         // A flag whose value was not given goes with it: ["--image", "{image}"] without an image is left out.
         var kept: [String] = []
         for argument in template {
             if (argument.contains("{image}") && image == nil) || (argument.contains("{seconds}") && seconds == nil)
                 || (argument.contains("{audio}") && audio == nil) || (argument.contains("{plan}") && plan == nil)
-                || (argument == "{keyframes}" && keyframes.isEmpty) { _ = kept.popLast(); continue }
+                || (argument == "{keyframes}" && keyframes.isEmpty) || (argument.contains("{face}") && face == nil) { _ = kept.popLast(); continue }
             if argument == "{keyframes}" { kept += keyframes.map(\.path); continue }
             kept.append(argument)
         }
@@ -78,6 +80,7 @@ struct ImageGenerationService: ImageGenerating {
                 .replacingOccurrences(of: "{image}", with: image?.path ?? "")
                 .replacingOccurrences(of: "{audio}", with: audio?.path ?? "")
                 .replacingOccurrences(of: "{plan}", with: plan?.path ?? "")
+                .replacingOccurrences(of: "{face}", with: face?.path ?? "")
                 .replacingOccurrences(of: "{width}", with: "1024").replacingOccurrences(of: "{height}", with: "1024")
                 .replacingOccurrences(of: "{home}", with: FileManager.default.homeDirectoryForCurrentUser.path)
         }

@@ -25,6 +25,7 @@ final class ImageChange: Identifiable {
     var referenceImage: Data?
     /// More attached pictures for a video: keyframes after the first (2026-11-10).
     var keyframeImages: [Data] = []
+    var face: (project: UUID, attached: Data?)?   // the conversation's first face, and a newly attached one (2026-11-10)
     /// A picture attached to an image request: its person is described to the prompt writer (2026-11-07: an attached person
     /// was ignored and the prompt said only "a person").
     var personPicture: Data?
@@ -150,7 +151,7 @@ extension WorkspaceStore {
         library.updateSelectedProject { $0.conversation.append(message) }
         persist()
         let change = ImageChange(id: message.id, instruction: text, isVideo: isVideo)
-        if !isVideo { change.personPicture = visualAttachments.items.first?.data }
+        if !isVideo { change.personPicture = visualAttachments.items.first?.data }; change.face = (project.id, visualAttachments.items.first?.data)
         if isVideo {
             change.referenceImage = visualAttachments.items.first?.data
             change.keyframeImages = visualAttachments.items.dropFirst().map(\.data)
@@ -253,6 +254,7 @@ extension WorkspaceStore {
             }
         }
         guard !Task.isCancelled else { return }
+        prompt = Undress.apply(prompt, instruction: change.instruction, isVideo: change.isVideo)
         // Motion sentences are for videos only: in a picture prompt they made stiff, broken bodies (2026-11-07). The picture
         // model that keeps a person makes its picture through video clips, so it gets them too (2026-11-08: in the app, a
         // follow-up to the person's picture lost 「自慰」 in the writer and the result was only a change of clothes).
@@ -311,7 +313,8 @@ extension WorkspaceStore {
             // The clip lasts as long as the voice (2026-11-08: a 12-second line in a 10-second clip lost its last words).
             let voiced = await speech.asyncMap(Self.seconds(of:))
             let clipSeconds = voiced.flatMap { $0 }.map { max(seconds ?? 0, Int($0.rounded(.up)) + 1) } ?? seconds
-            let options = ImageGenerationOptions(seed: change.seed, seconds: clipSeconds, image: reference, audio: speech, keyframes: keyframes)
+            let options = ImageGenerationOptions(seed: change.seed, seconds: clipSeconds, image: reference, audio: speech, keyframes: keyframes,
+                                                 face: reference == nil ? nil : Self.originalFace(change))
             if let longScenes, let command = option.longCommand {
                 try await makeLongVideo(command, scenes: longScenes, option: option, prompt: prompt, instruction: change.instruction,
                                         output: output, image: reference, seed: change.seed, writer: writer, voice: change.voiceFile)
