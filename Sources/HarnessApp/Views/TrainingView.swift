@@ -14,7 +14,7 @@ struct TrainingView: View {
     @State private var message: String?
     /// The face check (2026-11-10, the user: 「学習で入れた動画を音声はそのままで顔だけスワップできる様な機能」).
     @State private var swapVideo: URL?
-    @State private var swapRunning: Task<Void, Never>?
+    private var faceCheck: TrainingFaceCheck { .shared }
 
     private let materials = TrainingMaterials.standard
 
@@ -58,7 +58,7 @@ struct TrainingView: View {
                         ScrollView {
                             LazyVGrid(columns: [GridItem(.adaptive(minimum: 120), spacing: 10)], spacing: 10) {
                                 ForEach(current.files, id: \.self) { file in
-                                    MaterialTile(file: file, swapFace: swapRunning == nil ? { swapVideo = file } : nil) { remove(file) }
+                                    MaterialTile(file: file, swapFace: faceCheck.isRunning ? nil : { swapVideo = file }) { remove(file) }
                                 }
                             }
                         }
@@ -66,11 +66,16 @@ struct TrainingView: View {
                 } else {
                     dropHint
                 }
-                if let message {
+                if let message { Text(message).font(.harness(.caption)).foregroundStyle(.secondary) }
+                if faceCheck.isRunning, let video = faceCheck.video {
                     HStack {
-                        Text(message).font(.harness(.caption)).foregroundStyle(.secondary)
-                        if let running = swapRunning { Button("止める") { running.cancel() }.font(.harness(.caption)) }
+                        ProgressView().controlSize(.small)
+                        Text("「\(video.lastPathComponent)」の顔を入れ替えています" + (faceCheck.progress.map { "(\($0))" } ?? ""))
+                            .font(.harness(.caption)).foregroundStyle(.secondary)
+                        Button("止める") { faceCheck.stop() }.font(.harness(.caption))
                     }
+                } else if let result = faceCheck.result {
+                    Text(result).font(.harness(.caption)).foregroundStyle(.secondary)
                 }
             }
             .padding(16)
@@ -93,17 +98,7 @@ struct TrainingView: View {
         panel.allowedContentTypes = [.image]
         panel.message = "入れ替える顔の画像(あなたが作った CG の人物)を選びます"
         guard panel.runModal() == .OK, let face = panel.url else { return }
-        message = "顔を入れ替えています…"
-        swapRunning = Task {
-            let made = await TrainingFaceCheck.make(face: face, video: video) { line in message = "顔を入れ替えています(\(line))" }
-            swapRunning = nil
-            if let made {
-                message = "できました: \(made.lastPathComponent)(出力フォルダ)"
-                NSWorkspace.shared.activateFileViewerSelecting([made])
-            } else {
-                message = Task.isCancelled ? "止めました。" : "顔を入れ替えられませんでした。顔が写っていないか、顔のモデルがありません。"
-            }
-        }
+        faceCheck.start(face: face, video: video) { NSWorkspace.shared.activateFileViewerSelecting([$0]) }
     }
 
     private var dropHint: some View {
