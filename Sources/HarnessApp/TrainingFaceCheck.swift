@@ -28,7 +28,7 @@ final class TrainingFaceCheck {
         progress = nil
         result = nil
         task = Task {
-            let made = await Self.make(face: face, video: video) { [weak self] line in self?.progress = line }
+            let made = await Self.make(face: face, video: video) { line in self.progress = line }
             let stopped = Task.isCancelled
             task = nil
             self.video = nil
