@@ -8,7 +8,7 @@ enum StudioSection: String, CaseIterable, Identifiable {
     case projects = "プロジェクト"
     case apps = "アプリ"
     case models = "AIモデル"
-    case voices = "声", dailyNews = "毎日のニュース", agent = "エージェント"
+    case voices = "声", dailyNews = "毎日のニュース", agent = "エージェント", training = "学習"
     case developer = "開発"
 
     var id: String { rawValue }
@@ -48,10 +48,10 @@ final class WorkspaceStore {
     var notice: WorkspaceNotice?
     /// Code changes asked for in the chat, keyed by the asking message (not persisted; see WorkspaceStore+ChatChange).
     var chatChanges: [UUID: ChatChange] = [:]
-    /// Documents attached in the chat for the next message (PDF, Word, Excel, CSV, text), read to text on attach.
-    var documentAttachments: [DocumentText] = []
-    /// A folder attached in the chat for file operations (bulk rename), and the rename cards by the asking message.
+    var documentAttachments: [DocumentText] = []   // PDF, Word, Excel, CSV, text for the next message, read on attach
+    /// A folder attached for bulk rename; a voice file as the next video's lines (+VoiceAttachment); rename cards.
     var attachedFolder: URL?
+    var attachedVoice: AttachedVoice?
     var renameChanges: [UUID: RenameChange] = [:]
     var spreadsheetChanges: [UUID: SpreadsheetChange] = [:]
     var analysisChanges: [UUID: AnalysisChange] = [:]
@@ -65,6 +65,7 @@ final class WorkspaceStore {
     var composerPurpose: ComposerPurpose = .conversation
     var imageChanges: [UUID: ImageChange] = [:]
     var pendingConsent: PendingConsent?
+    var consentedImages: Set<Int> = []   // attached images the user said 続ける for in this session
     @ObservationIgnored var purposeSettingsOverride: PurposeModelSettings?
     @ObservationIgnored var imageGenerator: any ImageGenerating = ImageGenerationService()
     /// Tests inject the orchestrated run here; the App uses OrchestratedRunSettings.

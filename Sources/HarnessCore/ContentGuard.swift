@@ -63,7 +63,9 @@ public enum ContentGuard {
             return .block(reason: "「\(minor)」と「\(sexualWord)」が同じ指示にあるため作りません(未成年を性的に描く内容は扱いません)。")
         }
         if attachesPhoto {
-            return .confirmConsent(reason: "読み込んだ写真を性的な内容に作り替える指示です。写真の人物が実在する場合、本人の同意がありますか？")
+            // Said briefly, as a reminder rather than a gate (2026-11-08, the user: CG is read in as image files too; a guard
+            // that feels too strict makes the app seem needlessly cramped).
+            return .confirmConsent(reason: "画像の人物が実在する場合は、本人の同意が必要です。")
         }
         return .allow
     }

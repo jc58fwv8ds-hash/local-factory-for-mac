@@ -44,6 +44,21 @@ public enum VoiceLine {
         return ["喘", "あえぎ", "自慰", "オナニー"].contains(where: instruction.contains) ? moaning : nil
     }
 
+    /// True when the line is only moans and breaths, no words to move the lips to (2026-11-09): such a voice is laid over a
+    /// clip whose action follows a skeleton instead of making the clip speech-first. Same rule as long_video.moans_only.
+    public static func moansOnly(_ text: String) -> Bool {
+        let sounds = Set("あぁアァっッんンはハぅうウゥおぉオォいぃイィふフ〜ー…・、。！？!?")
+        let rest = text.unicodeScalars.filter { scalar in
+            !sounds.contains(Character(scalar)) && !scalar.properties.isWhitespace
+                && (scalar.value < 0x2000 || (0x3000..<0xFF00).contains(scalar.value))
+        }
+        return rest.count <= 1
+    }
+
+    /// The voice file's name: "-moans" tells the video maker the voice has no words; the video script lays it over a guided
+    /// action instead of moving the lips to it.
+    public static func fileSuffix(_ text: String) -> String { moansOnly(text) ? "-voice-moans.wav" : "-voice.wav" }
+
     /// The words and the voice description from the writer's answer, or nil when either is missing.
     public static func parse(_ reply: String) -> (text: String, caption: String)? {
         var text = "", caption = ""

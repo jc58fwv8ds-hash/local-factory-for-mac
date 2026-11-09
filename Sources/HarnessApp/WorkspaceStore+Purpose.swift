@@ -26,6 +26,8 @@ final class ImageChange: Identifiable {
     /// A picture attached to an image request: its person is described to the prompt writer (2026-11-07: an attached person
     /// was ignored and the prompt said only "a person").
     var personPicture: Data?
+    /// The lines as a voice file made elsewhere (a copy, removed once done): the mouth moves to it.
+    var voiceFile: URL?
     /// The seed it was made with; a follow-up that changes this output uses it again.
     var seed = Int.random(in: 1...999_999)
     /// A video request (2026-10-19): the same flow with the 動画を作る model, saved as .mp4.
@@ -43,6 +45,8 @@ final class ImageChange: Identifiable {
 struct PendingConsent: Equatable {
     let instruction: String
     let reason: String
+    /// The attached images it was asked for: once confirmed, the same images are not asked about again in this session.
+    var images: Set<Int> = []
 }
 
 extension WorkspaceStore {
@@ -74,7 +78,9 @@ extension WorkspaceStore {
             if routed { composerPurpose = .conversation }
             return true
         case .confirmConsent(let reason):
-            pendingConsent = PendingConsent(instruction: text, reason: reason)
+            let images = Set(visualAttachments.items.map { $0.data.hashValue })
+            if !images.isEmpty, images.isSubset(of: consentedImages) { break }
+            pendingConsent = PendingConsent(instruction: text, reason: reason, images: images)
             return true
         case .allow:
             break
@@ -85,6 +91,12 @@ extension WorkspaceStore {
     }
 
     /// After 「同意を得ている」 on the consent question, or directly when nothing needs asking.
+    /// 続ける on the reminder: these images are not asked about again (2026-11-08: asked every time, it felt cramped).
+    func consentGiven(_ pending: PendingConsent) {
+        consentedImages.formUnion(pending.images)
+        continuePurposeInstruction(pending.instruction)
+    }
+
     func continuePurposeInstruction(_ text: String) {
         pendingConsent = nil
         switch composerPurpose {
@@ -136,6 +148,7 @@ extension WorkspaceStore {
         if !isVideo { change.personPicture = visualAttachments.items.first?.data }
         if isVideo {
             change.referenceImage = visualAttachments.items.first?.data
+            change.voiceFile = attachedVoice?.file; attachedVoice = nil
             if change.referenceImage == nil, GeneratedMedia.pointsAtLastImage(text),
                let last = GeneratedMedia.lastFile(.image, in: project.conversation.map(\.content)) {
                 change.referenceImage = try? Data(contentsOf: last)
@@ -268,13 +281,14 @@ extension WorkspaceStore {
             var speech: URL?
             // A length beyond one clip becomes scenes made one after another (2026-11-08); each scene has its own voice.
             // A length beyond a few seconds, asked in words or chosen beside the input, is made from short scenes.
-            let longScenes = change.isVideo && option.longCommand != nil
-                ? (LongVideoPlan.requestedSeconds(in: change.instruction) ?? seconds).flatMap(LongVideoPlan.sceneCount) : nil
-            if change.isVideo, longScenes == nil, VoiceLine.wanted(change.instruction), let writer {
+            let longScenes = await longSceneCount(change, option: option, seconds: seconds)
+            defer { if let file = change.voiceFile { try? FileManager.default.removeItem(at: file) } }
+            if longScenes == nil, let file = change.voiceFile { speech = file }
+            if change.isVideo, longScenes == nil, change.voiceFile == nil, VoiceLine.wanted(change.instruction), let writer {
                 change.status = .running("声を作っています")
                 line = await voiceLine(instruction: change.instruction, videoPrompt: prompt, writer: writer)
                 if let line, option.command?.contains("{audio}") == true, let command = settings.catalog.speechCommand {
-                    let file = Self.imageFolder.appendingPathComponent("\(change.id.uuidString.prefix(8))-voice.wav")
+                    let file = Self.imageFolder.appendingPathComponent("\(change.id.uuidString.prefix(8))\(VoiceLine.fileSuffix(line.text))")
                     if await runVoice(command, ["{text}": line.text, "{caption}": line.caption, "{output}": file.path,
                                                 "{seed}": String(change.seed)]), FileManager.default.fileExists(atPath: file.path) { speech = file }
                 }
@@ -282,10 +296,13 @@ extension WorkspaceStore {
                 change.status = .running("\(noun)を作っています")
             }
             defer { if let speech { try? FileManager.default.removeItem(at: speech) } }
-            let options = ImageGenerationOptions(seed: change.seed, seconds: seconds, image: reference, audio: speech)
+            // The clip lasts as long as the voice (2026-11-08: a 12-second line in a 10-second clip lost its last words).
+            let voiced = await speech.asyncMap(Self.seconds(of:))
+            let clipSeconds = voiced.flatMap { $0 }.map { max(seconds ?? 0, Int($0.rounded(.up)) + 1) } ?? seconds
+            let options = ImageGenerationOptions(seed: change.seed, seconds: clipSeconds, image: reference, audio: speech)
             if let longScenes, let command = option.longCommand {
                 try await makeLongVideo(command, scenes: longScenes, option: option, prompt: prompt, instruction: change.instruction,
-                                        output: output, image: reference, seed: change.seed, writer: writer)
+                                        output: output, image: reference, seed: change.seed, writer: writer, voice: change.voiceFile)
             } else if let first = option.firstTry, !change.isVideo, await quickPictureHolds(first, option: option, prompt: prompt, output: output, options: options, writer: writer) {
                 // the quick picture shows what was asked
             } else {
@@ -306,7 +323,7 @@ extension WorkspaceStore {
             change.status = .ready(output)
             if let kind = change.jobKind { JobTimeEstimates().record(kind, seconds: Date().timeIntervalSince(change.startedAt)) }
             // Said when a voice was asked for and none could be made, instead of a silent video passing for one.
-            let voiceMissing = change.isVideo && longScenes == nil && VoiceLine.wanted(change.instruction) && line == nil ? "声は作れませんでした。" : ""
+            let voiceMissing = change.isVideo && longScenes == nil && change.voiceFile == nil && VoiceLine.wanted(change.instruction) && line == nil ? "声は作れませんでした。" : ""
             appendAssistantNote("\(noun)ができました(\(option.label))。\(voiceMissing)保存先: \(output.path)")
         } catch {
             guard !Task.isCancelled else { return }

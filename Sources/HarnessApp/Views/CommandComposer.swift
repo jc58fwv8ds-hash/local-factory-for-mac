@@ -8,6 +8,7 @@ struct CommandComposer: View {
     @State private var isShowingImageImporter = false
     @State private var isShowingDocumentImporter = false
     @State private var isShowingFolderImporter = false
+    @State private var isShowingVoiceImporter = false
     @State private var isShowingPhotoLibrary = false
     @State private var photoItems: [PhotosPickerItem] = []
     @FocusState private var fieldIsFocused: Bool
@@ -28,6 +29,7 @@ struct CommandComposer: View {
                 store.removeVisualAttachment($0)
             }
             if !store.documentAttachments.isEmpty { documentStrip }
+            if let voice = store.attachedVoice { voiceChip(voice) }
             if let folder = store.attachedFolder {
                 HStack(spacing: 6) {
                     Image(systemName: "folder")
@@ -96,6 +98,9 @@ struct CommandComposer: View {
                     Button("フォルダを選ぶ(名前の一括変更など)", systemImage: "folder") {
                         isShowingFolderImporter = true
                     }
+                    Button("セリフの音声ファイルを選ぶ(動画の口を合わせる)", systemImage: "waveform") {
+                        isShowingVoiceImporter = true
+                    }
                 } label: {
                     Image(systemName: "paperclip")
                         .font(.harness(size: 16, weight: .semibold))
@@ -104,7 +109,7 @@ struct CommandComposer: View {
                 .menuStyle(.borderlessButton)
                 .menuIndicator(.hidden)
                 .disabled(store.isGenerating || store.visualAttachments.isImporting)
-                .help("画像や文書を添付")
+                .help("画像・文書・セリフの音声ファイルを添付")
                 .accessibilityIdentifier(HarnessAccessibilityID.commandImageAdd)
                 .photosPicker(isPresented: $isShowingPhotoLibrary, selection: $photoItems, maxSelectionCount: 4, matching: .images)
                 .onChange(of: photoItems) { _, items in importPhotos(items) }
@@ -190,10 +195,13 @@ struct CommandComposer: View {
         }
         .alert("確認", isPresented: Binding(get: { store.pendingConsent != nil }, set: { if !$0 { store.pendingConsent = nil } }),
                presenting: store.pendingConsent) { pending in
-            Button("同意を得ている") { store.continuePurposeInstruction(pending.instruction) }
+            Button("続ける") { store.consentGiven(pending) }
             Button("やめる", role: .cancel) { store.pendingConsent = nil }
         } message: { pending in
             Text(pending.reason)
+        }
+        .fileImporter(isPresented: $isShowingVoiceImporter, allowedContentTypes: [.audio]) { result in
+            if case .success(let url) = result { store.attachVoice(url) }
         }
         .fileImporter(isPresented: $isShowingFolderImporter, allowedContentTypes: [.folder]) { result in
             if case .success(let url) = result { store.attachFolder(url) }
@@ -202,13 +210,31 @@ struct CommandComposer: View {
             guard !store.isGenerating else { return false }
             let folders = urls.filter { (try? $0.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true }
             folders.first.map(store.attachFolder)
-            let files = urls.filter { !folders.contains($0) }
+            let voices = urls.filter(WorkspaceStore.isVoiceFile)
+            voices.first.map(store.attachVoice)
+            let files = urls.filter { !folders.contains($0) && !voices.contains($0) }
             let documents = files.filter(DocumentReader.isDocument)
             let images = files.filter { !DocumentReader.isDocument($0) }
             if !documents.isEmpty { store.attachDocuments(documents) }
             if !images.isEmpty { store.importVisualFiles(images, source: .dragAndDrop) }
             return true
         }
+    }
+
+    /// The attached voice file: its name and length; the next video's mouth moves to it.
+    private func voiceChip(_ voice: AttachedVoice) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: "waveform")
+            Text(voice.name).font(.harness(.caption, weight: .medium)).lineLimit(1).truncationMode(.middle)
+            if let seconds = voice.seconds { Text("\(Int(seconds.rounded())) 秒").font(.harness(.caption2)).foregroundStyle(.secondary) }
+            Text("次の動画のセリフになります(口の動きを合わせます)").font(.harness(.caption2)).foregroundStyle(.secondary)
+            Button { store.removeVoice() } label: { Image(systemName: "xmark.circle.fill") }
+                .buttonStyle(.borderless)
+                .help("音声ファイルの添付をやめる")
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 8)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     /// Attached documents as small chips: name, what was read, and a remove button.
@@ -243,7 +269,7 @@ struct CommandComposer: View {
         Task {
             for (index, item) in items.enumerated() {
                 guard let data = try? await item.loadTransferable(type: Data.self) else { continue }
-                store.importVisualImageData(data, displayName: "写真 \(index + 1)", source: .photoLibrary)
+                store.importVisualImageData(data, displayName: "画像 \(index + 1)", source: .photoLibrary)
             }
         }
     }

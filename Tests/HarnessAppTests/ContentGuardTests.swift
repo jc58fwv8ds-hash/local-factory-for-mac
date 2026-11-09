@@ -35,7 +35,7 @@ struct ContentGuardTests {
 
     @Test func aSexualRemakeOfAnAttachedPhotoAsksForConsentOnce() {
         #expect(ContentGuard.check("この写真の人をヌードにして", attachesPhoto: true)
-            == .confirmConsent(reason: "読み込んだ写真を性的な内容に作り替える指示です。写真の人物が実在する場合、本人の同意がありますか？"))
+            == .confirmConsent(reason: "画像の人物が実在する場合は、本人の同意が必要です。"))
         #expect(ContentGuard.check("この写真を水彩画風にして", attachesPhoto: true) == .allow)
         #expect(ContentGuard.check("ヌードデッサンの説明", attachesPhoto: false) == .allow)
     }

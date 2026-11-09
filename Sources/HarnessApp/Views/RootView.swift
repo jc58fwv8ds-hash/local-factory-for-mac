@@ -34,6 +34,9 @@ struct RootView: View {
             } else if store.selectedSection == .dailyNews {
                 DailyNewsView()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if store.selectedSection == .training {
+                TrainingView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if store.selectedSection == .voices {
                 VoiceLibraryView(store: store)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -175,6 +178,14 @@ private struct SidebarView: View {
                     accessibilityID: "sidebar-output-folder",
                     isSelected: false
                 ) { store.openOutputFolder() }
+                if store.workspaceMode == .chat {
+                SidebarButton(
+                    title: "学習",
+                    systemImage: "square.stack.3d.up",
+                    accessibilityID: "sidebar-training",
+                    isSelected: store.selectedSection == .training
+                ) { store.selectedSection = .training }
+                }
                 SidebarButton(
                     title: "毎日のニュース",
                     systemImage: "play.rectangle",

@@ -1,3 +1,4 @@
+import AVFoundation
 import Foundation
 import HarnessCore
 
@@ -57,23 +58,44 @@ extension WorkspaceStore {
     /// A video longer than one clip: the prompt writer splits it into scenes, each made from where the one before ended
     /// with its own voice, and joined into one file (2026-11-08).
     func makeLongVideo(_ command: [String], scenes: Int, option: PurposeModelOption, prompt: String, instruction: String,
-                       output: URL, image: URL?, seed: Int, writer: ModelSelection?) async throws {
-        let withVoice = VoiceLine.wanted(instruction)
-        var reply = ""
-        if let writer {
-            let request = InferenceRequest(runtime: writer.runtime, modelIdentifier: writer.identifier, messages: [
-                InferenceMessage(role: .user, content: LongVideoPlan.writerRequest(instruction: instruction, videoPrompt: prompt,
-                                                                                    scenes: scenes, withVoice: withVoice))
-            ], maximumOutputTokens: 260 * scenes, temperature: 0)
+                       output: URL, image: URL?, seed: Int, writer: ModelSelection?, voice: URL? = nil) async throws {
+        // An attached voice file is the lines (spread over the scenes by long_video.py); none is written then.
+        let withVoice = voice == nil && VoiceLine.wanted(instruction)
+        // Up to a minute as one list of scenes; longer, first as chapters, then each chapter as its scenes (2026-11-08).
+        func ask(_ content: String, tokens: Int) async -> String {
+            guard let writer else { return "" }
+            let request = InferenceRequest(runtime: writer.runtime, modelIdentifier: writer.identifier,
+                                           messages: [InferenceMessage(role: .user, content: content)], maximumOutputTokens: tokens, temperature: 0)
+            var reply = ""
             do {
                 for try await piece in await inferenceProvider.events(for: request) { reply += piece }
             } catch { reply = "" }
+            return reply
+        }
+        var written: [LongVideoPlan.Scene] = []
+        if scenes <= LongVideoPlan.scenesPerChapter * 2 {
+            let reply = await ask(LongVideoPlan.writerRequest(instruction: instruction, videoPrompt: prompt, scenes: scenes, withVoice: withVoice),
+                                  tokens: 260 * scenes)
+            written = LongVideoPlan.parse(reply, scenes: scenes, fallback: prompt)
+        } else {
+            let count = (scenes + LongVideoPlan.scenesPerChapter - 1) / LongVideoPlan.scenesPerChapter
+            let chapters = LongVideoPlan.parseChapters(await ask(LongVideoPlan.chapterRequest(instruction: instruction, videoPrompt: prompt, chapters: count),
+                                                                 tokens: 120 * count), chapters: count, fallback: prompt)
+            for (index, chapter) in chapters.enumerated() {
+                guard !Task.isCancelled else { return }
+                let size = min(LongVideoPlan.scenesPerChapter, scenes - index * LongVideoPlan.scenesPerChapter)
+                let reply = await ask(LongVideoPlan.writerRequest(instruction: instruction + "\nThis part: " + chapter, videoPrompt: chapter,
+                                                                  scenes: size, withVoice: withVoice), tokens: 260 * size)
+                written += LongVideoPlan.parse(reply, scenes: size, fallback: chapter)
+            }
         }
         let hints = purposeSettings.catalog.motionHints(for: instruction)
-        let plan = LongVideoPlan.parse(reply, scenes: scenes, fallback: prompt).enumerated().map { index, scene -> LongVideoPlan.Scene in
+        let plan = written.enumerated().map { index, scene -> LongVideoPlan.Scene in
             var scene = scene
             if let first = hints.first, !scene.prompt.contains(first) {
-                scene.prompt = hints.joined(separator: " ") + " " + LongVideoPlan.intensity(scene: index, of: scenes) + " " + scene.prompt
+                // Rising within each chapter of a long video, over the whole of a short one.
+                let per = scenes > LongVideoPlan.scenesPerChapter * 2 ? LongVideoPlan.scenesPerChapter : scenes
+                scene.prompt = hints.joined(separator: " ") + " " + LongVideoPlan.intensity(scene: index % per, of: per) + " " + scene.prompt
             }
             scene.text = withVoice ? (VoiceLine.words(scene.text, instruction: instruction) ?? "") : ""
             return scene
@@ -86,6 +108,13 @@ extension WorkspaceStore {
         long.firstTry = nil
         long.timeLimit = Double(scenes) * 900
         try await imageGenerator.generate(option: long, prompt: prompt, output: output,
-                                          options: ImageGenerationOptions(seed: seed, seconds: LongVideoPlan.sceneSeconds, image: image, plan: file))
+                                          options: ImageGenerationOptions(seed: seed, seconds: LongVideoPlan.sceneSeconds, image: image, audio: voice, plan: file))
+    }
+
+    /// How long a sound file plays, in seconds.
+    nonisolated static func seconds(of file: URL) async -> Double? {
+        guard let duration = try? await AVURLAsset(url: file).load(.duration) else { return nil }
+        let value = duration.seconds
+        return value.isFinite && value > 0 ? value : nil
     }
 }

@@ -366,19 +366,39 @@ struct PictureCheckTests {
 struct LongVideoPlanTests {
     @Test func aLengthBeyondOneClipBecomesScenes() {
         #expect(LongVideoPlan.requestedSeconds(in: "1分の動画にして") == 60)
-        #expect(LongVideoPlan.requestedSeconds(in: "10分の動画") == 300)
+        #expect(LongVideoPlan.requestedSeconds(in: "10分の動画") == 600)
+        #expect(LongVideoPlan.requestedSeconds(in: "45分の動画") == 1800)
         #expect(LongVideoPlan.sceneCount(seconds: 60) == 20)
         #expect(LongVideoPlan.sceneCount(seconds: 10) == 3)
         #expect(LongVideoPlan.sceneCount(seconds: 3) == nil)
         #expect(LongVideoPlan.sceneCount(seconds: 30) == 10)
-        #expect(LongVideoPlan.intensity(scene: 0, of: 10).contains("slow") && LongVideoPlan.intensity(scene: 9, of: 10).contains("frantic"))
+        #expect(LongVideoPlan.intensity(scene: 0, of: 10).contains("slow") && LongVideoPlan.intensity(scene: 9, of: 10).contains("intense"))
+        // Stronger, not faster (2026-11-09: fast motion broke the hand up).
+        #expect(!(0..<10).contains { LongVideoPlan.intensity(scene: $0, of: 10).contains("fast") || LongVideoPlan.intensity(scene: $0, of: 10).contains("frantic") })
+        // Words and hand actions in separate scenes, so the talking is lip-synced and the action follows the skeleton.
+        let request = LongVideoPlan.writerRequest(instruction: "自慰しながら話して", videoPrompt: "", scenes: 4, withVoice: true)
+        #expect(request.contains("Keep words and hand actions in separate scenes"))
+        // Moans only go over a guided action; words make the clip speech-first.
+        #expect(VoiceLine.moansOnly("🥵あっ…んっ…🌬はぁ…") && VoiceLine.moansOnly("はぁ…はぁ…"))
+        #expect(!VoiceLine.moansOnly("もっと見て") && !VoiceLine.moansOnly("あっ、だめ…") && !VoiceLine.moansOnly("気持ちいい…"))
+        #expect(VoiceLine.fileSuffix(VoiceLine.moaning) == "-voice-moans.wav" && VoiceLine.fileSuffix("ねえ、見て") == "-voice.wav")
+        // A voice file made elsewhere is the lines (2026-11-09): sound files are taken, others are not; a long video gets
+        // it as --voice only when one is attached.
+        #expect(WorkspaceStore.isVoiceFile(URL(fileURLWithPath: "/tmp/a.MP3")) && WorkspaceStore.isVoiceFile(URL(fileURLWithPath: "/tmp/b.wav")))
+        #expect(!WorkspaceStore.isVoiceFile(URL(fileURLWithPath: "/tmp/c.png")))
+        let long = ["--plan", "{plan}", "--voice", "{audio}"][...]
+        let out = URL(fileURLWithPath: "/tmp/o.mp4"), plan = URL(fileURLWithPath: "/tmp/p.json")
+        #expect(ImageGenerationService.arguments(long, prompt: "p", output: out, plan: plan) == ["--plan", "/tmp/p.json"])
+        #expect(ImageGenerationService.arguments(long, prompt: "p", output: out, audio: URL(fileURLWithPath: "/tmp/v.m4a"), plan: plan)
+                == ["--plan", "/tmp/p.json", "--voice", "/tmp/v.m4a"])
     }
 
     @Test func theScenesComeFromTheWritersJSONAndTheRestIsFilled() {
-        let reply = #"Here: {"scenes": [{"prompt": "a", "text": "やあ", "caption": "声"}, {"prompt": "b"}]}"#
+        let reply = #"Here: {"scenes": [{"prompt": "a", "text": "やあ", "caption": "声"}, {"prompt": "b", "restart": true}]}"#
         let scenes = LongVideoPlan.parse(reply, scenes: 3, fallback: "whole")
         #expect(scenes.map(\.prompt) == ["a", "b", "whole"])
         #expect(scenes[0].text == "やあ" && scenes[1].text == "")
+        #expect(!scenes[0].restart && scenes[1].restart)
         #expect(LongVideoPlan.parse("no json", scenes: 2, fallback: "whole").map(\.prompt) == ["whole", "whole"])
     }
 }
@@ -392,5 +412,33 @@ struct LongVideoCommandTests {
         let bundled = PurposeModelCatalog.load(from: URL(fileURLWithPath: #filePath).deletingLastPathComponent()
             .deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("config/purpose-models.json"))
         if bundled.motionHints != nil { #expect(bundled.video?.contains { $0.longCommand?.contains("{plan}") == true } == true) }
+    }
+}
+
+struct LongVideoChapterTests {
+    @Test func aLongVideoIsWrittenAsChaptersFirst() {
+        #expect(LongVideoPlan.parseChapters(#"{"chapters": ["on the sofa", "by the window"]}"#, chapters: 3, fallback: "x")
+                == ["on the sofa", "by the window", "by the window"])
+        #expect(LongVideoPlan.parseChapters("none", chapters: 2, fallback: "x") == ["x", "x"])
+        #expect(LongVideoPlan.chapterRequest(instruction: "i", videoPrompt: "p", chapters: 4).contains("4 parts"))
+    }
+}
+
+struct TrainingMaterialsTests {
+    @Test func setsHoldCopiesOfPicturesAndVideosFromFilesAndFolders() throws {
+        let base = FileManager.default.temporaryDirectory.appendingPathComponent("training-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: base) }
+        let source = base.appendingPathComponent("source")
+        try FileManager.default.createDirectory(at: source.appendingPathComponent("inner"), withIntermediateDirectories: true)
+        for name in ["a.png", "inner/b.mp4", "notes.txt"] { try Data([1]).write(to: source.appendingPathComponent(name)) }
+        let materials = TrainingMaterials(root: base.appendingPathComponent("Training"))
+        let name = try materials.addSet(named: "浴衣")
+        #expect(try materials.addSet(named: "浴衣") == "浴衣 2")
+        #expect(try materials.add([source], to: name) == 2)
+        #expect(try materials.add([source.appendingPathComponent("a.png")], to: name) == 1)
+        let set = try #require(materials.sets().first { $0.name == "浴衣" })
+        #expect(set.pictures == 2 && set.videos == 1)
+        #expect(set.files.map(\.lastPathComponent).contains("a 2.png"))
+        #expect(FileManager.default.fileExists(atPath: source.appendingPathComponent("a.png").path))
     }
 }
