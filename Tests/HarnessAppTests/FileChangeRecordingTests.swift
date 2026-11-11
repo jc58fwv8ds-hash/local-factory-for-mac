@@ -6,6 +6,39 @@ import Testing
 
 @MainActor
 struct FileChangeRecordingTests {
+    /// 2026-11-11: after 「続けて」 fixed the project and it passed, the request's plan was dropped because the fix was saved.
+    @Test func aPlanStartsAfterASavedFixHasPassed() async throws {
+        let fixture = try Fixture()
+        defer { fixture.remove() }
+        let session = fixture.session(editor: RecordedProjectFileEditor(directory: fixture.runs), checkpoints: Checkpoints())
+        await session.select("Example.swift")
+        session.updateProposedContent("let value = 2")
+        await session.prepareReview()
+        #expect(await session.applyProposal() != nil)
+        let plan = ArtifactCreationPlan(instruction: "画面を足す", targets: [ArtifactCreationTarget(relativePath: "Screen.swift", instruction: "画面を作る")])
+        await session.startArtifactPlan(plan)
+        #expect(session.artifactPlan == nil)   // still being checked: held
+        session.validation.report = ProjectValidationReport(startedAt: .now, finishedAt: .now, checks: [ProjectValidationCheck(kind: .build, succeeded: true, exitCode: 0, output: "ok", outputWasTruncated: false, duration: 0)])
+        await session.startArtifactPlan(plan)
+        #expect(session.artifactPlan != nil && !session.isApplied)
+        #expect(session.isCreatingNewFile && session.newFileRelativePath == "Screen.swift")
+    }
+
+    /// 2026-11-11: a plan's file that already was as asked stopped the run; it is kept and the plan goes on, once.
+    @Test func aFileAlreadyAsAskedIsSkippedOnce() async throws {
+        let fixture = try Fixture()
+        defer { fixture.remove() }
+        let session = fixture.session(editor: RecordedProjectFileEditor(directory: fixture.runs), checkpoints: Checkpoints())
+        await session.loadFiles()
+        let plan = ArtifactCreationPlan(instruction: "続き", targets: [ArtifactCreationTarget(relativePath: "Example.swift", instruction: "そのまま"),
+                                                                  ArtifactCreationTarget(relativePath: "Screen.swift", instruction: "画面を作る")])
+        await session.startArtifactPlan(plan)
+        #expect(session.selectedPath == "Example.swift")
+        #expect(await session.skipToNextArtifactTarget())
+        #expect(session.newFileRelativePath == "Screen.swift")
+        #expect(await session.skipToNextArtifactTarget() == false)   // the last one: nothing comes back around
+    }
+
     @Test func preparingReviewDoesNotWriteAndApprovedApplyKeepsUndo() async throws {
         let fixture = try Fixture()
         defer { fixture.remove() }

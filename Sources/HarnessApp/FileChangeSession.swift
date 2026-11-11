@@ -233,7 +233,12 @@ final class FileChangeSession {
     }
 
     func startArtifactPlan(_ plan: ArtifactCreationPlan) async {
-        guard !isBusy, !isApplied, !plan.targets.isEmpty else { return }
+        // A saved fix whose check has finished does not hold the plan back (2026-11-11: after 「続けて」 fixed the project
+        // and it passed, the request's plan was dropped and the screen stayed at 「頼まれたことに進みます」).
+        guard !isBusy, !isLockedByAppliedChange, !plan.targets.isEmpty else { return }
+        isApplied = false
+        proposal = nil
+        appliedChange = nil
         repairProgress = nil
         artifactPlan = plan
         await prepareCurrentArtifactTarget()

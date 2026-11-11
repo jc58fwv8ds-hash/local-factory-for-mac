@@ -21,7 +21,9 @@ final class FileChangeAutopilot {
     private var afterPassing: (() -> Void)?
 
     func start(_ session: FileChangeSession) {
-        guard session.canAskAI else { return }
+        guard session.canAskAI else {
+            return finish("おまかせを始められませんでした(作るファイルか、作ってほしいことが決まっていません)。もう一度「続けて」と書いてください。")
+        }
         isOn = true
         repairRounds = 0
         retriedUnchanged = false
@@ -68,11 +70,27 @@ final class FileChangeAutopilot {
                 session.askAI()
                 return
             }
+            // A file of the plan that already is as asked: kept, and the plan goes on (2026-11-11: 14Translate's screen already
+            // had what 「続けて」 planned, and the run stopped at 「変更内容がありません」).
+            if session.errorMessage?.contains("変更内容がありません") == true, session.artifactPlan != nil, let path = session.selectedPath {
+                onReport?("\((path as NSString).lastPathComponent) はすでに頼まれた形になっていたので、そのままにしました。")
+                Task { await alreadyDone(session) }
+                return
+            }
             return finish("案を作れませんでした" + (session.errorMessage.map { "(\($0))" } ?? "") + "。")
         }
         retriedUnchanged = false
         status = "保存して確かめています…"
         apply()
+    }
+
+    private func alreadyDone(_ session: FileChangeSession) async {
+        guard await session.skipToNextArtifactTarget() else {
+            return finish("頼まれたことは、すでにできていました(ビルドとテストは通っています" + (savedFiles.isEmpty ? "" : "、保存 \(savedFiles.count) 件") + ")。")
+        }
+        retriedUnchanged = false
+        status = "次のファイル(\(session.selectedPath ?? session.newFileRelativePath))を作っています…"
+        session.askAI()
     }
 
     /// A file was saved: in a plan of several files the next one comes before any check.
@@ -99,6 +117,17 @@ final class FileChangeAutopilot {
         if report.succeeded, let empty = Self.emptyTests(savedFiles, root: session.rootPath).first {
             return finish("ビルドは通りましたが、\((empty as NSString).lastPathComponent) のテストが何も確かめていません。"
                 + "何を確かめてほしいか(例: 初めは止まっている、履歴は新しい順など)を書いて、もう一度頼んでください。")
+        }
+        // A model file the code names and the project lacks: passing does not make the app work (2026-11-11).
+        if report.succeeded, repairRounds < Self.maximumRepairRounds,
+           let missing = Optional(MissingResourceCheck.diagnostics(rootURL: URL(fileURLWithPath: session.rootPath))), let first = missing.first {
+            repairRounds += 1
+            status = "コードが読むファイルの名前を直しています(\(first.relativePath))…"
+            onReport?("ビルドは通りましたが、コードが読むファイルがプロジェクトにないので名前を直しています(\((first.relativePath as NSString).lastPathComponent))。")
+            await session.continueRepair(with: BuildRepairPlan(targets: [BuildRepairTarget(relativePath: first.relativePath,
+                diagnostics: missing.filter { $0.relativePath == first.relativePath })], unresolvedErrorCount: 0))
+            session.askAI()
+            return
         }
         if report.succeeded, let next = afterPassing {
             afterPassing = nil

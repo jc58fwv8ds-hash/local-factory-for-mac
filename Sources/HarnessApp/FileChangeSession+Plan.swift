@@ -13,6 +13,16 @@ extension FileChangeSession {
         await prepareCurrentArtifactTarget()
     }
 
+    /// The current file was already as asked and nothing was saved: on to the next one. False when it was the last.
+    func skipToNextArtifactTarget() async -> Bool {
+        if let current = artifactPlan?.currentTarget?.relativePath { artifactPlan?.markCompleted(relativePath: current) }
+        guard !isBusy, !isApplied, artifactPlan?.nextTarget != nil else { return false }
+        proposal = nil
+        _ = artifactPlan?.advance()
+        await prepareCurrentArtifactTarget()
+        return true
+    }
+
     func prepareCurrentArtifactTarget() async {
         guard let target = artifactPlan?.currentTarget else { return }
         isApplied = false
