@@ -51,7 +51,9 @@ public enum GeneratedMedia {
     /// `lastMade` is the kind of the conversation's last picture or video, if it has one: a change to it or a 「生成」 that
     /// refers back asks for the same kind (2026-11-08: after a picture, 「この人物を全裸にして」 and 「さっきの条件で生成」
     /// reached the chat model, which answered that it cannot make files).
-    public static func requestedKind(_ text: String, lastMade: Kind? = nil) -> Kind? {
+    /// `justMade`: the conversation's last message is that picture or video. Then a plain change to it (「腕を組ませて」,
+    /// 「顔も写るように引いて」) asks for the same kind too (2026-11-11: it reached the chat model, which only described it).
+    public static func requestedKind(_ text: String, lastMade: Kind? = nil, justMade: Bool = false) -> Kind? {
         let asking = ["教えて", "とは", "方法", "作り方", "どうやって", "できますか", "？", "?"]
         guard !asking.contains(where: text.contains) else { return nil }
         let making = ["生成", "作って", "作成", "にして", "出して", "描いて", "撮って", "作り直", "変えて", "させて"]
@@ -59,10 +61,18 @@ public enum GeneratedMedia {
         if (["動画", "ムービー"].contains(where: text.contains) && makes)
             || ["画像を動かして", "写真を動かして", "絵を動かして", "これを動かして"].contains(where: text.contains) { return .video }
         if ["画像", "写真", "イラスト", "絵を"].contains(where: text.contains) && makes { return .image }
+        if justMade, let lastMade, isChange(text) { return lastMade }
         guard makes, let lastMade else { return nil }
         if pointsAtLastImage(text) { return .image }
         if ["生成", "作り直", "もう一度", "さっきの", "同じ条件"].contains(where: text.contains) { return lastMade }
         return nil
+    }
+
+    /// A request to change something (ending in 「〜て」), not a writing task such as 「まとめて」 or 「翻訳して」.
+    static func isChange(_ text: String) -> Bool {
+        let body = text.trimmingCharacters(in: CharacterSet(charactersIn: " 　。！!、").union(.whitespacesAndNewlines))
+        let writing = ["まとめて", "教えて", "説明して", "翻訳して", "要約して", "書いて", "調べて", "答えて", "話して", "読んで", "考えて"]
+        return (body.hasSuffix("て") || body.hasSuffix("ください")) && !writing.contains(where: body.contains)
     }
 
     /// 「この画像を動かして」: the video starts from the last picture without attaching it again.

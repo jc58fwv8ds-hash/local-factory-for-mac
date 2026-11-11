@@ -56,6 +56,7 @@ extension FileChangeSession {
                 for try await delta in events {
                     try Task.checkCancellation()
                     response += delta
+                    if DegenerateOutput.isRunaway(response) { throw DegenerateOutput.Failure.runaway }
                 }
                 try Task.checkCancellation()
                 let content = try FileEditResponseParser.proposedContent(from: response)

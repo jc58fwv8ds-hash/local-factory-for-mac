@@ -17,6 +17,9 @@ enum AppleAppStarterFiles {
             "\(product)/RemoteProtocol.swift": remoteProtocol,
             "\(product)/RemoteSession.swift": remoteSession,
             "\(product)/Info.plist": infoPlist(displayName),
+            // A place for the app's icon from the start (2026-11-10); 「アイコンを設定」 fills it.
+            "\(product)/Assets.xcassets/Contents.json": AppleAppIcon.catalogContents,
+            "\(product)/Assets.xcassets/AppIcon.appiconset/Contents.json": AppleAppIcon.iconSetContents(filename: nil),
             "\(product)Tests/RemoteProtocolTests.swift": tests(product),
             "README.md": readme(product)
         ]

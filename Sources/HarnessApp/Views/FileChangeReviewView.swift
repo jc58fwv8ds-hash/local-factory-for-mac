@@ -6,6 +6,9 @@ struct FileChangeReviewView: View {
     @State private var session: FileChangeSession
     @State private var artifactPlanner: ArtifactPlanSession
     @State private var isConfirmingApply = false
+    @State private var autopilotRequested = false
+    private let startsAutopilotPlan: Bool
+    private let initialInstruction: String
     @State private var isShowingArtifactPlanner = false
     let onApplied: (AppliedFileChange) -> Void
     let onReverted: (AppliedFileChange) -> Void
@@ -33,6 +36,8 @@ struct FileChangeReviewView: View {
         repairPlan: BuildRepairPlan? = nil,
         currentRepairTargetID: String? = nil,
         artifactPlan: ArtifactCreationPlan? = nil,
+        startsAutopilotPlan: Bool = false,
+        onAutopilotReport: ((String) -> Void)? = nil,
         onApplied: @escaping (AppliedFileChange) -> Void,
         onReverted: @escaping (AppliedFileChange) -> Void,
         onValidationStarted: @escaping @MainActor () -> Void,
@@ -50,7 +55,7 @@ struct FileChangeReviewView: View {
         onGenerationEvent: @escaping (FileEditGenerationEvent) -> Void,
         onPlanGenerationEvent: @escaping (ArtifactPlanGenerationEvent) -> Void
     ) {
-        _session = State(initialValue: FileChangeSession(
+        let newSession = FileChangeSession(
             rootPath: rootPath,
             model: model,
             editor: editor,
@@ -64,7 +69,9 @@ struct FileChangeReviewView: View {
             artifactPlan: artifactPlan,
             orchestrator: OrchestratedRunSettings().service,
             onGenerationEvent: onGenerationEvent
-        ))
+        )
+        newSession.autopilot.onReport = onAutopilotReport
+        _session = State(initialValue: newSession)
         _artifactPlanner = State(initialValue: ArtifactPlanSession(
             rootPath: rootPath,
             model: model,
@@ -73,6 +80,8 @@ struct FileChangeReviewView: View {
             onGenerationEvent: onPlanGenerationEvent
         ))
         self.onApplied = onApplied
+        self.startsAutopilotPlan = startsAutopilotPlan
+        self.initialInstruction = initialInstruction
         self.onReverted = onReverted
         self.onValidationStarted = onValidationStarted
         self.onValidation = onValidation
@@ -103,7 +112,9 @@ struct FileChangeReviewView: View {
                     ArtifactPlanComposer(
                         planner: artifactPlanner,
                         existingPaths: session.files.map(\.relativePath),
-                        onStart: startArtifactPlan
+                        onStart: { startArtifactPlan($0) },
+                        onStartAutopilot: { startArtifactPlan($0, autopilot: true) },
+                        autopilotRequested: $autopilotRequested
                     )
                 } else {
                     FileChangeWorkspacePanel(
@@ -128,10 +139,32 @@ struct FileChangeReviewView: View {
             }
         }
         .frame(minWidth: 920, minHeight: 680)
-        .task { if session.files.isEmpty { await session.loadFiles() } }
+        .task {
+            if session.files.isEmpty { await session.loadFiles() }
+            if startsAutopilotPlan, !autopilotRequested, artifactPlanner.plan == nil {
+                autopilotRequested = true
+                // The project as it is first; the request's plan once it builds and passes (2026-11-10).
+                session.autopilot.checkFirst(session, onComplete: onValidation) {
+                    isShowingArtifactPlanner = true
+                    artifactPlanner.instruction = initialInstruction
+                    autopilotRequested = true
+                    artifactPlanner.generate(existingPaths: session.files.map(\.relativePath))
+                }
+            }
+        }
         .onDisappear {
             session.stopAll()
             artifactPlanner.stop()
+        }
+        // 「おまかせで作る」 drives the same steps the buttons do (2026-11-10).
+        .onChange(of: session.isGenerating) { wasGenerating, isGenerating in
+            if wasGenerating && !isGenerating { session.autopilot.generationFinished(session, apply: applyProposal) }
+        }
+        .onChange(of: session.isApplied) { _, isApplied in
+            if isApplied { session.autopilot.applied(session) }
+        }
+        .onChange(of: session.validation.isRunning) { wasRunning, isRunning in
+            if wasRunning && !isRunning { Task { await session.autopilot.validationFinished(session) } }
         }
         .confirmationDialog(
             "この差分を保存しますか？",
@@ -166,10 +199,17 @@ struct FileChangeReviewView: View {
         .padding(16)
     }
 
-    private func startArtifactPlan(_ plan: ArtifactCreationPlan) {
-        session.startArtifactPlan(plan)
-        onArtifactPlanStarted(plan)
+    private func startArtifactPlan(_ plan: ArtifactCreationPlan, autopilot: Bool = false) {
         isShowingArtifactPlanner = false
+        Task {
+            await session.startArtifactPlan(plan)
+            onArtifactPlanStarted(plan)
+            if autopilot {
+                let names = plan.targets.map { ($0.relativePath as NSString).lastPathComponent }
+                session.autopilot.onReport?("計画を立てました。\(names.count) つのファイルを作ったり直したりします: " + names.joined(separator: "、"))
+                session.autopilot.start(session)
+            }
+        }
     }
 
     private func applyProposal() {

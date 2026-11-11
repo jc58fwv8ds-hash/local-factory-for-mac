@@ -6,6 +6,14 @@ enum SourceFilePolicy {
         "vendor", "xcuserdata", "coverage", ".git"
     ]
 
+    /// Prebuilt parts added to an app (2026-11-10: llama.xcframework's headers filled the file list of 14Translate).
+    static let prebuiltDirectorySuffixes = [".xcframework", ".framework", ".bundle", ".xcassets"]
+
+    static func isExcludedDirectory(_ name: String) -> Bool {
+        let lowered = name.lowercased()
+        return excludedDirectoryNames.contains(lowered) || prebuiltDirectorySuffixes.contains(where: lowered.hasSuffix)
+    }
+
     static let preferredFileNames: Set<String> = [
         "readme", "readme.md", "package.swift", "package.json", "pyproject.toml",
         "requirements.txt", "cargo.toml", "go.mod", "project.yml", "project.yaml"
@@ -14,7 +22,9 @@ enum SourceFilePolicy {
     static let allowedExtensions: Set<String> = [
         "swift", "m", "mm", "h", "c", "cc", "cpp", "cs", "java", "kt", "kts",
         "js", "jsx", "ts", "tsx", "py", "rb", "rs", "go", "php", "html", "css",
-        "scss", "sql", "sh", "zsh", "md", "toml", "yaml", "yml", "json"
+        "scss", "sql", "sh", "zsh", "md", "toml", "yaml", "yml", "json",
+        // An iPhone app's settings and permissions (2026-11-10: Info.plist could not be edited for the microphone).
+        "plist", "entitlements", "strings"
     ]
 
     static func isAllowedFile(_ url: URL) -> Bool {

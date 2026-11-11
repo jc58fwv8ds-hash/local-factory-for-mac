@@ -47,9 +47,18 @@ actor BackburnerServer {
 
     func ensureRunning(model: String? = nil) async throws {
         if await isHealthy() {
-            // A server the user started is used as it is; this App's own server is restarted for another model.
-            if process == nil || model == currentModel { return }
-            stop()
+            if process != nil, model == currentModel { return }
+            // A server this App did not start (one from Terminal, or one an earlier run of this App left behind) is used as
+            // it is only when it serves the model asked for (2026-11-11: after the App was reinstalled, the writer's 9B with its
+            // image encoder was sent to a leftover 27B without one; every request failed with 「image input is not supported」
+            // and the picture prompts went out untranslated).
+            if process == nil {
+                let served = await servedModelPath()
+                if served == nil || model == nil ? true : served == model { return }
+                Self.stopLeftoverServer()
+            } else {
+                stop()
+            }
             for _ in 0..<30 where await isHealthy() { try await Task.sleep(for: .seconds(1)) }
         }
         if let starting { return try await starting.value }
@@ -57,6 +66,22 @@ actor BackburnerServer {
         starting = task
         defer { starting = nil }
         try await task.value
+    }
+
+    /// The model file the server on 8080 serves (llama-server's /props), nil when it cannot say.
+    func servedModelPath() async -> String? {
+        var request = URLRequest(url: URL(string: "http://127.0.0.1:8080/props")!)
+        request.timeoutInterval = 3
+        guard let (data, _) = try? await URLSession.shared.data(for: request),
+              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
+        return object["model_path"] as? String
+    }
+
+    /// A Backburner left serving another model: its serve.sh, proxy and llama-server, and nothing else.
+    static func stopLeftoverServer() {
+        for pattern in ["backburner/scripts/serve.sh", "scripts/proxy.py", "backburner/llama.cpp/build-metal/bin/llama-server"] {
+            _ = run("/usr/bin/pkill", ["-f", pattern])
+        }
     }
 
     /// Stops only a server this App started; a server the user launched in Terminal is left alone.

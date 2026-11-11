@@ -69,7 +69,10 @@ struct LocalAppleAppInstaller: Sendable {
         guard observation.isReady(for: device.deviceIdentifier) else {
             throw DevicePreparationError.notReady(observation)
         }
-        try validateReadiness(configuration: current)
+        let team = current.hasDevelopmentTeam ? nil : SigningTeamDetector.team()
+        try validateReadiness(configuration: current, automaticTeam: team)
+        // A profile with days left would be reused and keep its date: an install renews it (2026-11-11).
+        if let bundle = current.bundleIdentifier { ProvisioningProfileRenewal.retireExpiring(bundleIdentifier: bundle) }
 
         await onStage(.building)
         let build = try await run(
@@ -78,7 +81,7 @@ struct LocalAppleAppInstaller: Sendable {
                 configuration: current,
                 device: device,
                 derivedDataURL: derivedDataURL
-            ),
+            ) + (team.map { ["DEVELOPMENT_TEAM=\($0)"] } ?? []),
             rootURL: rootURL,
             environment: environment
         )
@@ -151,12 +154,13 @@ struct LocalAppleAppInstaller: Sendable {
     }
 
     private func validateReadiness(
-        configuration: AppleAppBuildConfiguration
+        configuration: AppleAppBuildConfiguration,
+        automaticTeam: String? = nil
     ) throws {
         guard configuration.signingStyle == .automatic else {
             throw AppleAppLibraryError.automaticSigningRequired
         }
-        guard configuration.hasDevelopmentTeam else {
+        guard configuration.hasDevelopmentTeam || automaticTeam != nil else {
             throw AppleAppLibraryError.developmentTeamRequired
         }
         guard configuration.hasUsableBundleIdentifier else {

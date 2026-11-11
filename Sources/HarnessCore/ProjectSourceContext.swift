@@ -124,7 +124,7 @@ public actor ProjectSourceContextCollector: ProjectSourceContextProviding {
             }
 
             if values.isDirectory == true {
-                if SourceFilePolicy.excludedDirectoryNames.contains(name) {
+                if SourceFilePolicy.isExcludedDirectory(name) {
                     enumerator.skipDescendants()
                 }
                 continue

@@ -172,6 +172,8 @@ struct CommandComposer: View {
 
                 Spacer(minLength: 0)
 
+                ComposerAutopilotButton(store: store)
+
                 Button {
                     if store.isGenerating {
                         store.stopGeneration()

@@ -24,7 +24,7 @@ struct FileChangeFileList: View {
             .buttonStyle(.bordered)
             .controlSize(.small)
             .padding(.horizontal, 10)
-            .disabled(session.isBusy || session.isApplied || session.artifactPlan != nil)
+            .disabled(session.isBusy || session.isLockedByAppliedChange || session.artifactPlan != nil)
             .accessibilityIdentifier(HarnessAccessibilityID.sourceNewFile)
 
             Button(action: onBeginArtifactPlan) {
@@ -34,7 +34,7 @@ struct FileChangeFileList: View {
             .buttonStyle(.bordered)
             .controlSize(.small)
             .padding(.horizontal, 10)
-            .disabled(session.isBusy || session.isApplied || session.artifactPlan != nil)
+            .disabled(session.isBusy || session.isLockedByAppliedChange || session.artifactPlan != nil)
             .accessibilityIdentifier(HarnessAccessibilityID.sourceArtifactPlan)
 
             if session.isLoading && session.files.isEmpty {
@@ -103,6 +103,6 @@ struct FileChangeFileList: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .disabled(session.isBusy || session.isApplied || session.artifactPlan != nil)
+        .disabled(session.isBusy || session.isLockedByAppliedChange || session.artifactPlan != nil)
     }
 }

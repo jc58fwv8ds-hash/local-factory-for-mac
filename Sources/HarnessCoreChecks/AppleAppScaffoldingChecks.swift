@@ -19,7 +19,9 @@ enum AppleAppScaffoldingChecks {
         let result = try scaffolder.create(request)
 
         try expect(
-            result.createdRelativePaths.count == 10
+            // 10 template files and, since 2026-11-10, the asset catalog with its app icon set (2 more).
+            result.createdRelativePaths.count == 12
+                && result.createdRelativePaths.contains("HarnessRemote/Assets.xcassets/AppIcon.appiconset/Contents.json")
                 && FileManager.default.fileExists(
                     atPath: URL(fileURLWithPath: result.projectPath)
                         .appendingPathComponent("project.pbxproj").path

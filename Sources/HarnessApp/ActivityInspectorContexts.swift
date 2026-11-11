@@ -11,6 +11,8 @@ struct FileEditContext: Identifiable {
     let repairPlan: BuildRepairPlan?
     let currentRepairTargetID: String?
     let artifactPlan: ArtifactCreationPlan?
+    /// Plan the files from the instruction and build them 「おまかせ」 as soon as the sheet opens.
+    var startsAutopilotPlan = false
 }
 
 struct ValidationContext: Identifiable {

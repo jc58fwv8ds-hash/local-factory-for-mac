@@ -98,6 +98,16 @@ public enum BuildFailureAnalyzer {
             }
         }
 
+        // A type declared twice: the newest declaring file is the one to change (2026-11-10).
+        diagnostics = RedeclarationRetarget.retarget(diagnostics, rootURL: rootURL)
+        // A member another file needs and the type lacks: the type's file gets it (2026-11-11).
+        diagnostics = MissingMemberRetarget.retarget(diagnostics, rootURL: rootURL)
+        // No compile errors but failed tests: the tested files become the repair (2026-11-10).
+        if diagnostics.isEmpty {
+            for check in failedChecks where check.kind == .test || check.kind == .xcodeTest {
+                diagnostics += TestFailureAnalyzer.diagnostics(output: check.output, rootURL: rootURL, kind: check.kind)
+            }
+        }
         return BuildFailureAnalysis(
             diagnostics: diagnostics,
             unresolvedErrorCount: unresolvedErrorCount,

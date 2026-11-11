@@ -123,6 +123,14 @@ public struct PurposeModelCatalog: Codable, Equatable, Sendable {
         return options(for: purpose).first { $0.id == id }
     }
 
+    /// `option`, or, when it keeps a person from a picture (its command takes {image}) and there is no picture, the first
+    /// picture model that does not need one (2026-11-11: 「人物を保って作る」, left chosen from an earlier chat, failed in a
+    /// new chat with "At least one init image is required").
+    public func pictureModel(_ option: PurposeModelOption, hasPicture: Bool) -> PurposeModelOption {
+        guard !hasPicture, option.command?.contains("{image}") == true else { return option }
+        return image.first { $0.command?.contains("{image}") != true } ?? option
+    }
+
     /// The model for a role ("large" or "checker") in a flow where `chosen` was picked, if the catalog aligns roles.
     public func roleModel(_ role: String, chosen: PurposeModelOption) -> ModelSelection? {
         guard let id = roles?[role], let option = writing.first(where: { $0.id == id }) else { return chosen.selection }

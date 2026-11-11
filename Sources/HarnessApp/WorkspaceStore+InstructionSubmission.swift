@@ -19,6 +19,8 @@ extension WorkspaceStore {
             attachedFolder = nil
             return
         }
+        // コード: a request is built 「おまかせ」, its progress written back here (2026-11-10).
+        if submitCodeAutopilot() { return }
         if PrimaryInstructionIntentRouter.route(instruction) == .computerOperation {
             if handoffPrimaryInstructionToComputerOperator(instruction) {
                 instruction = ""

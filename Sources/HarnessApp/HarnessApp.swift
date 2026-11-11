@@ -28,11 +28,15 @@ struct HarnessApp: App {
                     if !expiring.isEmpty {
                         store.presentNotice(expiring.compactMap { $0.expiryNote().map { "\($0)" } }
                             .enumerated().map { "\(expiring[$0.offset].appName)(\($0.element))" }.joined(separator: "、")
-                            + "。作成アプリの画面から入れ直してください。", kind: .information)
+                            + "。端末がつながっていれば自動で入れ直します(つながっていなければ、つないだあとに入れ直します)。", kind: .information)
                     }
-                    // Booked instructions (#43): checked once a minute while the app is open.
+                    // Booked instructions (#43): checked once a minute while the app is open. Signatures that run out within a day
+                    // are renewed at launch and then every hour (2026-11-11).
+                    var minutes = 0
                     while !Task.isCancelled {
                         store.runDueScheduledInstructions()
+                        if minutes % 60 == 0 { Task { await store.renewExpiringSignatures() } }
+                        minutes += 1
                         try? await Task.sleep(for: .seconds(60))
                     }
                 }

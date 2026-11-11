@@ -4,7 +4,8 @@ public enum PhysicalDeviceReadinessEvaluator {
     public static func evaluate(
         device: PhysicalAppleDevice,
         project: PhysicalDeviceProjectConfiguration,
-        preparation: DevicePreparationSnapshot? = nil
+        preparation: DevicePreparationSnapshot? = nil,
+        automaticTeamAvailable: Bool = false
     ) -> PhysicalDeviceReadiness {
         var requirements: [PhysicalDeviceSetupRequirement] = []
         // Legacy inventory booleans cannot establish current device readiness.
@@ -13,7 +14,7 @@ public enum PhysicalDeviceReadinessEvaluator {
         }
         if !project.isIOSApplication { requirements.append(.selectIOSApplication) }
         if project.signingStyle != .automatic { requirements.append(.selectAutomaticSigning) }
-        if !project.hasDevelopmentTeam { requirements.append(.selectDevelopmentTeam) }
+        if !project.hasDevelopmentTeam && !automaticTeamAvailable { requirements.append(.selectDevelopmentTeam) }
         if !project.hasUsableBundleIdentifier { requirements.append(.configureBundleIdentifier) }
         return PhysicalDeviceReadiness(
             device: device,

@@ -26,22 +26,28 @@ struct FileChangeWorkspacePanel: View {
                 aiComposer
                 modePicker
                 editorOrDiff
-                FileChangeValidationPanel(
-                    validation: session.validation,
-                    isEnabled: Binding(
-                        get: { session.shouldValidateAfterApply },
-                        set: { session.shouldValidateAfterApply = $0 }
-                    ),
-                    isApplied: session.isApplied,
-                    requiresFinalPlanValidation: session.artifactPlan != nil,
-                    onRetry: retryValidation,
-                    replanModel: replanModel,
-                    replanInference: replanInference,
-                    replanProject: replanProject,
-                    onApplyReplan: onApplyReplan,
-                    reviewMode: reviewMode,
-                    onRequestExternalReview: onRequestExternalReview
-                )
+                // Scrolls inside the sheet so a long failure report cannot push 「完了」 out of the window (2026-11-10).
+                ScrollView {
+                    FileChangeValidationPanel(
+                        validation: session.validation,
+                        isEnabled: Binding(
+                            get: { session.shouldValidateAfterApply },
+                            set: { session.shouldValidateAfterApply = $0 }
+                        ),
+                        isApplied: session.isApplied,
+                        requiresFinalPlanValidation: session.artifactPlan != nil,
+                        onRetry: retryValidation,
+                        replanModel: replanModel,
+                        replanInference: replanInference,
+                        replanProject: replanProject,
+                        onApplyReplan: onApplyReplan,
+                        reviewMode: reviewMode,
+                        onRequestExternalReview: onRequestExternalReview,
+                        onContinueRepair: { plan in Task { await session.continueRepair(with: plan) } }
+                    )
+                }
+                .frame(maxHeight: 300)
+                .fixedSize(horizontal: false, vertical: true)
                 if let error = session.errorMessage { errorBanner(error) }
                 if let run = session.orchestratedOutcome { orchestratedSummary(run) }
                 footer
@@ -126,26 +132,57 @@ struct FileChangeWorkspacePanel: View {
     }
 
     private var aiComposer: some View {
-        HStack(spacing: 9) {
-            TextField(
-                "例：エラー処理を追加して",
-                text: $session.aiInstruction,
-                axis: .vertical
-            )
-            .lineLimit(1...4)
-            .textFieldStyle(.roundedBorder)
-            .disabled(session.isBusy || session.isApplied)
-            Button {
-                session.isGenerating ? session.stopAI() : session.askAI()
-            } label: {
-                Label(
-                    session.isGenerating ? "停止" : "AIで変更案を作成",
-                    systemImage: session.isGenerating ? "stop.fill" : "sparkles"
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 9) {
+                TextField(
+                    "作りたいもの・直したいことを書きます(例:エラー処理を追加して)",
+                    text: $session.aiInstruction,
+                    axis: .vertical
                 )
+                .lineLimit(1...6)
+                .textFieldStyle(.roundedBorder)
+                .disabled(session.isBusy || session.isApplied || session.autopilot.isOn)
+                // Clears the last instruction in one press (2026-11-10).
+                if !session.aiInstruction.isEmpty && !session.isBusy && !session.autopilot.isOn {
+                    Button { session.aiInstruction = "" } label: { Image(systemName: "xmark.circle.fill") }
+                        .buttonStyle(.plain).foregroundStyle(.secondary).help("指示を消す")
+                        .accessibilityLabel("指示を消す")
+                        .accessibilityIdentifier(HarnessAccessibilityID.fileChangeClearInstruction)
+                }
+                if session.autopilot.isOn {
+                    Button("止める", systemImage: "stop.fill") { session.autopilot.stop(session) }
+                        .buttonStyle(.bordered)
+                } else {
+                    Button {
+                        session.autopilot.start(session)
+                    } label: {
+                        Label("おまかせで作る", systemImage: "wand.and.stars")
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(!session.canAskAI)
+                    .help("案を作り、保存し、ビルドとテストで確かめ、失敗したら直す(最大\(FileChangeAutopilot.maximumRepairRounds)回)までを自動で行います。保存のたびに戻せる地点を残します。")
+                    .accessibilityIdentifier(HarnessAccessibilityID.fileChangeAutopilot)
+                    Button {
+                        session.isGenerating ? session.stopAI() : session.askAI()
+                    } label: {
+                        Label(
+                            session.isGenerating ? "停止" : "案だけ作る",
+                            systemImage: session.isGenerating ? "stop.fill" : "sparkles"
+                        )
+                    }
+                    .buttonStyle(.bordered)
+                    .disabled(!session.isGenerating && !session.canAskAI)
+                    .help(session.model == nil ? "先にAIモデルを選択してください" : "選択中のローカルAIで案を作り、保存は自分で確かめてから行います")
+                }
             }
-            .buttonStyle(.bordered)
-            .disabled(!session.isGenerating && !session.canAskAI)
-            .help(session.model == nil ? "先にAIモデルを選択してください" : "選択中のローカルAIを使用")
+            if let status = session.autopilot.status {
+                HStack(spacing: 7) {
+                    if session.autopilot.isOn { ProgressView().controlSize(.small) }
+                    Text(status).font(.harness(.caption, weight: .medium))
+                }
+                .foregroundStyle(session.autopilot.isOn ? Color.accentColor : .secondary)
+                .accessibilityIdentifier(HarnessAccessibilityID.fileChangeAutopilotStatus)
+            }
         }
     }
 

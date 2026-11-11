@@ -301,6 +301,12 @@ struct FollowUpRoutingTests {
         #expect(GeneratedMedia.requestedKind("この人物を全裸にして") == nil)
         #expect(GeneratedMedia.requestedKind("この人物について教えて", lastMade: .image) == nil)
         #expect(GeneratedMedia.requestedKind("今日の予定をまとめて", lastMade: .image) == nil)
+        #expect(GeneratedMedia.requestedKind("顔も写るように引いて、腕を組ませて", lastMade: .image, justMade: true) == .image)
+        #expect(GeneratedMedia.requestedKind("腕を１本に戻して。", lastMade: .video, justMade: true) == .video)
+        #expect(GeneratedMedia.requestedKind("腕を組ませて", lastMade: .image) == nil)
+        #expect(GeneratedMedia.requestedKind("今日の予定をまとめて", lastMade: .image, justMade: true) == nil)
+        #expect(GeneratedMedia.requestedKind("どう思う？", lastMade: .image, justMade: true) == nil)
+        #expect(GeneratedMedia.requestedKind("ありがとう", lastMade: .image, justMade: true) == nil)
     }
 
     @Test func theLastMadeKindComesFromTheNotes() {

@@ -7,7 +7,10 @@ struct NewProjectView: View {
 
     @State private var draft = ProjectDraft()
     @State private var createsIPhoneApp = false
-    @State private var productName = "HarnessRemote"
+    @State private var productName = ""
+    /// Follows the project name until the user types their own (2026-11-10).
+    @State private var productNameEdited = false
+    @State private var choosesFolder = false
     @State private var organizationIdentifier = "local.harness"
 
     var body: some View {
@@ -29,11 +32,18 @@ struct NewProjectView: View {
 
             if createsIPhoneApp {
                 HStack(spacing: 12) {
-                    TextField("製品名（英数字）", text: $productName)
+                    TextField("製品名（英数字）", text: Binding(get: { productName },
+                                                            set: { productName = $0; productNameEdited = true }))
+                        .accessibilityLabel("製品名")
+                        .accessibilityIdentifier(HarnessAccessibilityID.newProjectProductName)
                     TextField("組織ID", text: $organizationIdentifier)
+                        .accessibilityLabel("組織ID")
                 }
                 .textFieldStyle(.roundedBorder)
-                Text("作成時に保存先フォルダを選びます。同名の項目は上書きしません。")
+                Toggle("保存先のフォルダを自分で選ぶ", isOn: $choosesFolder)
+                    .font(.harness(.caption))
+                Text(choosesFolder ? "作成時に保存先フォルダを選びます。同名の項目は上書きしません。"
+                     : "Local Factory のプロジェクト用フォルダに作ります。同名の項目は上書きしません。")
                     .font(.harness(.caption))
                     .foregroundStyle(.secondary)
             }
@@ -44,11 +54,12 @@ struct NewProjectView: View {
                     .keyboardShortcut(.cancelAction)
                 Button("作成") {
                     if createsIPhoneApp {
-                        if store.createIPhoneAppProjectChoosingDestination(
-                            from: draft,
-                            productName: productName,
-                            organizationIdentifier: organizationIdentifier
-                        ) {
+                        let created = choosesFolder
+                            ? store.createIPhoneAppProjectChoosingDestination(
+                                from: draft, productName: productName, organizationIdentifier: organizationIdentifier)
+                            : store.createIPhoneAppProjectInManagedFolder(
+                                from: draft, productName: productName, organizationIdentifier: organizationIdentifier)
+                        if created {
                             dismiss()
                         }
                     } else if store.createProject(from: draft) {
@@ -66,7 +77,10 @@ struct NewProjectView: View {
                 .accessibilityIdentifier(HarnessAccessibilityID.newProjectCreate)
             }
         }
+        .onChange(of: draft.name, initial: true) { _, name in
+            if !productNameEdited { productName = AppleAppProductName.suggested(from: name) }
+        }
         .padding(26)
-        .frame(width: 610, height: createsIPhoneApp ? 570 : 500)
+        .frame(width: 610, height: createsIPhoneApp ? 600 : 500)
     }
 }

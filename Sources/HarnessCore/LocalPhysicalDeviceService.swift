@@ -34,7 +34,8 @@ public struct LocalPhysicalDeviceService: PhysicalDeviceProviding, Sendable {
         return PhysicalDeviceReadinessEvaluator.evaluate(
             device: device,
             project: prepared.configuration,
-            preparation: observation
+            preparation: observation,
+            automaticTeamAvailable: automaticTeam(for: prepared.configuration) != nil
         )
     }
 
@@ -58,22 +59,27 @@ public struct LocalPhysicalDeviceService: PhysicalDeviceProviding, Sendable {
         guard observation.isReady(for: device.deviceIdentifier) else {
             throw DevicePreparationError.notReady(observation)
         }
+        let team = automaticTeam(for: prepared.configuration)
         let readiness = PhysicalDeviceReadinessEvaluator.evaluate(
             device: device,
             project: prepared.configuration,
-            preparation: observation
+            preparation: observation,
+            automaticTeamAvailable: team != nil
         )
         if let requirement = readiness.requirements.first {
             throw PhysicalDeviceServiceError.notReady(requirement)
         }
 
+        // Renew a free profile with days left instead of reusing it (2026-11-11).
+        if let bundle = prepared.configuration.bundleIdentifier { ProvisioningProfileRenewal.retireExpiring(bundleIdentifier: bundle) }
         await onStage(.building)
         let buildResult = try await run(
             arguments: signedBuildArguments(
                 container: prepared.container,
                 scheme: prepared.configuration.scheme,
                 destinationIdentifier: device.destinationIdentifier,
-                derivedDataURL: derivedDataURL
+                derivedDataURL: derivedDataURL,
+                team: team
             ),
             currentDirectoryURL: prepared.rootURL,
             environment: prepared.environment
@@ -225,9 +231,12 @@ public struct LocalPhysicalDeviceService: PhysicalDeviceProviding, Sendable {
         container: XcodeProjectContainer,
         scheme: String,
         destinationIdentifier: String,
-        derivedDataURL: URL
+        derivedDataURL: URL,
+        team: String? = nil
     ) -> [String] {
-        ["xcodebuild"] + container.selectorArguments + [
+        // The Mac's own team when the project names none, for this build only (2026-11-10).
+        let teamSetting = team.map { ["DEVELOPMENT_TEAM=\($0)"] } ?? []
+        return ["xcodebuild"] + container.selectorArguments + teamSetting + [
             "-scheme", scheme,
             "-configuration", "Debug",
             "-sdk", "iphoneos",
@@ -241,9 +250,12 @@ public struct LocalPhysicalDeviceService: PhysicalDeviceProviding, Sendable {
         container: XcodeProjectContainer,
         scheme: String,
         destinationIdentifier: String,
-        derivedDataURL: URL
+        derivedDataURL: URL,
+        team: String? = nil
     ) -> [String] {
-        ["xcodebuild"] + container.selectorArguments + [
+        // The Mac's own team when the project names none, for this build only (2026-11-10).
+        let teamSetting = team.map { ["DEVELOPMENT_TEAM=\($0)"] } ?? []
+        return ["xcodebuild"] + container.selectorArguments + teamSetting + [
             "-scheme", scheme,
             "-configuration", "Debug",
             "-destination", "id=\(destinationIdentifier)",
@@ -253,6 +265,11 @@ public struct LocalPhysicalDeviceService: PhysicalDeviceProviding, Sendable {
             "-hideShellScriptEnvironment",
             "build"
         ]
+    }
+
+    /// The keychain's team, only when the project has none of its own.
+    private func automaticTeam(for configuration: PhysicalDeviceProjectConfiguration) -> String? {
+        configuration.hasDevelopmentTeam ? nil : SigningTeamDetector.team()
     }
 
     private func builtAppURL(

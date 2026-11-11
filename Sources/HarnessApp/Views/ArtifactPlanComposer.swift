@@ -5,6 +5,9 @@ struct ArtifactPlanComposer: View {
     @Bindable var planner: ArtifactPlanSession
     let existingPaths: [String]
     let onStart: (ArtifactCreationPlan) -> Void
+    /// Starts the plan with 「おまかせ」 (2026-11-10); set before the plan exists, it starts as soon as the plan is made.
+    var onStartAutopilot: ((ArtifactCreationPlan) -> Void)?
+    @Binding var autopilotRequested: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -35,8 +38,20 @@ struct ArtifactPlanComposer: View {
                         systemImage: planner.isGenerating ? "stop.fill" : "sparkles"
                     )
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.bordered)
                 .disabled(!planner.isGenerating && !planner.canGenerate)
+                if onStartAutopilot != nil, !planner.isGenerating {
+                    Button {
+                        autopilotRequested = true
+                        planner.generate(existingPaths: existingPaths)
+                    } label: {
+                        Label("計画からおまかせで作る", systemImage: "wand.and.stars")
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(!planner.canGenerate)
+                    .help("必要なファイルを考えて、1つずつ作り、ビルドとテストで確かめ、失敗したら直すまでを自動で進めます。")
+                    .accessibilityIdentifier(HarnessAccessibilityID.artifactPlanAutopilot)
+                }
                 if planner.isGenerating {
                     ProgressView().controlSize(.small)
                 }
@@ -54,6 +69,15 @@ struct ArtifactPlanComposer: View {
             Spacer()
         }
         .padding(18)
+        .onChange(of: planner.plan) { _, plan in
+            if autopilotRequested, let plan, let onStartAutopilot {
+                autopilotRequested = false
+                onStartAutopilot(plan)
+            }
+        }
+        .onChange(of: planner.isGenerating) { _, generating in
+            if !generating && planner.plan == nil { autopilotRequested = false }
+        }
     }
 
     private func planPreview(_ plan: ArtifactCreationPlan) -> some View {
@@ -82,9 +106,15 @@ struct ArtifactPlanComposer: View {
                     }
                 }
             }
-            Button("この計画を1ファイルずつ開始") { onStart(plan) }
-                .buttonStyle(.borderedProminent)
-                .frame(maxWidth: .infinity, alignment: .trailing)
+            HStack {
+                Spacer()
+                Button("1ファイルずつ確かめながら進める") { onStart(plan) }
+                    .buttonStyle(.bordered)
+                if let onStartAutopilot {
+                    Button("この計画をおまかせで作る") { onStartAutopilot(plan) }
+                        .buttonStyle(.borderedProminent)
+                }
+            }
         }
         .padding(12)
         .background(Color.accentColor.opacity(0.055), in: RoundedRectangle(cornerRadius: 10))

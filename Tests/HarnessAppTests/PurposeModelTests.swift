@@ -154,4 +154,13 @@ struct PurposeModelTests {
         #expect(ImageGenerationService.arguments(["--prompt", "{prompt}", "--output", "{output}"], prompt: "lake",
                                                  output: URL(fileURLWithPath: "/tmp/a.png"), seed: 1) == ["--prompt", "lake", "--output", "/tmp/a.png"])
     }
+
+    @Test func personKeepingModelWithoutPictureFallsBackToPlainModel() {
+        let keep = PurposeModelOption(id: "keep", label: "人物を保つ", command: ["keep", "--image", "{image}", "--output", "{output}"])
+        let plain = PurposeModelOption(id: "plain", label: "ふつう", command: ["tool", "--output", "{output}"])
+        let catalog = PurposeModelCatalog(writing: [], image: [keep, plain])
+        #expect(catalog.pictureModel(keep, hasPicture: false).id == "plain")
+        #expect(catalog.pictureModel(keep, hasPicture: true).id == "keep")
+        #expect(catalog.pictureModel(plain, hasPicture: false).id == "plain")
+    }
 }

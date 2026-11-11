@@ -64,7 +64,9 @@ struct ActivityInspectorView: View {
                             physicalDeviceContext = PhysicalDeviceContext(rootPath: rootPath)
                         },
                         onShowCheckpoints: { beginRestore(record) },
-                        onDisconnect: { sourceDisconnectProjectID = record.id }
+                        onDisconnect: { sourceDisconnectProjectID = record.id },
+                        onSetIcon: { store.setAppIcon(for: record.id) },
+                        onAddFramework: { store.addFramework(for: record.id) }
                     )
                 }
                 RecentProjectActivitySection(
@@ -75,6 +77,12 @@ struct ActivityInspectorView: View {
             .padding(16)
         }
         .background(.ultraThinMaterial)
+        .onChange(of: AutopilotRequests.shared.pending) { _, request in
+            guard let request, let record = store.library.records.first(where: { $0.id == request.projectID }),
+                  record.sourceLocation != nil else { return }
+            AutopilotRequests.shared.pending = nil
+            beginFileEdit(record, initialInstruction: request.text, startsAutopilotPlan: true)
+        }
         .activityInspectorPresentation(
             store: store,
             isSelectingSourceFolder: $isSelectingSourceFolder,
@@ -191,18 +199,20 @@ struct ActivityInspectorView: View {
 
     private func beginFileEdit(
         _ record: ProjectRecord,
-        initialInstruction: String = ""
+        initialInstruction: String = "",
+        startsAutopilotPlan: Bool = false
     ) {
         guard let rootPath = record.sourceLocation else { return }
         fileEditContext = FileEditContext(
             projectID: record.id,
             rootPath: rootPath,
-            model: record.project.selectedModel,
+            model: record.project.selectedModel ?? WorkspaceStore.automaticModel,
             initialRelativePath: nil,
             initialInstruction: initialInstruction,
             repairPlan: nil,
             currentRepairTargetID: nil,
-            artifactPlan: nil
+            artifactPlan: nil,
+            startsAutopilotPlan: startsAutopilotPlan
         )
     }
 
@@ -240,7 +250,7 @@ struct ActivityInspectorView: View {
         validationContext = ValidationContext(
             projectID: record.id,
             rootPath: rootPath,
-            model: record.project.selectedModel,
+            model: record.project.selectedModel ?? WorkspaceStore.automaticModel,
             startsAutomatically: startsAutomatically
         )
     }
@@ -255,7 +265,7 @@ struct ActivityInspectorView: View {
         fileEditContext = FileEditContext(
             projectID: record.id,
             rootPath: rootPath,
-            model: record.project.selectedModel,
+            model: record.project.selectedModel ?? WorkspaceStore.automaticModel,
             initialRelativePath: nil,
             initialInstruction: "",
             repairPlan: nil,

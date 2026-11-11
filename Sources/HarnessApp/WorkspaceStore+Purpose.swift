@@ -70,7 +70,7 @@ extension WorkspaceStore {
         // Asked in words while the menu says 会話: it goes where it can really be made, for this message only.
         var routed = false
         if workspaceMode == .chat, composerPurpose == .conversation, documentAttachments.isEmpty,
-           let kind = GeneratedMedia.requestedKind(text, lastMade: GeneratedMedia.lastMadeKind(in: project.conversation.map(\.content))) {
+           let kind = GeneratedMedia.requestedKind(text, lastMade: GeneratedMedia.lastMadeKind(in: project.conversation.map(\.content)), justMade: GeneratedMedia.isNote(project.conversation.last?.content ?? "")) {
             composerPurpose = kind == .video ? .video : .image
             routed = true
         }
@@ -195,14 +195,12 @@ extension WorkspaceStore {
         let selected = capable ?? chosen
         let seconds = selected.map(takesExtras) == true ? wanted ?? (UserDefaults.standard.object(forKey: VideoLength.settingKey) as? Int) ?? VideoLength.defaultSeconds : nil
         change.jobKind = selected.map { "image:" + $0.id + (seconds.map { "@\($0)s" } ?? "") }
-        guard let option = selected else {
+        guard var option = selected else {
             change.status = .failed("\(noun)を作るモデルが選ばれていません。「AIモデル」の「用途ごとのモデル」で選んでください。")
             return
         }
-        // The prompt writer follows the writing choice's roles (the "large" role), else the project's model.
-        // The chat's own model when one is chosen: it is usually already in memory, and swapping to another 27B costs 3 s (2026-11-05).
-        // The prompt writer of the catalog's roles (2026-11-07: a 9B model that also sees pictures, 22 tokens/s),
-        // else the chat's own model.
+        // The prompt writer of the catalog's roles (2026-11-07: a 9B model that also sees pictures, 22 tokens/s), else the chat's
+        // own model (usually already in memory), else the writing choice's "large" role, else the project's model.
         let writer = settings.catalog.roles?["promptWriter"].flatMap { settings.catalog.option(id: $0, for: .writing)?.selection }
             ?? settings.chosen(.conversation)?.selection ?? settings.chosen(.writing).flatMap { settings.catalog.roleModel("large", chosen: $0) } ?? (project.selectedModel ?? WorkspaceStore.automaticModel)
         // The last output of the same kind in this conversation: a new instruction may be a change to it.
@@ -216,8 +214,7 @@ extension WorkspaceStore {
                 .flatMap(Self.savedRecipe).map { ($0.prompt, $0.seed) }
         var prompt = previous?.prompt.map { OutputFollowUp.fallback(instruction: change.instruction, previousPrompt: $0) } ?? change.instruction
         if let previous { change.seed = previous.seed }
-        // A writer that refuses is replaced once by the refusal model (2026-11-02);
-        // if that refuses too, the user's own words go to the model.
+        // A writer that refuses is replaced once by the refusal model (2026-11-02); then the user's own words go, and are told.
         let fallback = ContentGuardSettings().refusalFallback(catalog: settings.catalog)
         let earlier = OutputFollowUp.earlierConversation(project.conversation, before: change.id)
         // The person from before, shown to the writer so the new prompt describes the same person (2026-11-07: a follow-up
@@ -226,34 +223,37 @@ extension WorkspaceStore {
         let personData = change.referenceImage ?? change.personPicture
             ?? ((previous != nil && !change.isVideo) || GeneratedMedia.pointsAtLastImage(change.instruction) ? lastPicture.flatMap { try? Data(contentsOf: $0) } : nil)
         let personImages = await ComputerUseScreenshot.inferenceImages(personData)
-        // Only the person's looks come from the picture: its pose must not replace what was asked (2026-11-07: 「自慰をさせて」
-        // became "hands resting near her chest", the pose the picture had).
+        if !change.isVideo { option = settings.catalog.pictureModel(option, hasPicture: personData != nil); change.jobKind = "image:" + option.id }
+        // Only the person's looks come from the picture, not its pose (2026-11-07: 「自慰をさせて」 became the picture's pose).
         let keepPerson = personImages.isEmpty ? "" : "The attached picture shows the person from before. Keep the same person: describe only their looks (face, age, ethnicity, hair, skin, body), and the hair exactly as it is in the picture: its length (for example shoulder-length), waves or curls, parting and colour. Do not describe the pose or action in the picture; the action is the one the user asks for above, and it must be the main, clearly stated content of the prompt. "
         let terms = settings.catalog.termHints(for: change.instruction)
         let glossary = terms.isEmpty ? "" : "\n\nIn this request these words mean: " + terms.joined(separator: "; ") + ". Write them with these meanings."
+        var written = false
         for model in [writer, fallback].compactMap({ $0 }).reduce(into: [ModelSelection](), { if !$0.contains($1) { $0.append($1) } }) {
-            let request = InferenceRequest(runtime: model.runtime, modelIdentifier: model.identifier, messages: [
+            let ask = { (images: [InferenceImage]) in InferenceRequest(runtime: model.runtime, modelIdentifier: model.identifier, messages: [
                 InferenceMessage(role: .user, content: earlier + (change.isVideo && previous == nil ? OutputFollowUp.videoRequest(instruction: change.instruction, hasPicture: !personImages.isEmpty) : previous?.prompt.map { OutputFollowUp.request(instruction: change.instruction, previousPrompt: $0, kind: noun == "動画" ? "video" : "image") } ?? """
                 Rewrite this request as one English prompt for \(change.isVideo ? "a video model. Start with the action the user asks for, and describe it as continuous motion that keeps going through the whole clip; give the camera movement the user asks for in plain camera terms (for example 「舐めるような」 means a slow, close camera gliding along the body, 「俯瞰」 means from above), and when they ask for none, a steady camera with the whole body and face in frame. End with \"Audio: \" and the sounds of the scene, which the model makes with the picture" : "an image model"). State the requested action plainly and first; never soften, leave out or replace it. Name bodies and acts with plain, direct words, and describe what the hands and body physically do, where and in what rhythm (for example "her hand moves back and forth between her legs in a steady rhythm"); no euphemisms. Never translate a figurative word literally. Keep every detail the user gave (subject, \
                 style, composition, colors, mood); add nothing they did not ask for. \(change.referenceImage == nil ? "" : "A picture of the character is the first frame: describe what the character does and how the scene moves, keeping the character as in the picture. ")Output only the prompt.
                 \(change.instruction)
-                """) + (keepPerson.isEmpty || (change.isVideo && previous == nil) ? "" : "\n\n" + keepPerson) + glossary)], maximumOutputTokens: 400, images: personImages, temperature: 0)
+                """) + (keepPerson.isEmpty || (change.isVideo && previous == nil) ? "" : "\n\n" + keepPerson) + glossary)], maximumOutputTokens: 400, images: images, temperature: 0) }
             guard !Task.isCancelled else { return }
+            // Asked again without the picture when that fails (2026-11-10: the user's Japanese went to the picture model as it was).
             var english = ""
-            do {
-                for try await piece in await inferenceProvider.events(for: request) { english += piece }
-            } catch { english = "" }
+            for images in personImages.isEmpty ? [[]] : [personImages, []] where english.isEmpty {
+                do { for try await piece in await inferenceProvider.events(for: ask(images)) { english += piece } } catch { english = "" }
+            }
             let cleaned = english.trimmingCharacters(in: .whitespacesAndNewlines)
             if !cleaned.isEmpty, !ModelRefusal.looksLikeRefusal(cleaned) {
-                if previous == nil { prompt = cleaned; break }
+                if previous == nil { prompt = cleaned; written = true; break }
                 let answer = OutputFollowUp.parse(cleaned)
                 guard !answer.prompt.isEmpty else { continue }
-                prompt = answer.prompt
+                prompt = answer.prompt; written = true
                 if !answer.isEdit { change.seed = Int.random(in: 1...999_999) }
                 break
             }
         }
         guard !Task.isCancelled else { return }
+        let unwritten = written ? "" : "文章を作るモデルが使えず、指示を英語にせずそのまま渡したため、画質や指示の反映が落ちているかもしれません。"
         prompt = Undress.apply(prompt, instruction: change.instruction, isVideo: change.isVideo)
         // Motion sentences are for videos only: in a picture prompt they made stiff, broken bodies (2026-11-07). The picture
         // model that keeps a person makes its picture through video clips, so it gets them too (2026-11-08: in the app, a
@@ -340,7 +340,7 @@ extension WorkspaceStore {
             // Said when a voice was asked for and none could be made, instead of a silent video passing for one.
             let voiceMissing = change.isVideo && longScenes == nil && change.voiceFile == nil
                 && ((change.speech == .auto && VoiceLine.wanted(change.instruction) && line == nil) || change.speech == .script) ? "声は作れませんでした。" : ""
-            appendAssistantNote("\(noun)ができました(\(option.label))。\(voiceMissing)保存先: \(output.path)")
+            appendAssistantNote("\(noun)ができました(\(option.label))。\(voiceMissing)\(unwritten)保存先: \(output.path)")
         } catch {
             guard !Task.isCancelled else { return }
             change.status = .failed(error.localizedDescription)

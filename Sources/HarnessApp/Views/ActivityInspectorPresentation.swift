@@ -128,6 +128,8 @@ private struct ActivityInspectorPresentation: ViewModifier {
             repairPlan: context.repairPlan,
             currentRepairTargetID: context.currentRepairTargetID,
             artifactPlan: context.artifactPlan,
+            startsAutopilotPlan: context.startsAutopilotPlan,
+            onAutopilotReport: { store.appendAssistantNote($0) },
             onApplied: {
                 store.recordAppliedFileChange($0, projectID: context.projectID)
             },
@@ -181,7 +183,7 @@ private struct ActivityInspectorPresentation: ViewModifier {
         ProjectValidationView(
             rootPath: context.rootPath,
             provider: store.validationProvider,
-            model: project(for: context.projectID)?.selectedModel,
+            model: project(for: context.projectID)?.selectedModel ?? WorkspaceStore.automaticModel,
             inference: store.inferenceProvider,
             project: { project(for: context.projectID) },
             onApplyReplan: {

@@ -65,6 +65,21 @@ extension WorkspaceStore {
     }
 
     @discardableResult
+    /// In Local Factory's own projects folder, with no folder to pick (2026-11-10: the picker opened on every create).
+    func createIPhoneAppProjectInManagedFolder(
+        from draft: ProjectDraft,
+        productName: String,
+        organizationIdentifier: String
+    ) -> Bool {
+        do {
+            return createIPhoneAppProject(from: draft, parentDirectory: try managedProjectDirectory.prepare(),
+                                          productName: productName, organizationIdentifier: organizationIdentifier)
+        } catch {
+            presentNotice(error.localizedDescription, kind: .error)
+            return false
+        }
+    }
+
     func createIPhoneAppProjectChoosingDestination(
         from draft: ProjectDraft,
         productName: String,
@@ -114,6 +129,33 @@ extension WorkspaceStore {
         } catch {
             presentNotice(error.localizedDescription, kind: .error)
             return false
+        }
+    }
+
+    /// The app's icon from a picture the user picks (2026-11-10).
+    func setAppIcon(for projectID: UUID, picture: URL? = nil) {
+        guard let root = library.records.first(where: { $0.id == projectID })?.sourceLocation else { return }
+        guard let picture = picture ?? ImageSelectionPanel.choose(
+            message: "アプリのアイコンにする画像を選びます。正方形に切り抜き、1024×1024 の不透明な画像にします。") else { return }
+        do {
+            try AppleAppIcon.install(picture: picture, projectRoot: URL(fileURLWithPath: root))
+            presentNotice("アプリのアイコンを設定しました", kind: .information)
+            inspectSource(for: projectID, announcesCompletion: false, detectsChanges: true)
+        } catch {
+            presentNotice(error.localizedDescription, kind: .error)
+        }
+    }
+
+    /// A prebuilt framework added to the app: copied, linked and embedded (2026-11-10).
+    func addFramework(for projectID: UUID, framework: URL? = nil) {
+        guard let root = library.records.first(where: { $0.id == projectID })?.sourceLocation else { return }
+        guard let framework = framework ?? ImageSelectionPanel.chooseFramework() else { return }
+        do {
+            let path = try AppleAppFrameworkEmbedder.add(framework, to: URL(fileURLWithPath: root))
+            presentNotice("部品を加えました: \(path)(リンクと同梱を設定)", kind: .information)
+            inspectSource(for: projectID, announcesCompletion: false, detectsChanges: true)
+        } catch {
+            presentNotice(error.localizedDescription, kind: .error)
         }
     }
 }

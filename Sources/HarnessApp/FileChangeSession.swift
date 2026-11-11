@@ -43,6 +43,7 @@ final class FileChangeSession {
     var shouldValidateAfterApply = true
     var errorMessage: String?
     var repairProgress: BuildRepairProgress?
+    let autopilot = FileChangeAutopilot()
     var artifactPlan: ArtifactCreationPlan?
     var orchestratedOutcome: OrchestratedEditOutcome?
     let validation: ProjectValidationSession
@@ -94,6 +95,13 @@ final class FileChangeSession {
 
     var isBusy: Bool {
         isLoading || isGenerating || isApplying || validation.isRunning || hasUnresolvedEdit
+    }
+
+    /// Whether the user may leave the applied change for another file (2026-11-10: after a change passed its checks the
+    /// file list stayed locked until the sheet was closed and opened again). A change that passed stays recorded in its
+    /// Git restore point, so moving on loses nothing.
+    var isLockedByAppliedChange: Bool {
+        isApplied && (validation.isRunning || validation.report == nil)  // a finished check, even failed, frees the list
     }
 
     var canAskAI: Bool {
@@ -151,7 +159,7 @@ final class FileChangeSession {
             files = loadedFiles
             if artifactPlan != nil {
                 isLoading = false
-                prepareCurrentArtifactTarget()
+                await prepareCurrentArtifactTarget()
                 return
             }
             let initialFile = initialRelativePath.flatMap { relativePath in
@@ -170,7 +178,8 @@ final class FileChangeSession {
     }
 
     func select(_ relativePath: String) async {
-        guard (!isBusy || isLoading), !isApplied else { return }
+        guard (!isBusy || isLoading), !isLockedByAppliedChange else { return }
+        if validation.report?.succeeded == true { repairProgress = nil }  // a pass ends the repair plan (2026-11-10)
         let loadingFiles = isLoading
         if !loadingFiles { isLoading = true }
         errorMessage = nil
@@ -184,8 +193,8 @@ final class FileChangeSession {
             isCreatingNewFile = false
             newFileRelativePath = ""
             if let target = repairProgress?.select(relativePath: relativePath) {
-                aiInstruction = target.instruction
-            }
+                aiInstruction = target.instruction(source: loadedDocument.content, projectRoot: URL(fileURLWithPath: rootPath))
+            } else if aiInstruction.hasPrefix(BuildRepairTarget.instructionOpening) { aiInstruction = "" }
             proposedContent = loadedDocument.content
             proposal = nil
             appliedChange = nil
@@ -208,7 +217,8 @@ final class FileChangeSession {
     }
 
     func beginNewFile() {
-        guard !isBusy, !isApplied else { return }
+        guard !isBusy, !isLockedByAppliedChange else { return }
+        isApplied = false
         selectedPath = nil
         document = nil
         isCreatingNewFile = true
@@ -222,11 +232,11 @@ final class FileChangeSession {
         errorMessage = nil
     }
 
-    func startArtifactPlan(_ plan: ArtifactCreationPlan) {
+    func startArtifactPlan(_ plan: ArtifactCreationPlan) async {
         guard !isBusy, !isApplied, !plan.targets.isEmpty else { return }
         repairProgress = nil
         artifactPlan = plan
-        prepareCurrentArtifactTarget()
+        await prepareCurrentArtifactTarget()
     }
 
     func updateNewFileRelativePath(_ relativePath: String) {
@@ -305,25 +315,20 @@ final class FileChangeSession {
         proposal = nil
         appliedChange = nil
         _ = repairProgress?.select(relativePath: nextRepairTarget.relativePath)
-        aiInstruction = nextRepairTarget.instruction
         await select(nextRepairTarget.relativePath)
     }
 
-    func continueToNextArtifactTarget() {
-        guard canContinueArtifactPlan else { return }
+    /// After a repair still fails to build, the new errors become the next repair (2026-11-10: the sheet stopped at
+    /// 「計画の対象をすべて承認しました」 with an empty instruction, and the user had nowhere to go but out).
+    func continueRepair(with plan: BuildRepairPlan) async {
+        guard let first = plan.targets.first, !isBusy else { return }
+        repairProgress = BuildRepairProgress(plan: plan)
         isApplied = false
         proposal = nil
         appliedChange = nil
-        _ = artifactPlan?.advance()
-        prepareCurrentArtifactTarget()
+        await select(first.relativePath)
+        aiInstruction = first.instruction(source: document?.content, projectRoot: URL(fileURLWithPath: rootPath))
     }
 
-    private func prepareCurrentArtifactTarget() {
-        guard let target = artifactPlan?.currentTarget else { return }
-        isApplied = false
-        beginNewFile()
-        newFileRelativePath = target.relativePath
-        aiInstruction = target.instruction
-    }
 
 }

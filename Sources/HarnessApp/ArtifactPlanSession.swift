@@ -78,7 +78,8 @@ final class ArtifactPlanSession {
                     instruction: cleanedInstruction,
                     existingPaths: existingPaths
                 )
-                for target in parsedPlan.targets {
+                let existingSet = Set(existingPaths.map { $0.lowercased() })
+                for target in parsedPlan.targets where !existingSet.contains(target.relativePath.lowercased()) {
                     try await editor.validateCreationPath(
                         rootPath: rootPath,
                         relativePath: target.relativePath

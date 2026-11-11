@@ -34,11 +34,17 @@ enum ArtifactCreationPlanChecks {
             "Artifact planning prompt or structured parser failed"
         )
 
+        // An existing file in the list may be rewritten as part of the plan (2026-11-10).
+        let rewrite = try ArtifactPlanResponseParser.plan(
+            from: #"{"files":[{"path":"Sources/App.swift","instruction":"x"},{"path":"Sources/B.swift","instruction":"y"}]}"#,
+            instruction: "rewrite", existingPaths: existing)
+        try expect(rewrite.targets.map(\.relativePath) == ["Sources/App.swift", "Sources/B.swift"],
+                   "A plan could not rewrite an existing file")
+
         let invalidPayloads = [
             #"{"files":[{"path":"../Outside.swift","instruction":"x"},{"path":"Sources/B.swift","instruction":"y"}]}"#,
             #"{"files":[{"path":"Sources/A.swift","instruction":"x"},{"path":"Sources/A.swift","instruction":"y"}]}"#,
             #"{"files":[{"path":"Sources/A.swift","instruction":"x"},{"path":"sources/a.swift","instruction":"y"}]}"#,
-            #"{"files":[{"path":"Sources/App.swift","instruction":"x"},{"path":"Sources/B.swift","instruction":"y"}]}"#,
             #"{"files":[{"path":"Sources/Only.swift","instruction":"x"}]}"#,
             #"{"files":[{"path":"New/A.swift","instruction":"x"},{"path":"Sources/B.swift","instruction":"y"}]}"#
         ]

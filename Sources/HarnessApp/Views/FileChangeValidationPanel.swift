@@ -17,6 +17,7 @@ struct FileChangeValidationPanel: View {
         ProjectValidationReport,
         BuildFailureAnalysis?
     ) -> Void
+    var onContinueRepair: ((BuildRepairPlan) -> Void)?
 
     @ViewBuilder
     var body: some View {
@@ -101,6 +102,17 @@ struct FileChangeValidationPanel: View {
                         )
                     }
                 )
+                if assessment?.permitsCodeChanges == true, let onContinueRepair,
+                   let plan = validation.failureAnalysis?.repairPlan, let first = plan.targets.first {
+                    Button {
+                        onContinueRepair(plan)
+                    } label: {
+                        Label("このエラーで続けて直す(\(first.relativePath))", systemImage: "wrench.and.screwdriver")
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
+                    .accessibilityIdentifier(HarnessAccessibilityID.fileChangeContinueRepair)
+                }
                 if assessment?.permitsCodeChanges == true {
                     WorkPlanReplanView(
                         model: replanModel,

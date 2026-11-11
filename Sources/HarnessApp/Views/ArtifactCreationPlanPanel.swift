@@ -30,9 +30,11 @@ struct ArtifactCreationPlanPanel: View {
                         .truncationMode(.middle)
                     Spacer()
                     if session.canContinueArtifactPlan {
-                        Button("次の新規ファイル") {
-                            session.continueToNextArtifactTarget()
-                            if let plan = session.artifactPlan { onProgress(plan) }
+                        Button("次のファイル") {
+                            Task {
+                                await session.continueToNextArtifactTarget()
+                                if let plan = session.artifactPlan { onProgress(plan) }
+                            }
                         }
                         .controlSize(.small)
                     }

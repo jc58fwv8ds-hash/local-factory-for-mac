@@ -21,6 +21,8 @@ struct SourceInspectorCard: View {
     let onPhysicalDevice: () -> Void
     let onShowCheckpoints: () -> Void
     let onDisconnect: () -> Void
+    var onSetIcon: (() -> Void)?
+    var onAddFramework: (() -> Void)?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 11) {
@@ -147,6 +149,21 @@ struct SourceInspectorCard: View {
                 .controlSize(.small)
                 .disabled(isInspecting)
                 .accessibilityIdentifier(HarnessAccessibilityID.physicalDeviceOpen)
+
+            if let onSetIcon {
+                Button("アイコンを設定…", action: onSetIcon)
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .disabled(isInspecting)
+                    .accessibilityIdentifier(HarnessAccessibilityID.sourceSetIcon)
+            }
+            if let onAddFramework {
+                Button("部品(xcframework)を加える…", action: onAddFramework)
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .disabled(isInspecting)
+                    .accessibilityIdentifier(HarnessAccessibilityID.sourceAddFramework)
+            }
         }
 
         if !record.project.fileCheckpoints.isEmpty {

@@ -44,9 +44,7 @@ public actor ProjectFileEditor: ProjectFileEditing {
             ) else { continue }
 
             if values.isDirectory == true {
-                if SourceFilePolicy.excludedDirectoryNames.contains(
-                    url.lastPathComponent.lowercased()
-                ) {
+                if SourceFilePolicy.isExcludedDirectory(url.lastPathComponent) {
                     enumerator.skipDescendants()
                 }
                 continue

@@ -44,8 +44,10 @@ public enum ArtifactPlanPromptBuilder {
         .joined(separator: "\n")
         let system = """
         あなたは安全な成果物計画アシスタントです。
-        ユーザーの目的を、既存フォルダ内へ新規作成する2〜8ファイルの計画へ分解してください。
-        既存ファイルの変更・削除、親フォルダの新規作成、依存物や秘密情報の生成を計画しないでください。
+        ユーザーの目的を、2〜8ファイルの計画へ分解してください。既存フォルダ内への新規作成と、既存ファイル一覧にあるファイルの
+        書き換えのどちらも含められます(書き換えるときは一覧のパスをそのまま使う)。目的を果たすのに要るなら、画面の入口になる
+        既存ファイルの書き換えも含めてください。
+        ファイルの削除、親フォルダの新規作成、依存物や秘密情報の生成を計画しないでください。
         pathの親フォルダは、ユーザー欄の「作成可能フォルダ」から完全一致で選んでください。
         説明やMarkdownを付けず、次のJSONだけを返してください。
         {"files":[{"path":"Sources/Feature.swift","instruction":"この1ファイルだけで行う具体的な制作指示"}]}
@@ -111,11 +113,10 @@ public enum ArtifactPlanResponseParser {
             guard seen.insert(comparisonPath).inserted else {
                 throw ArtifactPlanInferenceError.duplicatePath(path)
             }
-            guard !existing.contains(comparisonPath) else {
-                throw ArtifactPlanInferenceError.existingPath(path)
-            }
+            // An existing file may be rewritten (2026-11-10: showing a new screen needs the app's ContentView changed).
+            let rewritesExisting = existing.contains(comparisonPath)
             let parentDirectory = ArtifactPlanDirectoryPolicy.parentDirectory(of: path)
-            guard availableDirectories.contains(parentDirectory.lowercased()) else {
+            guard rewritesExisting || availableDirectories.contains(parentDirectory.lowercased()) else {
                 throw ArtifactPlanInferenceError.unavailableParentDirectory(parentDirectory)
             }
             guard !targetInstruction.isEmpty else {
