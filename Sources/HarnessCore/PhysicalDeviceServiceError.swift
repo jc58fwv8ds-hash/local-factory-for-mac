@@ -7,6 +7,7 @@ public enum PhysicalDeviceBuildFailure: String, Equatable, Sendable {
     case provisioningFailed
     case destinationUnavailable
     case deviceLocked
+    case codeError
     case generic
 
     public var guidance: String {
@@ -23,6 +24,8 @@ public enum PhysicalDeviceBuildFailure: String, Equatable, Sendable {
             "iPhoneをUSBで接続し、ロックを解除して「信頼」を確認してください。"
         case .deviceLocked:
             "iPhoneのロックを解除したまま、もう一度実行してください。"
+        case .codeError:
+            "コードにエラーがあり、iPhone 向けにビルドできませんでした。チャットに「直して」と書けば、Local Factory が直します。"
         case .generic:
             "Xcodeでプロジェクトを開き、Signing & Capabilitiesの警告を確認してください。"
         }
@@ -56,6 +59,10 @@ public enum PhysicalDeviceBuildFailureClassifier {
             || value.contains("failed to register bundle identifier") {
             return .provisioningFailed
         }
+        // A compile error is not a signing problem (2026-11-11: it was told to check Signing & Capabilities).
+        if value.contains(": error:") && (value.contains(".swift:") || value.contains(".m:") || value.contains(".c:")) {
+            return .codeError
+        }
         return .generic
     }
 }
@@ -71,7 +78,7 @@ public enum PhysicalDeviceServiceError: LocalizedError, Equatable, Sendable {
     case buildFailed(PhysicalDeviceBuildFailure)
     case appProductUnavailable
     case installFailed
-    case launchFailed
+    case launchFailed(String? = nil)
     case timedOut
 
     public var errorDescription: String? {
@@ -96,8 +103,8 @@ public enum PhysicalDeviceServiceError: LocalizedError, Equatable, Sendable {
             "ビルド済みアプリを安全な一時領域内で確認できませんでした。"
         case .installFailed:
             "iPhoneへアプリをインストールできませんでした。接続、空き容量、署名を確認してください。"
-        case .launchFailed:
-            "インストールは完了しましたが、iPhoneでアプリを起動できませんでした。ロックを解除してください。"
+        case .launchFailed(let reason):
+            "インストールは完了しましたが、iPhoneでアプリを起動できませんでした。" + (reason.map { "理由: " + $0 } ?? "")
         case .timedOut:
             "実機操作が3分で完了しなかったため停止しました。"
         }

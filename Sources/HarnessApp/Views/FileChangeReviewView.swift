@@ -38,6 +38,7 @@ struct FileChangeReviewView: View {
         artifactPlan: ArtifactCreationPlan? = nil,
         startsAutopilotPlan: Bool = false,
         onAutopilotReport: ((String) -> Void)? = nil,
+        onAutopilotEnded: ((Bool, Bool) -> Void)? = nil,
         onApplied: @escaping (AppliedFileChange) -> Void,
         onReverted: @escaping (AppliedFileChange) -> Void,
         onValidationStarted: @escaping @MainActor () -> Void,
@@ -71,6 +72,7 @@ struct FileChangeReviewView: View {
             onGenerationEvent: onGenerationEvent
         )
         newSession.autopilot.onReport = onAutopilotReport
+        newSession.autopilot.onEnded = onAutopilotEnded
         _session = State(initialValue: newSession)
         _artifactPlanner = State(initialValue: ArtifactPlanSession(
             rootPath: rootPath,
@@ -153,12 +155,17 @@ struct FileChangeReviewView: View {
             }
         }
         .onDisappear {
+            session.autopilot.interrupted()
             session.stopAll()
             artifactPlanner.stop()
         }
         // 「おまかせで作る」 drives the same steps the buttons do (2026-11-10).
         .onChange(of: session.isGenerating) { wasGenerating, isGenerating in
             if wasGenerating && !isGenerating { session.autopilot.generationFinished(session, apply: applyProposal) }
+        }
+        // A run asked for in the chat reports there; its screen closes when it ends (2026-11-11).
+        .onChange(of: session.autopilot.endedAt) { _, ended in
+            if ended != nil, startsAutopilotPlan { dismiss() }
         }
         .onChange(of: session.isApplied) { _, isApplied in
             if isApplied { session.autopilot.applied(session) }

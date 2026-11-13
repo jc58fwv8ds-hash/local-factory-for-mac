@@ -30,6 +30,30 @@ public enum TestFailureAnalyzer {
                                                 message: String(detail.prefix(600))))
             if found.count >= 4 { break }
         }
+        // Only xcodebuild's closing list was left (「Failing tests: JapaneseSpeakerTests.convertsThreeBonsToSanbon()」):
+        // the tested file, with the tests' names, which say what was expected (2026-11-12).
+        if found.isEmpty, let list = output.range(of: "Failing tests:") {
+            var bySuite: [String: [String]] = [:], order: [String] = []
+            for line in output[list.upperBound...].components(separatedBy: "\n").dropFirst().prefix(20) {
+                let item = line.trimmingCharacters(in: .whitespaces)
+                guard item.hasSuffix(")"), let dot = item.firstIndex(of: ".") else { if item.isEmpty || item.hasPrefix("**") { break }; continue }
+                let suite = String(item[..<dot])
+                if bySuite[suite] == nil { order.append(suite) }
+                bySuite[suite, default: []].append(String(item[item.index(after: dot)...]))
+            }
+            for suite in order {
+                guard let target = testedFile(for: suite + ".swift", under: rootURL) else { continue }
+                // What the tests expect, from the test file, since the repair sees only the file it changes.
+                let expectations = swiftFiles(under: rootURL).first { ($0 as NSString).lastPathComponent == suite + ".swift" }
+                    .flatMap { try? String(contentsOf: rootURL.appendingPathComponent($0), encoding: .utf8) }?
+                    .components(separatedBy: "\n").map { $0.trimmingCharacters(in: .whitespaces) }
+                    .filter { $0.hasPrefix("#expect") || $0.hasPrefix("#require") }.prefix(8) ?? []
+                let detail = "テストが失敗しました(\(suite)): " + (bySuite[suite] ?? []).joined(separator: ", ")
+                    + "。次の期待を満たすように \((target as NSString).lastPathComponent) を直してください: "
+                    + expectations.joined(separator: " ")
+                found.append(BuildFailureDiagnostic(validationKind: kind, relativePath: target, line: nil, column: nil, message: String(detail.prefix(1_200))))
+            }
+        }
         return found
     }
 

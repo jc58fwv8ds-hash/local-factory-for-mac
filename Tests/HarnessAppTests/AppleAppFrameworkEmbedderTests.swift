@@ -27,6 +27,8 @@ struct AppleAppFrameworkEmbedderTests {
         let tests = text.components(separatedBy: "\n").first { $0.contains("com.apple.product-type.bundle.unit-test") }!
         #expect(app.components(separatedBy: ",").count == 4)       // sources, frameworks, resources, embed
         #expect(!tests.contains("K0000"))
+        // The app finds the framework on the iPhone (2026-11-11): its two configurations get the run path, the tests' do not.
+        #expect(text.components(separatedBy: "@executable_path/Frameworks").count - 1 == 2)
         let plutil = Process()
         plutil.executableURL = URL(fileURLWithPath: "/usr/bin/plutil")
         plutil.arguments = ["-lint", root.appendingPathComponent("EmbedProbe.xcodeproj/project.pbxproj").path]
@@ -40,5 +42,18 @@ struct AppleAppFrameworkEmbedderTests {
         defer { try? FileManager.default.removeItem(at: root.deletingLastPathComponent()) }
         try AppleAppFrameworkEmbedder.add(framework, to: root)
         #expect(throws: AppleAppFrameworkEmbedder.Failure.alreadyAdded) { try AppleAppFrameworkEmbedder.add(framework, to: root) }
+    }
+
+    @Test func repairsTheRunPathOfAnEarlierProject() throws {
+        let (root, framework) = try project()
+        defer { try? FileManager.default.removeItem(at: root.deletingLastPathComponent()) }
+        try AppleAppFrameworkEmbedder.add(framework, to: root)
+        let file = root.appendingPathComponent("EmbedProbe.xcodeproj/project.pbxproj")
+        let earlier = try String(contentsOf: file, encoding: .utf8)
+            .replacingOccurrences(of: "LD_RUNPATH_SEARCH_PATHS = \"$(inherited) @executable_path/Frameworks\"; ", with: "")
+        try earlier.write(to: file, atomically: true, encoding: .utf8)
+        #expect(AppleAppFrameworkEmbedder.repairRunpath(in: root))
+        #expect(!AppleAppFrameworkEmbedder.repairRunpath(in: root))   // once
+        #expect(try String(contentsOf: file, encoding: .utf8).contains("@executable_path/Frameworks"))
     }
 }

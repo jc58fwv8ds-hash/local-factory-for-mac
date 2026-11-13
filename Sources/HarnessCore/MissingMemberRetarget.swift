@@ -31,10 +31,13 @@ public enum MissingMemberRetarget {
         }
     }
 
-    /// Shares a run of five letters, ignoring case (「isSpeakerOn」 resembles 「speakerEnabled」).
+    /// Shares a run of at least half the missing name's letters (five at least), ignoring case (「isSpeakerOn」 resembles
+    /// 「speakerEnabled」; 2026-11-12: 「queuedCount」 no longer resembles 「readNumberAndCounter」 through 「count」 alone,
+    /// which kept the new reading function from being added where it belonged).
     static func resembles(_ name: String, _ missing: String) -> Bool {
         let a = name.lowercased(), b = Array(missing.lowercased())
-        guard b.count >= 5 else { return a.contains(String(b)) }
-        return (0...(b.count - 5)).contains { a.contains(String(b[$0..<($0 + 5)])) }
+        let run = max(5, b.count / 2)
+        guard b.count >= run else { return a.contains(String(b)) }
+        return (0...(b.count - run)).contains { a.contains(String(b[$0..<($0 + run)])) }
     }
 }

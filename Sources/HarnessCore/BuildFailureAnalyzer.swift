@@ -102,6 +102,18 @@ public enum BuildFailureAnalyzer {
         diagnostics = RedeclarationRetarget.retarget(diagnostics, rootURL: rootURL)
         // A member another file needs and the type lacks: the type's file gets it (2026-11-11).
         diagnostics = MissingMemberRetarget.retarget(diagnostics, rootURL: rootURL)
+        // Errors xcodebuild could not place (inside a macro such as #expect): the files of its 「The following build commands
+        // failed: SwiftCompile … File.swift」 list get them (2026-11-12: JapaneseSpeakerTests' #expect errors named no file).
+        if diagnostics.isEmpty {
+            for check in failedChecks {
+                diagnostics += CompileFailureFiles.diagnostics(output: check.output, rootURL: rootURL, kind: check.kind)
+            }
+        }
+        // Tests that stopped on a dictionary with a key twice: the literal's file and line (2026-11-12: 14Translate's tests
+        // crashed with 「Dictionary literal contains duplicate keys」 and no file could be named).
+        if diagnostics.isEmpty, failedChecks.contains(where: { $0.output.contains("Dictionary literal contains duplicate keys") }) {
+            diagnostics += DuplicateLiteralKeyCheck.diagnostics(rootURL: rootURL)
+        }
         // No compile errors but failed tests: the tested files become the repair (2026-11-10).
         if diagnostics.isEmpty {
             for check in failedChecks where check.kind == .test || check.kind == .xcodeTest {

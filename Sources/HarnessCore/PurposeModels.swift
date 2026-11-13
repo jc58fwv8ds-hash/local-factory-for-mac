@@ -126,8 +126,13 @@ public struct PurposeModelCatalog: Codable, Equatable, Sendable {
     /// `option`, or, when it keeps a person from a picture (its command takes {image}) and there is no picture, the first
     /// picture model that does not need one (2026-11-11: 「人物を保って作る」, left chosen from an earlier chat, failed in a
     /// new chat with "At least one init image is required").
-    public func pictureModel(_ option: PurposeModelOption, hasPicture: Bool) -> PurposeModelOption {
-        guard !hasPicture, option.command?.contains("{image}") == true else { return option }
+    /// `keepsPerson`: the request names the person in the picture (「画像の人物が…」). A plain picture model then hands over to
+    /// the one that keeps a person (2026-11-13: with a plain model chosen, 「画像の人物が香港で…」 drew someone else from the
+    /// prompt's description, and the same person was never kept).
+    public func pictureModel(_ option: PurposeModelOption, hasPicture: Bool, keepsPerson: Bool = false) -> PurposeModelOption {
+        let keeps = option.command?.contains("{image}") == true
+        if hasPicture, keepsPerson, !keeps, let keeper = image.first(where: { $0.command?.contains("{image}") == true }) { return keeper }
+        guard !hasPicture, keeps else { return option }
         return image.first { $0.command?.contains("{image}") != true } ?? option
     }
 

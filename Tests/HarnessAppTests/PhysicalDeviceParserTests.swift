@@ -30,4 +30,5 @@ struct PhysicalDeviceParserTests {
 @Test func xcode27MissingAccountIsRecognised() {
     let output = #"error: No Account for Team "ABCDE12345". Add a new account in Accounts settings or verify that your accounts have valid credentials."#
     #expect(PhysicalDeviceBuildFailureClassifier.classify(output) == .accountMissing)
+    #expect(PhysicalDeviceBuildFailureClassifier.classify("/p/App/SpeechListener.swift:64:42: error: sending 'buffer' risks causing data races") == .codeError)
 }

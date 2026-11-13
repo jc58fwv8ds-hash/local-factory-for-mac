@@ -129,7 +129,8 @@ private struct ActivityInspectorPresentation: ViewModifier {
             currentRepairTargetID: context.currentRepairTargetID,
             artifactPlan: context.artifactPlan,
             startsAutopilotPlan: context.startsAutopilotPlan,
-            onAutopilotReport: { store.appendAssistantNote($0) },
+            onAutopilotReport: { store.autopilotReported($0) },
+            onAutopilotEnded: { store.autopilotEnded(good: $0, closed: $1) },
             onApplied: {
                 store.recordAppliedFileChange($0, projectID: context.projectID)
             },

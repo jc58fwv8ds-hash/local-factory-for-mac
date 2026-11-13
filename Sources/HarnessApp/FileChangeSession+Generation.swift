@@ -3,7 +3,7 @@ import HarnessCore
 
 extension FileChangeSession {
     func askAI() {
-        guard canAskAI, let model else { return }
+        guard canAskAI, let model = secondWriter ?? model else { return }
         let instruction = aiInstruction.trimmingCharacters(in: .whitespacesAndNewlines)
         let creationPath = newFileRelativePath.trimmingCharacters(in: .whitespacesAndNewlines)
         let existingDocument = document
@@ -48,7 +48,7 @@ extension FileChangeSession {
                     runtime: model.runtime,
                     modelIdentifier: model.identifier,
                     messages: messages,
-                    maximumOutputTokens: InferenceOutputBudget.fileChange,
+                    maximumOutputTokens: InferenceOutputBudget.fileChange(existingBytes: existingDocument?.content.utf8.count ?? 0),
                     structuredOutput: .fileContent
                 )
                 var response = ""

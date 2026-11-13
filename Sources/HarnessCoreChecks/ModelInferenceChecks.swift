@@ -17,7 +17,7 @@ enum ModelInferenceChecks {
         )
         try expect(
             defaultRequest.maximumOutputTokens == InferenceOutputBudget.conversation
-                && oversizedRequest.maximumOutputTokens == InferenceOutputBudget.fileChange
+                && oversizedRequest.maximumOutputTokens == InferenceOutputBudget.maximum
                 && defaultRequest.structuredOutput == nil
                 && oversizedRequest.structuredOutput == .fileContent
                 && InferenceOutputBudget.bounded(1) == 256,

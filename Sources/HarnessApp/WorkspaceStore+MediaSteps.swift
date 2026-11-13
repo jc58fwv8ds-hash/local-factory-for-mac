@@ -98,6 +98,9 @@ extension WorkspaceStore {
                 scene.prompt = hints.joined(separator: " ") + " " + LongVideoPlan.intensity(scene: index % per, of: per) + " " + scene.prompt
             }
             scene.text = withVoice ? (VoiceLine.words(scene.text, instruction: instruction) ?? "") : ""
+            // With a picture, the video starts from it (2026-11-13: the writer, who does not see the picture, marked the first
+            // scene new; a fresh picture was drawn and the person of the picture was gone from the first frame on).
+            if index == 0, image != nil { scene.restart = false }
             return scene
         }
         let file = Self.imageFolder.appendingPathComponent("\(output.deletingPathExtension().lastPathComponent)-plan.json")

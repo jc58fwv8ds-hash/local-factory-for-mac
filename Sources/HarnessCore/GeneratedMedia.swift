@@ -77,6 +77,13 @@ public enum GeneratedMedia {
 
     /// 「この画像を動かして」: the video starts from the last picture without attaching it again.
     public static func pointsAtLastImage(_ text: String) -> Bool {
-        ["この画像", "この写真", "この絵", "さっきの画像", "さっきの写真", "今の画像", "生成した画像", "この人物", "この女性", "この男性", "この人"].contains(where: text.contains)
+        ["この画像", "この写真", "この絵", "さっきの画像", "さっきの写真", "今の画像", "生成した画像"].contains(where: text.contains) || namesPerson(text)
+    }
+
+    /// Whether the request is about the same person as in the picture, not only the picture.
+    public static func namesPerson(_ text: String) -> Bool {
+        let pointers = ["この", "その", "画像の", "写真の", "さっきの", "同じ", "上の", "前の"]
+        let people = ["人物", "女性", "男性", "人", "子", "女の人", "男の人", "モデル"]
+        return pointers.contains { pointer in people.contains { text.contains(pointer + $0) } }
     }
 }

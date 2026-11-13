@@ -162,6 +162,9 @@ struct ThrowsAndAsyncAdviceTests {
     @Test func tellsHowToHandleThrowingAndAsyncCalls() {
         #expect(BuildErrorAdvice.lines(for: ["call can throw, but it is not marked with 'try' and the error is not handled"]).first?.contains("try") == true)
         #expect(BuildErrorAdvice.lines(for: ["'async' call in a function that does not support concurrency"]).first?.contains("Task {") == true)
+        #expect(BuildErrorAdvice.lines(for: ["'async' call in a function that does not support concurrency"]).first?.contains("MainActor.run") == true)
+        #expect(BuildErrorAdvice.lines(for: ["sending 'buffer' risks causing data races"]).first?.contains("その場で使い切って") == true)
+        #expect(BuildErrorAdvice.lines(for: ["value of type '[String]' has no member 'unicodeScalars'"]).first?.contains("joined") == true)
     }
 }
 

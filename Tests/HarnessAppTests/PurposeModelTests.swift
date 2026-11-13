@@ -162,5 +162,9 @@ struct PurposeModelTests {
         #expect(catalog.pictureModel(keep, hasPicture: false).id == "plain")
         #expect(catalog.pictureModel(keep, hasPicture: true).id == "keep")
         #expect(catalog.pictureModel(plain, hasPicture: false).id == "plain")
+        #expect(catalog.pictureModel(plain, hasPicture: true).id == "plain")
+        #expect(catalog.pictureModel(plain, hasPicture: true, keepsPerson: true).id == "keep")
+        #expect(GeneratedMedia.namesPerson("画像の人物がネオン瞬く夜の香港で石段に腰掛けている様子を生成"))
+        #expect(!GeneratedMedia.namesPerson("背景を青くして"))
     }
 }

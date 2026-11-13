@@ -122,8 +122,14 @@ public struct LocalPhysicalDeviceService: PhysicalDeviceProviding, Sendable {
             environment: deviceEnvironment
         )
         guard launchResult.exitCode == 0 else {
-            throw PhysicalDeviceServiceError.launchFailed
+            // Said as it is (2026-11-11: an app that quit at launch was reported as a locked iPhone).
+            let reason = launchResult.output.contains("10004") ? "アプリが起動してすぐに終了しました(起動時の不具合)。"
+                : launchResult.output.lowercased().contains("locked") ? "iPhone がロックされています。" : nil
+            throw PhysicalDeviceServiceError.launchFailed(reason)
         }
+        // Its output, kept while it runs, for 「止まった」 later (2026-11-13).
+        DeviceConsoleLog.attach(xcrunURL: Self.xcrunURL, projectRoot: rootPath, deviceIdentifier: device.deviceIdentifier,
+                                bundleIdentifier: bundleIdentifier, environment: deviceEnvironment)
         return PhysicalDeviceRunReport(
             deviceName: device.name,
             productName: prepared.configuration.productName,
@@ -160,7 +166,7 @@ public struct LocalPhysicalDeviceService: PhysicalDeviceProviding, Sendable {
               ) else {
             throw PhysicalDeviceServiceError.schemeUnavailable
         }
-        let settingsResult = try await run(
+        var settingsResult = try await run(
             arguments: buildSettingsArguments(
                 container: container,
                 scheme: scheme,
@@ -170,6 +176,18 @@ public struct LocalPhysicalDeviceService: PhysicalDeviceProviding, Sendable {
             currentDirectoryURL: rootURL,
             environment: environment
         )
+        // The settings do not depend on the very iPhone: read again for any iPhone when the named one could not be used
+        // just then (2026-11-12: a reinstall right after a fix failed here once and worked a minute later).
+        if settingsResult.exitCode != 0 {
+            try await Task.sleep(for: .seconds(3))
+            settingsResult = try await run(
+                arguments: buildSettingsArguments(container: container, scheme: scheme, destinationIdentifier: device.destinationIdentifier,
+                                                  derivedDataURL: derivedDataURL)
+                    .map { $0 == "id=\(device.destinationIdentifier)" ? "generic/platform=iOS" : $0 },
+                currentDirectoryURL: rootURL,
+                environment: environment
+            )
+        }
         guard settingsResult.exitCode == 0,
               let configuration = XcodeSigningSettingsParser.configuration(
                   from: settingsResult.output,

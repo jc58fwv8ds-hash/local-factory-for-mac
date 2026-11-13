@@ -21,7 +21,10 @@ public struct BuildRepairTarget: Identifiable, Equatable, Sendable {
         let lines = source.components(separatedBy: "\n")
         let places = diagnostics.prefix(4).compactMap { diagnostic -> String? in
             guard let line = diagnostic.line, line >= 1, line <= lines.count else { return nil }
-            return Self.enclosing(line: line, in: lines).map { "行\(line) は \($0) の中" }
+            // The line itself, so the change is made there (2026-11-12: a one-line Optional error came back unchanged twice).
+            let code = lines[line - 1].trimmingCharacters(in: .whitespaces)
+            let place = Self.enclosing(line: line, in: lines).map { "行\(line) は \($0) の中" } ?? "行\(line)"
+            return code.isEmpty ? place : place + "(その行: \(code.prefix(160)))"
         }
         var text = instruction
         // A throwing call in an initializer that cannot throw needs a change of shape, not a 「try」 (2026-11-10).

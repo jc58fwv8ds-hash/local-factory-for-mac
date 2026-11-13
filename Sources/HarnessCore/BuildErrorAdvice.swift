@@ -22,7 +22,11 @@ public enum BuildErrorAdvice {
             + "メインスレッドのコードはそのままにします。エラーの行が deinit の中なら、deinit は main actor の外で動くので、"
             + "そこでの @Published などへの代入は消してください(片づけに要る処理は stop() など main actor のメソッドへ移します)。"),
         (#"(risks causing data races|non-Sendable type|capture of .* with non-sendable type)"#,
-         "直し方: クロージャへ渡す値を、送る前にローカルの let に取り出してから使うか、型に Sendable を付けられるか確かめてください。"),
+         "直し方: その値(Sendable でない値)を Task { } や別の actor へ渡さないでください。ローカルの let に移しても同じエラーになります。"
+            + "受け取ったクロージャの中で、その場で使い切ってください。例: マイクのタップでは `Task { @MainActor in request.append(buffer) }` ではなく、"
+            + "クロージャの中で `request?.append(buffer)` と直接呼ぶ(append はどのスレッドからでも呼べます。request は nonisolated(unsafe) の変数で持つ)。"
+            + "main actor へ渡す必要があるときは、文字列・数・Bool など Sendable な値に変えてから渡してください"
+            + "(2026-11-11: 14Translate の SpeechListener で let に移す直しを 3 回くり返して通らなかった)。"),
         (#"cannot (assign|convert) value of type '(Unsafe(Mutable)?Pointer<\w+>|OpaquePointer)\??' to (type|specified type) '(Unsafe(Mutable)?Pointer<\w+>|OpaquePointer)"#,
          "直し方: C の関数が返すポインタの型(UnsafeMutablePointer<…> か OpaquePointer)をヘッダーの宣言どおりに使い、"
             + "それを入れるプロパティの型もその型に合わせてください。別のポインタ型へ変換しないでください。"),
@@ -35,13 +39,22 @@ public enum BuildErrorAdvice {
          "直し方: その呼び出しの前に try を付け、呼んでいる関数に throws を付けるか、do { try … } catch { … } で受けて"
             + "エラーを状態の文言などに出してください。try? で黙って捨てないでください。"),
         (#"'async' call in a function that does not support concurrency"#,
-         "直し方: async の関数は、async の関数の中で await を付けて呼ぶか、同期の関数からなら Task { await … } で包んで呼んでください。"),
+         "直し方: async の関数は、async の関数の中で await を付けて呼ぶか、同期の関数からなら Task { await … } で包んで呼んでください。"
+            + "`MainActor.run { … }` や `DispatchQueue.main.async { … }` の中は同期の場所なので await を使えません。呼んでいる関数がすでに "
+            + "@MainActor の型のメソッドや Task の中なら、包むのをやめて `try await 値.関数()` と直接呼んでください"
+            + "(2026-11-11: 14Translate で MainActor.run の中から async の start() を呼んで通らなかった)。"),
         (#"inheritance from a final class|overriding non-open (instance )?method outside of its defining module|instance method overrides a 'final' instance method"#,
          "直し方: final class は継承できません。テストで偽物を作るために継承しないでください。テストでは本物の型をそのまま作り、"
             + "マイク・スピーカー・通信・大きなモデルを動かさずに確かめられること(初期の状態、計算、文字の扱いなど)だけを確かめてください。"
             + "偽物のクラスはすべて消してください。"),
+        // 2026-11-12: a function that came to return the sentences as a list; its test still used the text, and the model
+        // gave the file back unchanged twice.
+        (#"value of type '\[String\]' has no member"#,
+         "直し方: その値は文字列の並び([String])になっています。1 つの文字列として使うなら `.joined(separator: \"\")` でつなぐか、"
+            + "`.first ?? \"\"` で最初の 1 つを使ってください。テストなら、並びをつないだ文字列を確かめるように書き換えてください。"),
         (#"value of optional type .* must be unwrapped"#,
-         "直し方: Optional の値は ?. か if let / guard let で取り出してください。! で強制的に取り出さないでください。"),
+         "直し方: Optional の値は ?. か if let / guard let で取り出してください。! で強制的に取り出さないでください。"
+         + "Optional でない変数へ代入している行なら、その行を「= 値 ?? 既定値」(文字列なら ?? \"\")に変えるだけで直ります。"),
         (#"cannot find '\w+' in scope"#,
          "直し方: 名前の綴り、import の抜け、別ファイルにある型の名前を確かめてください。存在しない名前を作らないでください。"),
         (#"has no member '\w+'"#,

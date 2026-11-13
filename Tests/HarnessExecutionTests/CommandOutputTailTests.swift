@@ -27,6 +27,27 @@ struct CommandOutputTailTests {
         #expect(tail.wasTruncated)
     }
 
+    @Test func errorsOfTheDroppedHeadAreKept() throws {
+        let file = temporaryFile()
+        defer { try? FileManager.default.removeItem(at: file) }
+        let log = "/p/A.swift:3:5: error: cannot find 'x' in scope\n" + String(repeating: "noise\n", count: 2_000) + "Testing failed: (3 failures)"
+        try Data(log.utf8).write(to: file)
+        let tail = try CommandOutputTail(file: file, maximumBytes: 64)
+        #expect(tail.text.hasPrefix("(前の部分のエラー)\n/p/A.swift:3:5: error: cannot find 'x' in scope"))
+        #expect(tail.text.hasSuffix("Testing failed: (3 failures)"))
+    }
+
+    @Test func failedTestLinesOfTheDroppedHeadAreKept() throws {
+        let file = temporaryFile()
+        defer { try? FileManager.default.removeItem(at: file) }
+        let log = "✘ Test convertsThreeBons() recorded an issue at JapaneseSpeakerTests.swift:9:9: Expectation failed: result == \"さんぼん\"\n  ↳ result → \"さんほん\"\n"
+            + String(repeating: "llama noise\n", count: 2_000) + "** TEST FAILED **"
+        try Data(log.utf8).write(to: file)
+        let tail = try CommandOutputTail(file: file, maximumBytes: 64)
+        #expect(tail.text.contains("JapaneseSpeakerTests.swift:9:9: Expectation failed"))
+        #expect(tail.text.contains("↳ result → \"さんほん\""))
+    }
+
     @Test(arguments: [1, 2, 3, 4, 5, 6])
     func japaneseBoundaryDoesNotIntroduceReplacementCharacters(limit: Int) throws {
         let file = temporaryFile()

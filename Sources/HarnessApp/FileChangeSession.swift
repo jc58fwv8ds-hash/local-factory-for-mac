@@ -21,6 +21,9 @@ enum FileEditGenerationEvent {
 final class FileChangeSession {
     let rootPath: String
     let model: ModelSelection?
+    /// Another model asked once when the project's model gave a file back unchanged twice (2026-11-12: the 27B could not
+    /// add the counter readings 14Translate's tests asked for). Cleared when its answer comes.
+    var secondWriter: ModelSelection?
     var files: [EditableSourceFile] = []
     var selectedPath: String?
     var document: EditableSourceDocument?

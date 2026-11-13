@@ -20,6 +20,8 @@ extension WorkspaceStore {
             return
         }
         // コード: a request is built 「おまかせ」, its progress written back here (2026-11-10).
+        // 「iPhone に入れて」: built, installed and opened on the iPhone, told in the chat (2026-11-11).
+        if submitDeviceRun() { return }
         if submitCodeAutopilot() { return }
         if PrimaryInstructionIntentRouter.route(instruction) == .computerOperation {
             if handoffPrimaryInstructionToComputerOperator(instruction) {
@@ -138,23 +140,19 @@ extension WorkspaceStore {
                 message: "Local Factoryでプロジェクトを選択してください"
             )
         }
+        // Pictures go to a model that sees them: the chosen one if it does, else the catalog's picture-reading model, switched
+        // to by itself (2026-11-12, the user: model switching is the Factory's to do, not the person's).
+        var modelOverride = modelOverride
         if !images.isEmpty {
-            guard let model = record.project.selectedModel else {
-                return RemoteInstructionDecision(
-                    status: .unavailable,
-                    message: "画像を見るAIモデルを先に選んでください"
-                )
-            }
-            let capabilities = VisualModelCapabilityResolver.capabilities(for: model)
-            let routing = VisualModelRoutingPolicy.decision(
-                for: .understandReference,
-                capabilities: capabilities
-            )
-            guard routing.route == .visionModel else {
-                return RemoteInstructionDecision(
-                    status: .unavailable,
-                    message: routing.userMessage
-                )
+            let sees = { (model: ModelSelection) in
+                VisualModelRoutingPolicy.decision(for: .understandReference,
+                                                  capabilities: VisualModelCapabilityResolver.capabilities(for: model)).route == .visionModel }
+            if let chosen = modelOverride ?? record.project.selectedModel, sees(chosen) {
+                // the chosen model sees pictures
+            } else if let reader = pictureReadingModel {
+                modelOverride = reader
+            } else {
+                return RemoteInstructionDecision(status: .unavailable, message: "画像を読めるモデルが入っていません。「AIモデル」で、画像を読めるモデルを入れてください")
             }
         }
 

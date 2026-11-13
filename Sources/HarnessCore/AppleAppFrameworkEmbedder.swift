@@ -90,7 +90,41 @@ public enum AppleAppFrameworkEmbedder {
                section: "PBXBuildFile", into: &lines)
         insert("\t\t\(reference) /* \(name) */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = \(relative); sourceTree = \"<group>\"; };",
                section: "PBXFileReference", into: &lines)
+        return withRunpath(lines.joined(separator: "\n"))
+    }
+
+    /// The app finds embedded frameworks only where its run path points (2026-11-11: 14Translate quit at launch on the
+    /// iPhone with 「Library not loaded: @rpath/llama.framework/llama」; the simulator had found it in the build folder).
+    /// Adds @executable_path/Frameworks to the app target's configurations that lack a run path.
+    static func withRunpath(_ text: String) -> String {
+        var lines = text.components(separatedBy: "\n")
+        guard let appRow = lines.firstIndex(where: { $0.contains("isa = PBXNativeTarget;")
+                && $0.contains("productType = \"com.apple.product-type.application\"") }),
+              let listRange = lines[appRow].range(of: "buildConfigurationList = ") else { return text }
+        let list = String(lines[appRow][listRange.upperBound...].prefix(24))
+        guard let listRow = lines.firstIndex(where: { $0.trimmingCharacters(in: .whitespaces).hasPrefix(list + " ") }),
+              let open = lines[listRow].range(of: "buildConfigurations = (") else { return text }
+        let configurations = lines[listRow][open.upperBound...].prefix { $0 != ")" }
+            .split(separator: ",").compactMap { $0.split(separator: " ").first.map(String.init) }
+        for id in configurations {
+            guard let row = lines.firstIndex(where: { $0.trimmingCharacters(in: .whitespaces).hasPrefix(id + " ") }),
+                  !lines[row].contains("LD_RUNPATH_SEARCH_PATHS"),
+                  let settings = lines[row].range(of: "buildSettings = {") else { continue }
+            lines[row].insert(contentsOf: "LD_RUNPATH_SEARCH_PATHS = \"$(inherited) @executable_path/Frameworks\"; ", at: settings.upperBound)
+        }
         return lines.joined(separator: "\n")
+    }
+
+    /// A project with embedded frameworks and no run path gets one. True when the file was changed.
+    @discardableResult
+    public static func repairRunpath(in root: URL) -> Bool {
+        guard let project = try? FileManager.default.contentsOfDirectory(at: root, includingPropertiesForKeys: nil)
+                .first(where: { $0.pathExtension == "xcodeproj" }) else { return false }
+        let file = project.appendingPathComponent("project.pbxproj")
+        guard let text = try? String(contentsOf: file, encoding: .utf8), text.contains("dstSubfolderSpec = 10;") else { return false }
+        let repaired = withRunpath(text)
+        guard repaired != text else { return false }
+        return (try? repaired.write(to: file, atomically: true, encoding: .utf8)) != nil
     }
 
     /// Into the section, made where it sorts among the others if the file has none yet.

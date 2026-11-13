@@ -26,6 +26,11 @@ struct PurposeModelSettings {
     }
 
     /// The option the user picked for a purpose; nil means the project's model (the default).
+    /// The coding model asked when the project's own gives nothing usable (role 「secondCoder」, 2026-11-12).
+    var secondCoder: ModelSelection? {
+        catalog.roles?["secondCoder"].flatMap { catalog.option(id: $0, for: .writing)?.selection }
+    }
+
     func chosen(_ purpose: ModelPurpose) -> PurposeModelOption? {
         catalog.option(id: defaults.string(forKey: Self.key(purpose)), for: purpose)
     }

@@ -223,7 +223,7 @@ extension WorkspaceStore {
         let personData = change.referenceImage ?? change.personPicture
             ?? ((previous != nil && !change.isVideo) || GeneratedMedia.pointsAtLastImage(change.instruction) ? lastPicture.flatMap { try? Data(contentsOf: $0) } : nil)
         let personImages = await ComputerUseScreenshot.inferenceImages(personData)
-        if !change.isVideo { option = settings.catalog.pictureModel(option, hasPicture: personData != nil); change.jobKind = "image:" + option.id }
+        if !change.isVideo { option = settings.catalog.pictureModel(option, hasPicture: personData != nil, keepsPerson: change.personPicture != nil || GeneratedMedia.namesPerson(change.instruction)); change.jobKind = "image:" + option.id }
         // Only the person's looks come from the picture, not its pose (2026-11-07: 「自慰をさせて」 became the picture's pose).
         let keepPerson = personImages.isEmpty ? "" : "The attached picture shows the person from before. Keep the same person: describe only their looks (face, age, ethnicity, hair, skin, body), and the hair exactly as it is in the picture: its length (for example shoulder-length), waves or curls, parting and colour. Do not describe the pose or action in the picture; the action is the one the user asks for above, and it must be the main, clearly stated content of the prompt. "
         let terms = settings.catalog.termHints(for: change.instruction)
