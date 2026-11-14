@@ -158,8 +158,7 @@ extension WorkspaceStore {
             change.voiceFile = attachedVoice?.file; attachedVoice = nil
             change.speech = UserDefaults.standard.string(forKey: VideoSpeech.settingKey).flatMap(VideoSpeech.init(rawValue:)) ?? .auto
             change.script = UserDefaults.standard.string(forKey: VideoSpeech.scriptKey) ?? ""
-            if change.referenceImage == nil, GeneratedMedia.pointsAtLastImage(text),
-               let last = GeneratedMedia.lastFile(.image, in: project.conversation.map(\.content)) {
+            if change.referenceImage == nil, let last = GeneratedMedia.workingPicture(for: text, in: project.conversation.map(\.content)) {
                 change.referenceImage = try? Data(contentsOf: last)
             }
         }
@@ -205,7 +204,7 @@ extension WorkspaceStore {
             ?? settings.chosen(.conversation)?.selection ?? settings.chosen(.writing).flatMap { settings.catalog.roleModel("large", chosen: $0) } ?? (project.selectedModel ?? WorkspaceStore.automaticModel)
         // The last output of the same kind in this conversation: a new instruction may be a change to it.
         let ids = Set(project.conversation.map(\.id))
-        let previous: (prompt: String?, seed: Int)? = change.referenceImage != nil || change.personPicture != nil ? nil : imageChanges.values
+        let previous: (prompt: String?, seed: Int)? = change.referenceImage != nil || change.personPicture != nil || GeneratedMedia.startsAnew(change.instruction) ? nil : imageChanges.values
             .filter { $0.id != change.id && $0.isVideo == change.isVideo && ids.contains($0.id) && $0.prompt != nil }
             .filter { if case .ready = $0.status { true } else { false } }
             .max { $0.startedAt < $1.startedAt }
@@ -219,21 +218,22 @@ extension WorkspaceStore {
         let earlier = OutputFollowUp.earlierConversation(project.conversation, before: change.id)
         // The person from before, shown to the writer so the new prompt describes the same person (2026-11-07: a follow-up
         // drew someone else). The video's own picture, else the last picture when the request points at it or changes it.
-        let lastPicture = GeneratedMedia.lastFile(.image, in: project.conversation.map(\.content))
+        // In a chat the request works on the last picture (or the first, when it says so) unless it starts anew (2026-11-14).
+        let lastPicture = GeneratedMedia.workingPicture(for: change.instruction, in: project.conversation.map(\.content))
         let personData = change.referenceImage ?? change.personPicture
-            ?? ((previous != nil && !change.isVideo) || GeneratedMedia.pointsAtLastImage(change.instruction) ? lastPicture.flatMap { try? Data(contentsOf: $0) } : nil)
+            ?? ((previous != nil && !change.isVideo) || GeneratedMedia.pointsAtLastImage(change.instruction) || GeneratedMedia.pointsAtFirstImage(change.instruction) ? lastPicture.flatMap { try? Data(contentsOf: $0) } : nil)
         let personImages = await ComputerUseScreenshot.inferenceImages(personData)
-        if !change.isVideo { option = settings.catalog.pictureModel(option, hasPicture: personData != nil, keepsPerson: change.personPicture != nil || GeneratedMedia.namesPerson(change.instruction)); change.jobKind = "image:" + option.id }
+        if !change.isVideo { option = settings.catalog.pictureModel(option, hasPicture: personData != nil, keepsPerson: change.personPicture != nil || GeneratedMedia.namesPerson(change.instruction) || (personData != nil && GeneratedMedia.showsPerson(previous?.prompt))); change.jobKind = "image:" + option.id }
         // Only the person's looks come from the picture, not its pose (2026-11-07: 「自慰をさせて」 became the picture's pose).
-        let keepPerson = personImages.isEmpty ? "" : "The attached picture shows the person from before. Keep the same person: describe only their looks (face, age, ethnicity, hair, skin, body), and the hair exactly as it is in the picture: its length (for example shoulder-length), waves or curls, parting and colour. Do not describe the pose or action in the picture; the action is the one the user asks for above, and it must be the main, clearly stated content of the prompt. "
+        let keepPerson = personImages.isEmpty ? "" : "The attached picture shows the person from before. Keep the same person: describe only their looks (face, age, ethnicity, hair, skin, body), and the hair exactly as it is in the picture: its length (for example shoulder-length), waves or curls, parting and colour. Do not describe the pose or action in the picture; the action is the one the user asks for above, and it must be the main, clearly stated content of the prompt. The place is the one the user names above, not the picture's background. "
         let terms = settings.catalog.termHints(for: change.instruction)
         let glossary = terms.isEmpty ? "" : "\n\nIn this request these words mean: " + terms.joined(separator: "; ") + ". Write them with these meanings."
         var written = false
         for model in [writer, fallback].compactMap({ $0 }).reduce(into: [ModelSelection](), { if !$0.contains($1) { $0.append($1) } }) {
             let ask = { (images: [InferenceImage]) in InferenceRequest(runtime: model.runtime, modelIdentifier: model.identifier, messages: [
                 InferenceMessage(role: .user, content: earlier + (change.isVideo && previous == nil ? OutputFollowUp.videoRequest(instruction: change.instruction, hasPicture: !personImages.isEmpty) : previous?.prompt.map { OutputFollowUp.request(instruction: change.instruction, previousPrompt: $0, kind: noun == "動画" ? "video" : "image") } ?? """
-                Rewrite this request as one English prompt for \(change.isVideo ? "a video model. Start with the action the user asks for, and describe it as continuous motion that keeps going through the whole clip; give the camera movement the user asks for in plain camera terms (for example 「舐めるような」 means a slow, close camera gliding along the body, 「俯瞰」 means from above), and when they ask for none, a steady camera with the whole body and face in frame. End with \"Audio: \" and the sounds of the scene, which the model makes with the picture" : "an image model"). State the requested action plainly and first; never soften, leave out or replace it. Name bodies and acts with plain, direct words, and describe what the hands and body physically do, where and in what rhythm (for example "her hand moves back and forth between her legs in a steady rhythm"); no euphemisms. Never translate a figurative word literally. Keep every detail the user gave (subject, \
-                style, composition, colors, mood); add nothing they did not ask for. \(change.referenceImage == nil ? "" : "A picture of the character is the first frame: describe what the character does and how the scene moves, keeping the character as in the picture. ")Output only the prompt.
+                Rewrite this request as one English prompt for \(change.isVideo ? "a video model. Start with the action the user asks for, and describe it as continuous motion that keeps going through the whole clip; give the camera movement the user asks for in plain camera terms (for example 「舐めるような」 means a slow, close camera gliding along the body, 「俯瞰」 means from above), and when they ask for none, a steady camera with the whole body in frame; a turn, a back view or walking away they ask for is kept as asked, never turned back to show the face. End with \"Audio: \" and the sounds of the scene, which the model makes with the picture" : "an image model"). State the requested action plainly and first; never soften, leave out or replace it. Name bodies and acts with plain, direct words, and describe what the hands and body physically do, where and in what rhythm (for example "her hand moves back and forth between her legs in a steady rhythm"); no euphemisms. Never translate a figurative word literally. Keep every detail the user gave (subject, \
+                place, style, composition, colors, mood); a place they name (for example 「場所を香港にして」) is where the scene is, written plainly (\"in Hong Kong\"). Add nothing they did not ask for, and no setting of your own such as a studio. \(change.referenceImage == nil ? "" : "A picture of the character is the first frame: describe what the character does and how the scene moves, keeping the character as in the picture. ")Output only the prompt.
                 \(change.instruction)
                 """) + (keepPerson.isEmpty || (change.isVideo && previous == nil) ? "" : "\n\n" + keepPerson) + glossary)], maximumOutputTokens: 400, images: images, temperature: 0) }
             guard !Task.isCancelled else { return }
@@ -254,7 +254,7 @@ extension WorkspaceStore {
         }
         guard !Task.isCancelled else { return }
         let unwritten = written ? "" : "文章を作るモデルが使えず、指示を英語にせずそのまま渡したため、画質や指示の反映が落ちているかもしれません。"
-        prompt = Undress.apply(prompt, instruction: change.instruction, isVideo: change.isVideo)
+        prompt = Undress.apply(written ? await coveringRequest(prompt, instruction: change.instruction, isVideo: change.isVideo, writer: writer, previousPrompt: previous?.prompt ?? nil) : prompt, instruction: change.instruction, isVideo: change.isVideo)
         // Motion sentences are for videos only: in a picture prompt they made stiff, broken bodies (2026-11-07). The picture
         // model that keeps a person makes its picture through video clips, so it gets them too (2026-11-08: in the app, a
         // follow-up to the person's picture lost 「自慰」 in the writer and the result was only a change of clothes).
@@ -321,7 +321,7 @@ extension WorkspaceStore {
             } else if let first = option.firstTry, !change.isVideo, await quickPictureHolds(first, option: option, prompt: prompt, output: output, options: options, writer: writer) {
                 // the quick picture shows what was asked
             } else {
-                try await imageGenerator.generate(option: option, prompt: prompt, output: output, options: options)
+                change.seed = try await checkedPicture(option: option, prompt: prompt, output: output, options: options, isVideo: change.isVideo, writer: writer) { change.status = .running($0) }
             }
             guard !Task.isCancelled else { return }
             if let line, speech == nil, let command = settings.catalog.voiceCommand {

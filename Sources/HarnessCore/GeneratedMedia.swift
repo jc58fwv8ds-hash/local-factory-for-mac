@@ -35,6 +35,15 @@ public enum GeneratedMedia {
         contents.reversed().compactMap(file(inNote:)).first { ($0.pathExtension == "mp4") == (kind == .video) && exists($0) }
     }
 
+    /// The picture a request in the chat works on: the first when it says so, none when it starts anew, else the last.
+    public static func workingPicture(for text: String, in contents: [String], exists: (URL) -> Bool = { FileManager.default.fileExists(atPath: $0.path) }) -> URL? {
+        guard !startsAnew(text) else { return nil }
+        if pointsAtFirstImage(text) {
+            return contents.compactMap(file(inNote:)).first { $0.pathExtension != "mp4" && exists($0) }
+        }
+        return lastFile(.image, in: contents, exists: exists)
+    }
+
     /// The kind of the last picture or video the conversation made, from its notes.
     public static func lastMadeKind(in contents: [String]) -> Kind? {
         contents.reversed().compactMap(file(inNote:)).first.map { $0.pathExtension == "mp4" ? .video : .image }
@@ -78,6 +87,25 @@ public enum GeneratedMedia {
     /// 「この画像を動かして」: the video starts from the last picture without attaching it again.
     public static func pointsAtLastImage(_ text: String) -> Bool {
         ["この画像", "この写真", "この絵", "さっきの画像", "さっきの写真", "今の画像", "生成した画像"].contains(where: text.contains) || namesPerson(text)
+    }
+
+    /// In a chat, a picture or video request works on the last picture unless it says to start anew (2026-11-14, the user:
+    /// 「チャットなんだから連続で考えられなきゃダメ。最初の画像でとか指定がない限りは、直前の画像に対しての操作とみなすべき」;
+    /// 「通行人がいる東京駅の正面入り口をまっすぐ歩かせて」 had been made from words alone, with another face and clothes).
+    public static func startsAnew(_ text: String) -> Bool {
+        ["新しい", "新しく", "別の", "別人", "違う人", "最初から", "一から", "ゼロから", "画像なしで", "写真なしで"].contains(where: text.contains)
+    }
+
+    /// Whether a picture's prompt shows a person, so a change to it keeps that person (2026-11-14: 「場所を香港にして全裸にして」
+    /// sent again after a picture of a woman went to the model that draws from words alone).
+    public static func showsPerson(_ prompt: String?) -> Bool {
+        guard let prompt else { return false }
+        return prompt.range(of: #"\b(woman|man|girl|boy|person|lady|she|he|her|his)\b"#, options: [.regularExpression, .caseInsensitive]) != nil
+    }
+
+    /// 「最初の画像で」: the first picture of the chat instead of the last.
+    public static func pointsAtFirstImage(_ text: String) -> Bool {
+        ["最初の画像", "最初の写真", "一枚目", "1枚目", "１枚目", "最初に作った"].contains(where: text.contains)
     }
 
     /// Whether the request is about the same person as in the picture, not only the picture.

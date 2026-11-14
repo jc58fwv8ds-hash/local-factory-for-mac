@@ -44,6 +44,11 @@ public enum LongVideoPlan {
             return Int(text[range])
         }
         if let minutes = first(#"(?<![0-9])([0-9]{1,2})\s*分(?!後|前|の[0-9])"#) { return min(longestSeconds, minutes * 60) }
+        // 「最後の10秒間…」 is a part of the video, so the whole is longer by at least a scene (2026-11-14: 「まっすぐ歩かせて、
+        // 最後の１０秒間ゆっくり一回転させて」 made a 9-second video, the turn squeezed into its last 3 seconds).
+        if let part = first(#"(?:最後|最初|はじめ|初め|終わり|ラスト|後半|前半)の?\s*([0-9]{1,3})\s*秒"#), part > 0 {
+            return min(longestSeconds, part + sceneSeconds)
+        }
         if let seconds = first(#"(?<![0-9])([0-9]{1,3})\s*秒(?!後|前)"#), seconds > 0 { return min(longestSeconds, seconds) }
         return nil
     }
@@ -67,7 +72,7 @@ public enum LongVideoPlan {
 
     public static func writerRequest(instruction: String, videoPrompt: String, scenes: Int, withVoice: Bool) -> String {
         """
-        A \(scenes * sceneSeconds)-second video is made as \(scenes) scenes of \(sceneSeconds) seconds, each starting where the one before ended, with the same person throughout.
+        A \(scenes * sceneSeconds)-second video is made as \(scenes) scenes of \(sceneSeconds) seconds, each starting where the one before ended, with the same person throughout. \((1...scenes).map { "Scene \($0): \(($0 - 1) * sceneSeconds)-\($0 * sceneSeconds) s" }.joined(separator: ", ")). What the request puts in the first or last seconds (「最後の10秒間」) is in the scenes of those seconds, and every action the request asks for is in some scene.
         The request:
         \(instruction)
         The whole video in one prompt:

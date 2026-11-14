@@ -227,7 +227,9 @@ struct VideoOptionsTests {
         #expect(text.contains("猫が走る") && text.contains("2. Second sentence") && text.contains("only the person's looks") && text.contains("5. End with"))
         #expect(OutputFollowUp.videoRequest(instruction: "猫が走る", hasPicture: false).contains("4. End with"))
         // No camera move the request did not ask for (2026-11-08: an unasked close glide cut the face out of the frame).
-        #expect(text.contains("The camera stays steady, with her whole body and face in frame."))
+        #expect(text.contains("The camera stays steady, with her whole body in frame."))
+        // A back view the user asks for is kept (2026-11-14: 「海の方へ歩いていく」 came toward the camera to show the face).
+        #expect(text.contains("never turn the person back to the camera"))
     }
 
     @Test func aWordInTheRequestAlwaysAddsItsMotion() {
@@ -374,6 +376,9 @@ struct LongVideoPlanTests {
         #expect(LongVideoPlan.requestedSeconds(in: "1分の動画にして") == 60)
         #expect(LongVideoPlan.requestedSeconds(in: "10分の動画") == 600)
         #expect(LongVideoPlan.requestedSeconds(in: "45分の動画") == 1800)
+        // A part of the video (「最後の１０秒間」) makes the whole longer than the part (2026-11-14).
+        #expect(LongVideoPlan.requestedSeconds(in: "まっすぐ歩かせて、最後の１０秒間ゆっくり一回転させて") == 13)
+        #expect(LongVideoPlan.requestedSeconds(in: "10秒の動画") == 10)
         #expect(LongVideoPlan.sceneCount(seconds: 60) == 20)
         #expect(LongVideoPlan.sceneCount(seconds: 10) == 3)
         #expect(LongVideoPlan.sceneCount(seconds: 3) == nil)

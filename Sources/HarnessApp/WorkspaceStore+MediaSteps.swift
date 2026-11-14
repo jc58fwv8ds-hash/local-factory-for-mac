@@ -42,17 +42,42 @@ extension WorkspaceStore {
             try? FileManager.default.removeItem(at: output)
             return false
         }
+        if await pictureShowsRequest(data, prompt: prompt, writer: writer) == true { return true }
+        try? FileManager.default.removeItem(at: output)
+        try? FileManager.default.removeItem(at: GeneratedMedia.stepsFolder(of: output))
+        return false
+    }
+
+    /// Whether the writer, looking at the picture, says it shows what was asked with an unbroken body (PictureCheck); nil
+    /// when the check could not run.
+    func pictureShowsRequest(_ data: Data, prompt: String, writer: ModelSelection) async -> Bool? {
         let request = InferenceRequest(runtime: writer.runtime, modelIdentifier: writer.identifier, messages: [
             InferenceMessage(role: .user, content: PictureCheck.request(prompt: prompt))
         ], maximumOutputTokens: 120, images: await ComputerUseScreenshot.inferenceImages(data), temperature: 0)
         var reply = ""
         do {
             for try await piece in await inferenceProvider.events(for: request) { reply += piece }
-        } catch { reply = "" }
-        if PictureCheck.passed(reply) { return true }
-        try? FileManager.default.removeItem(at: output)
-        try? FileManager.default.removeItem(at: GeneratedMedia.stepsFolder(of: output))
-        return false
+        } catch { return nil }
+        return PictureCheck.passed(reply)
+    }
+
+    /// The full way, checked too, and made again with another seed when the check fails (2026-11-14, the user: 「2の確認は
+    /// 最終画像にも入れてください。不合格なら作り直しで、数分増えるのは構いません」; a picture with four arms had passed
+    /// unchecked). Up to two more tries; the last one is kept when none passes. Returns the seed of the picture kept.
+    func checkedPicture(option: PurposeModelOption, prompt: String, output: URL, options: ImageGenerationOptions, isVideo: Bool,
+                        writer: ModelSelection?, status: (String) -> Void) async throws -> Int {
+        var options = options
+        for attempt in 0..<(isVideo || writer == nil ? 1 : PictureCheck.tries) {
+            if attempt > 0 {
+                status("確かめた結果、頼みと合わない所があったので作り直しています(\(attempt + 1) 回目)")
+                options.seed += 7_919 * attempt
+                try? FileManager.default.removeItem(at: GeneratedMedia.stepsFolder(of: output))
+            }
+            try await imageGenerator.generate(option: option, prompt: prompt, output: output, options: options)
+            guard !Task.isCancelled, !isVideo, let writer, let data = try? Data(contentsOf: output) else { break }
+            if await pictureShowsRequest(data, prompt: prompt, writer: writer) != false { break }  // unchecked is kept
+        }
+        return options.seed
     }
 
     /// A video longer than one clip: the prompt writer splits it into scenes, each made from where the one before ended
@@ -62,10 +87,14 @@ extension WorkspaceStore {
         // An attached voice file is the lines (spread over the scenes by long_video.py); none is written then.
         let withVoice = voice == nil && VoiceLine.wanted(instruction)
         // Up to a minute as one list of scenes; longer, first as chapters, then each chapter as its scenes (2026-11-08).
-        func ask(_ content: String, tokens: Int) async -> String {
+        // The writer sees the starting picture, so it can tell whether the first scene is somewhere else (2026-11-14: told
+        // nothing, it was held to the picture, and 「東京駅の正面入り口を歩かせて」 stayed on the beach of the picture).
+        let picture = await ComputerUseScreenshot.inferenceImages(image.flatMap { try? Data(contentsOf: $0) })
+        func ask(_ content: String, tokens: Int, images: [InferenceImage] = []) async -> String {
             guard let writer else { return "" }
             let request = InferenceRequest(runtime: writer.runtime, modelIdentifier: writer.identifier,
-                                           messages: [InferenceMessage(role: .user, content: content)], maximumOutputTokens: tokens, temperature: 0)
+                                           messages: [InferenceMessage(role: .user, content: content + (images.isEmpty ? "" : "\nThe attached picture is where the video starts."))],
+                                           maximumOutputTokens: tokens, images: images, temperature: 0)
             var reply = ""
             do {
                 for try await piece in await inferenceProvider.events(for: request) { reply += piece }
@@ -74,8 +103,11 @@ extension WorkspaceStore {
         }
         var written: [LongVideoPlan.Scene] = []
         if scenes <= LongVideoPlan.scenesPerChapter * 2 {
-            let reply = await ask(LongVideoPlan.writerRequest(instruction: instruction, videoPrompt: prompt, scenes: scenes, withVoice: withVoice),
-                                  tokens: 260 * scenes)
+            var reply = await ask(LongVideoPlan.writerRequest(instruction: instruction, videoPrompt: prompt, scenes: scenes, withVoice: withVoice),
+                                  tokens: 260 * scenes, images: picture)
+            if reply.isEmpty, !picture.isEmpty {
+                reply = await ask(LongVideoPlan.writerRequest(instruction: instruction, videoPrompt: prompt, scenes: scenes, withVoice: withVoice), tokens: 260 * scenes)
+            }
             written = LongVideoPlan.parse(reply, scenes: scenes, fallback: prompt)
         } else {
             let count = (scenes + LongVideoPlan.scenesPerChapter - 1) / LongVideoPlan.scenesPerChapter
@@ -98,9 +130,9 @@ extension WorkspaceStore {
                 scene.prompt = hints.joined(separator: " ") + " " + LongVideoPlan.intensity(scene: index % per, of: per) + " " + scene.prompt
             }
             scene.text = withVoice ? (VoiceLine.words(scene.text, instruction: instruction) ?? "") : ""
-            // With a picture, the video starts from it (2026-11-13: the writer, who does not see the picture, marked the first
-            // scene new; a fresh picture was drawn and the person of the picture was gone from the first frame on).
-            if index == 0, image != nil { scene.restart = false }
+            // With a picture the writer did not see, the video starts from it (2026-11-13: marked new without seeing it, the
+            // person of the picture was gone). Seen, a first scene somewhere else starts from a new picture of the same person.
+            if index == 0, image != nil, picture.isEmpty { scene.restart = false }
             return scene
         }
         let file = Self.imageFolder.appendingPathComponent("\(output.deletingPathExtension().lastPathComponent)-plan.json")

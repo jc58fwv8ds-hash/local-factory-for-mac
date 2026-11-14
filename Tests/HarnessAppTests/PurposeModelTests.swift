@@ -13,7 +13,8 @@ struct PurposeModelTests {
         func record(_ model: String) { models.append(model) }
         nonisolated func events(for request: InferenceRequest) async -> AsyncThrowingStream<String, Error> {
             await record(request.modelIdentifier)
-            let reply = self.reply
+            // The look at a finished picture passes, so a picture is not made again (2026-11-14).
+            let reply = request.messages.last?.content.contains("MATCH: YES only if") == true ? "MATCH: YES" : self.reply
             return AsyncThrowingStream { $0.yield(reply); $0.finish() }
         }
     }
@@ -84,7 +85,8 @@ struct PurposeModelTests {
         guard case .ready(let url) = change?.status else { Issue.record("no image: \(String(describing: change?.status))"); return }
         #expect(FileManager.default.fileExists(atPath: url.path))
         #expect(change?.prompt == "a calm lake at dawn")
-        #expect(await recorder.models == ["writer-large"])
+        // The same writer, then asked whether the prompt kept everything the words asked for, then where the scene is (2026-11-14).
+        #expect(await recorder.models == ["writer-large", "writer-large", "writer-large", "writer-large"])  // and the check of the picture
         try? FileManager.default.removeItem(at: url)
         try? FileManager.default.removeItem(at: url.appendingPathExtension("json"))
     }
@@ -166,5 +168,10 @@ struct PurposeModelTests {
         #expect(catalog.pictureModel(plain, hasPicture: true, keepsPerson: true).id == "keep")
         #expect(GeneratedMedia.namesPerson("画像の人物がネオン瞬く夜の香港で石段に腰掛けている様子を生成"))
         #expect(!GeneratedMedia.namesPerson("背景を青くして"))
+        // In a chat, a request works on the last picture unless it starts anew; 「最初の画像で」 takes the first (2026-11-14).
+        let notes = ["画像ができました。保存先: /tmp/a-first.png", "動画ができました。保存先: /tmp/b.mp4", "画像ができました。保存先: /tmp/c-last.png"]
+        #expect(GeneratedMedia.workingPicture(for: "通行人がいる東京駅の正面入り口をまっすぐ歩かせて", in: notes, exists: { _ in true })?.lastPathComponent == "c-last.png")
+        #expect(GeneratedMedia.workingPicture(for: "最初の画像で海辺を歩かせて", in: notes, exists: { _ in true })?.lastPathComponent == "a-first.png")
+        #expect(GeneratedMedia.workingPicture(for: "新しい女性が海辺を歩く動画", in: notes, exists: { _ in true }) == nil)
     }
 }
