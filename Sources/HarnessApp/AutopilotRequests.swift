@@ -1,4 +1,5 @@
 import Foundation
+import HarnessCore
 import Observation
 
 /// A request typed in the code chat to be built 「おまかせ」 (2026-11-10, the user: 「開発経験がないユーザーも君とのここでの
@@ -39,6 +40,14 @@ final class AutopilotRequests {
     private func setUnfinished(_ items: [String], projectID: UUID) {
         if items.isEmpty { store.removeObject(forKey: unfinishedKey(projectID)) } else { store.set(items, forKey: unfinishedKey(projectID)) }
     }
+    /// A new request replaces what was left of an earlier one (2026-11-17: 「続けて」 after a new request ran the old split
+    /// requests' leftovers, written for the recognizer the new request had just replaced).
+    func forgetUnfinished(projectID: UUID) {
+        setUnfinished([], projectID: projectID)
+        queued[projectID] = nil
+        batch[projectID] = nil
+    }
+
     /// The request now running, removed from the unfinished list when it ends well.
     private var running: [UUID: String] = [:]
 
@@ -89,10 +98,23 @@ final class AutopilotRequests {
 /// What the app is for, given with every request from the chat (2026-11-12, the user: 「リアルタイム翻訳ということを忘れないで」).
 /// The fixes made 14Translate wait for silence before translating, though its description says it translates in real time.
 enum AutopilotPurpose {
-    static func instruction(_ request: String, summary: String) -> String {
+    static func instruction(_ request: String, summary: String, root: String? = nil) -> String {
         let purpose = summary.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !purpose.isEmpty else { return request }
-        return request + "\n\nこのアプリの目的(直すときもこれを外さないこと。速さ・使い方・前提を含む): " + String(purpose.prefix(600))
+        // How the bundled model wants its prompts written, when the code writes them by hand (2026-11-16).
+        let notes = (root.flatMap { BundledModelNotes.notes(rootURL: URL(fileURLWithPath: $0)) }.map { "\n\n" + $0 } ?? "")
+            + (root.flatMap { DevicePlatformNotes.notes(root: $0) }.map { "\n\n" + $0 } ?? "")
+            + (root.flatMap { freshFindings(request, root: $0) }.map { "\n\n" + $0 } ?? "")
+        guard !purpose.isEmpty else { return request + notes }
+        return request + "\n\nこのアプリの目的(直すときもこれを外さないこと。速さ・使い方・前提を含む): " + String(purpose.prefix(600)) + notes
+    }
+
+    /// A request kept with what was found when it was sent, run later by 「続けて」: what the code shows now goes with it
+    /// too (2026-11-19: the Factory learned to say 「その行を消すだけでよい」, but the kept requests carried the older words,
+    /// and the same step was rejected three more times).
+    static func freshFindings(_ request: String, root: String) -> String? {
+        guard request.contains("調べてわかったこと") else { return nil }
+        let fresh = NotWorkingHints.hints(rootURL: URL(fileURLWithPath: root), request: request).filter { !request.contains($0) }
+        return fresh.isEmpty ? nil : "いまのコードを調べ直してわかったこと(上の「調べてわかったこと」と食い違うときは、こちらを使うこと):\n" + fresh.joined(separator: "\n")
     }
 }
 

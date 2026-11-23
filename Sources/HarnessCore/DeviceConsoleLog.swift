@@ -35,10 +35,25 @@ public enum DeviceConsoleLog {
     /// The last lines worth reading: what the app printed, without devicectl's own lines or a model library's loading
     /// chatter (2026-11-13: the 40 lines sent with 「全く何にも聞こえない」 were all llama.cpp's tensor list); at most `limit`.
     /// When the app had closed, a line says so: what happened after the person opened it again is not in the file.
+    /// The app's own lines of the last launch that wrote any (2026-11-16: a fixed failure from an earlier launch was found
+    /// again in the same file). For looking for patterns over a whole try.
+    public static func lastRun(projectRoot: String, limit: Int = 800) -> [String] {
+        guard let data = try? Data(contentsOf: url(projectRoot: projectRoot)) else { return [] }
+        let all = String(decoding: data.suffix(400_000), as: UTF8.self).components(separatedBy: "\n")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+        var runs: [[String]] = [[]]
+        for line in all {
+            if line.hasPrefix("Launched application") || line.hasSuffix("] 開きました") { runs.append([]); continue }
+            if !isNoise(line) { runs[runs.count - 1].append(line) }
+        }
+        return Array((runs.last { $0.count >= 5 } ?? []).suffix(limit))
+    }
+
     public static func tail(projectRoot: String, limit: Int = 40) -> [String] {
         guard let data = try? Data(contentsOf: url(projectRoot: projectRoot)) else { return [] }
         let all = String(decoding: data.suffix(400_000), as: UTF8.self).components(separatedBy: "\n")
-            .map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+            // The iPhone's lines end with "\r" (2026-11-16: 「People\r」 was no prefix of 「People do\r」 and no pattern matched).
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
         let closed = all.last?.hasPrefix("The app terminated") == true
         var lines = Array(all.filter { !isNoise($0) }.suffix(limit))
         if closed { lines.append(closedNote) }

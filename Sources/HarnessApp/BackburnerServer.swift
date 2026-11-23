@@ -58,8 +58,12 @@ actor BackburnerServer {
                 Self.stopLeftoverServer()
             } else {
                 stop()
+                // Stopping serve.sh leaves its llama-server holding 8180 for a while; the next start then could not bind
+                // and the run stopped with 「Backburner を起動できませんでした」 (2026-11-17, switching to the second writer).
+                Self.stopLeftoverServer()
             }
             for _ in 0..<30 where await isHealthy() { try await Task.sleep(for: .seconds(1)) }
+            for _ in 0..<30 where Self.portInUse(8180) { try await Task.sleep(for: .seconds(1)) }
         }
         if let starting { return try await starting.value }
         let task = Task { try await start(model: model) }
@@ -72,9 +76,17 @@ actor BackburnerServer {
     func servedModelPath() async -> String? {
         var request = URLRequest(url: URL(string: "http://127.0.0.1:8080/props")!)
         request.timeoutInterval = 3
-        guard let (data, _) = try? await URLSession.shared.data(for: request),
-              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return nil }
-        return object["model_path"] as? String
+        if let (data, _) = try? await URLSession.shared.data(for: request),
+           let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any], let path = object["model_path"] as? String {
+            return path
+        }
+        // splash has no /props: the model it serves is named by its identifier (BackburnerServer+Splash).
+        var models = URLRequest(url: URL(string: "http://127.0.0.1:8080/v1/models")!)
+        models.timeoutInterval = 3
+        guard let (data, _) = try? await URLSession.shared.data(for: models),
+              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let list = object["data"] as? [[String: Any]] else { return nil }
+        return list.compactMap { ($0["id"] as? String).flatMap(Self.modelPath(from:)) }.first
     }
 
     /// A Backburner left serving another model: its serve.sh, proxy and llama-server, and nothing else.
@@ -82,10 +94,17 @@ actor BackburnerServer {
         for pattern in ["backburner/scripts/serve.sh", "scripts/proxy.py", "backburner/llama.cpp/build-metal/bin/llama-server"] {
             _ = run("/usr/bin/pkill", ["-f", pattern])
         }
+        stopSplash()
+    }
+
+    /// Something still listens on the port (the llama-server behind the proxy).
+    static func portInUse(_ port: Int) -> Bool {
+        !run("/usr/sbin/lsof", ["-nP", "-iTCP:\(port)", "-sTCP:LISTEN", "-t"]).trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     /// Stops only a server this App started; a server the user launched in Terminal is left alone.
     func stop() {
+        if process?.executableURL?.path == Self.splashExecutable { Self.stopSplash() }
         process?.terminate()
         process = nil
         currentModel = nil
@@ -98,6 +117,9 @@ actor BackburnerServer {
         let serve = directory.appendingPathComponent("scripts/serve.sh")
         guard FileManager.default.isExecutableFile(atPath: serve.path) else { throw Failure.notInstalled }
         raiseWiredLimitIfNeeded()
+        // A llama-server whose proxy is gone still holds 8180 and answers nothing: it is a leftover, stopped before starting.
+        if Self.portInUse(8180) { Self.stopLeftoverServer() }
+        for _ in 0..<30 where Self.portInUse(8180) { try await Task.sleep(for: .seconds(1)) }
         try FileManager.default.createDirectory(at: log.deletingLastPathComponent(), withIntermediateDirectories: true)
         FileManager.default.createFile(atPath: log.path, contents: nil)
         let output = try FileHandle(forWritingTo: log)
@@ -115,7 +137,10 @@ actor BackburnerServer {
         // The helper Mac reads the last layers of long prompts alongside (HelperNode.prepareSplitTail); its tail is cut from
         // the default 27B, so only that model is split.
         if model == nil, let tail = await HelperNode.shared.prepareSplitTail() { environment["LLAMA_SPLIT_TAIL"] = tail }
-        if let model {
+        if let model, let arguments = Self.splashArguments(model: model) {
+            server.executableURL = URL(fileURLWithPath: Self.splashExecutable)
+            server.arguments = arguments
+        } else if let model {
             // Another GGUF than the default 27B: the DFlash drafter is trained for that 27B and slows a fine-tune down
             // (a 27B fine-tune: 8.1 tokens/s with it, 10.4 without, measured 2026-10-10), so it runs without speculation.
             environment["MODEL"] = model
@@ -131,8 +156,8 @@ actor BackburnerServer {
         try server.run()
         process = server
         currentModel = model
-        // Model load takes ~25 s on a warm SSD; allow up to 4 minutes.
-        for _ in 0..<240 {
+        // Model load takes ~25 s on a warm SSD (splash's first preparation and warm-up longer); allow up to 8 minutes.
+        for _ in 0..<480 {
             if await isHealthy() { return }
             guard server.isRunning else { break }
             try await Task.sleep(for: .seconds(1))
@@ -157,7 +182,7 @@ actor BackburnerServer {
         _ = Self.run("/usr/bin/osascript", ["-e", script])
     }
 
-    private static func run(_ path: String, _ arguments: [String]) -> String {
+    static func run(_ path: String, _ arguments: [String]) -> String {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: path)
         process.arguments = arguments
@@ -199,6 +224,12 @@ enum ModelRuntimes {
 struct BackburnerAwareInferenceProvider: ModelInferenceProvider {
     let base: any ModelInferenceProvider
 
+    /// An error after which the server does not recover by itself.
+    static func leftBroken(_ error: Error) -> Bool {
+        let text = String(describing: error) + error.localizedDescription
+        return ["Compute error", "GPU Timeout", "backend is in error state"].contains(where: text.contains)
+    }
+
     func events(for request: InferenceRequest) async -> AsyncThrowingStream<String, Error> {
         guard let target = ModelRuntimes.target(for: request) else { return await base.events(for: request) }
         await InferenceIndicator.shared.begin(.waiting)
@@ -218,14 +249,32 @@ struct BackburnerAwareInferenceProvider: ModelInferenceProvider {
         }
         await InferenceIndicator.shared.enter(.reading)
         let upstream = await base.events(for: request)
+        let base = self.base
         return AsyncThrowingStream { continuation in
             let task = Task {
+                var gave = false
                 do {
                     for try await piece in upstream {
+                        gave = true
                         await InferenceIndicator.shared.piece()
                         continuation.yield(piece)
                     }
                     continuation.finish()
+                } catch where !gave && target.backend == "backburner" && Self.leftBroken(error) {
+                    // The GPU timed out (another program used it at the same time) and llama.cpp's Metal backend stays
+                    // broken until it is started again (2026-11-16: every later request answered 「Compute error.」).
+                    // Started again and asked once more.
+                    do {
+                        await BackburnerServer.shared.stop()
+                        try await ModelRuntimes.Backburner().start(model: target.model)
+                        for try await piece in await base.events(for: request) {
+                            await InferenceIndicator.shared.piece()
+                            continuation.yield(piece)
+                        }
+                        continuation.finish()
+                    } catch {
+                        continuation.finish(throwing: error)
+                    }
                 } catch {
                     continuation.finish(throwing: error)
                 }

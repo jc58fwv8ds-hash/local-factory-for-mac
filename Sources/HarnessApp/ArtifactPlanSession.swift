@@ -57,7 +57,8 @@ final class ArtifactPlanSession {
             do {
                 let messages = try ArtifactPlanPromptBuilder.messages(
                     instruction: cleanedInstruction,
-                    existingPaths: existingPaths
+                    existingPaths: existingPaths,
+                    platformReference: SDKSwiftInterfaceLookup.shared.projectReference(rootURL: URL(fileURLWithPath: rootPath))
                 )
                 let request = InferenceRequest(
                     runtime: model.runtime,

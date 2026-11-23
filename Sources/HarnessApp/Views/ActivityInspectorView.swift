@@ -81,7 +81,7 @@ struct ActivityInspectorView: View {
             guard let request, let record = store.library.records.first(where: { $0.id == request.projectID }),
                   record.sourceLocation != nil else { return }
             AutopilotRequests.shared.pending = nil
-            beginFileEdit(record, initialInstruction: AutopilotPurpose.instruction(request.text, summary: record.project.summary),
+            beginFileEdit(record, initialInstruction: AutopilotPurpose.instruction(request.text, summary: record.project.summary, root: record.sourceLocation),
                           startsAutopilotPlan: true)
         }
         .activityInspectorPresentation(

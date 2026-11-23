@@ -53,4 +53,8 @@ struct BackburnerServerTests {
         var request = URLRequest(url: URL(string: "http://127.0.0.1:8080/health")!); request.timeoutInterval = 2
         #expect((try? await URLSession.shared.data(for: request)) == nil, "server still answering after stop")
     }
+
+    @Test func aPortNobodyListensOnIsFree() {
+        #expect(!BackburnerServer.portInUse(1))
+    }
 }

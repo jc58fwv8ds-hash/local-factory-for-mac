@@ -12,7 +12,7 @@ final class FileChangeAutopilot {
 
     private(set) var isOn = false
     private(set) var repairRounds = 0
-    private(set) var status: String?
+    var status: String?
     /// When a run ended (finished, stopped or gave up); the screen opened from the chat closes then (2026-11-11).
     private(set) var endedAt: Date?
     /// Where the steps that matter are told, plainly (the code chat; 2026-11-10).
@@ -20,7 +20,14 @@ final class FileChangeAutopilot {
     /// When a run ends: whether it ended well, and whether the person closed it (then nothing waiting should start).
     @ObservationIgnored var onEnded: ((_ good: Bool, _ closed: Bool) -> Void)?
     private(set) var savedFiles: [String] = []
+    var lastApplied: FileChangeProposal?
+    /// Plans a request instead of repairing (two copies of the same work: one is taken out; 2026-11-18).
+    @ObservationIgnored var onConsolidate: ((String) -> Void)?
     private var retriedUnchanged = false
+    var planRetried = false
+    /// Files of the plan whose change was checked against their step (once each; 2026-11-16).
+    var stepChecked: [String: Int] = [:]
+    var raisedTarget = false; @ObservationIgnored var validationRetried = false
     private var triedSecondWriter = false
     private var keptWriter: ModelSelection?
     /// The model to ask when the project's own gave nothing usable twice (the catalog's 「secondCoder」 role).
@@ -48,30 +55,30 @@ final class FileChangeAutopilot {
         isOn = true
         rootPath = session.rootPath
         repairRounds = 0
-        retriedUnchanged = false
-        triedSecondWriter = false
-        keptWriter = nil
-        savedFiles = []
+        retriedUnchanged = false; triedSecondWriter = false; keptWriter = nil
+        savedFiles = []; lastApplied = nil
+        stepChecked = [:]
+        raisedTarget = false
         status = "案を作っています…"
         session.askAI()
     }
 
-    /// A request from the chat: first the project as it is must build and pass, fixed if not, then `then` runs
-    /// (the order a person asked to 「続けて」 would take).
-    func checkFirst(_ session: FileChangeSession, onComplete: @escaping @MainActor @Sendable (ProjectValidationReport) -> Void,
+    /// A request from the chat: first the project as it is must build and pass, fixed if not, then `then` runs.
+    func checkFirst(_ session: FileChangeSession, request: String = "", onComplete: @escaping @MainActor @Sendable (ProjectValidationReport) -> Void,
                     then next: @escaping () -> Void) {
         isOn = true
-        repairRounds = 0
-        retriedUnchanged = false
-        triedSecondWriter = false
-        keptWriter = nil
-        savedFiles = []
-        afterPassing = next
         rootPath = session.rootPath
+        Self.keepTestsRequested(request, root: rootPath); if Self.testsRequested(root: rootPath) { setAsideFiles = [] }
+        repairRounds = 0
+        retriedUnchanged = false; triedSecondWriter = false; keptWriter = nil
+        savedFiles = []; lastApplied = nil
+        stepChecked = [:]
+        raisedTarget = false
+        afterPassing = next
         lastFailedPlan = nil
         status = "まず今のプロジェクトを確かめています…"
-        onReport?("まず今のプロジェクトがビルドとテストに通るかを確かめます。")
-        session.validation.start(onComplete: onComplete)
+        onReport?(Self.beforeCheckNote() + "まず今のプロジェクトがビルドとテストに通るかを確かめます。")
+        watchValidation(session); session.validation.start(onComplete: onComplete)
     }
 
     /// The screen was closed while it was working (2026-11-11: the user moved to the chat and the run ended unsaid).
@@ -83,11 +90,13 @@ final class FileChangeAutopilot {
     func stop(_ session: FileChangeSession) {
         afterPassing = nil
         session.stopAll()
-        finish("止めました。ここまでの変更は保存されています。")
+        // Stopped by the person: the requests waiting after this one stop too (2026-11-16: 「止める」 went straight on to
+        // the next request of the split message).
+        finish("止めました。ここまでの変更は保存されています。", closed: true)
     }
 
     /// The model finished: save its proposal, or stop if it gave none.
-    func generationFinished(_ session: FileChangeSession, apply: () -> Void) {
+    func generationFinished(_ session: FileChangeSession, apply: @escaping () -> Void) {
         guard isOn else { return }
         guard session.proposal != nil, !session.isApplied else {
             // The model gave the file back unchanged: ask once more, plainly (2026-11-10, SpeechListener's concurrency errors).
@@ -107,6 +116,14 @@ final class FileChangeAutopilot {
             // A file of the plan that already is as asked: kept, and the plan goes on (2026-11-11: 14Translate's screen already
             // had what 「続けて」 planned, and the run stopped at 「変更内容がありません」).
             // Not in a repair: a file the build still fails on is not 「already done」 (2026-11-11: it was, and the run said so).
+            // Not after the step check found something missing: an unchanged file then is the writer giving up, not the step
+            // being done (2026-11-16: the check named the missing change, the rewrite came back unchanged, and the run said
+            // 「頼まれたことは、すでにできていました」).
+            if let missing = StepCheck.missingNoted(in: session.aiInstruction), session.errorMessage?.contains("変更内容がありません") == true {
+                let name = (session.selectedPath.map { ($0 as NSString).lastPathComponent }) ?? "ファイル"
+                return finish("\(name) に、頼まれたことの一部を入れられませんでした(\(missing.prefix(160)))。"
+                    + "「続けて」と書けば、作り方を変えてもう一度試します。")
+            }
             if session.errorMessage?.contains("変更内容がありません") == true, session.artifactPlan != nil, session.repairProgress == nil,
                !session.aiInstruction.hasPrefix(BuildRepairTarget.instructionOpening), let path = session.selectedPath {
                 onReport?("\((path as NSString).lastPathComponent) はすでに頼まれた形になっていたので、そのままにしました。")
@@ -125,7 +142,21 @@ final class FileChangeAutopilot {
                 return
             }
             session.secondWriter = nil
+            // A test repair both writers left unchanged, while a test request runs: once more, told that nothing changed
+            // (2026-11-17: the reading tests' repair ended after one round with 「変更内容がありません」).
+            if Self.testsRequested(root: rootPath), session.aiInstruction.hasPrefix(BuildRepairTarget.instructionOpening),
+               repairRounds < Self.maximumRepairRounds {
+                repairRounds += 1; triedSecondWriter = false
+                if !session.aiInstruction.contains(Self.unchangedNudge) { session.aiInstruction += Self.unchangedNudge }
+                session.askAI(); return
+            }
             if setAsideOldTests(session) { return }
+            // The request's files are written and a repair gave nothing: 「続けて」 goes on with the repair (2026-11-16).
+            if afterPassing == nil, !savedFiles.isEmpty, session.aiInstruction.hasPrefix(BuildRepairTarget.instructionOpening) {
+                Self.setPendingRepair(true, root: rootPath)
+                return finish("案を作れませんでした" + (session.errorMessage.map { "(\($0))" } ?? "") + "。" + Self.leftoverErrors(lastFailedPlan)
+                    + "\n「続けて」と書けば、作ったものはそのままで、このエラーの直しを続けます。")
+            }
             return finish("案を作れませんでした" + (session.errorMessage.map { "(\($0))" } ?? "") + "。")
         }
         retriedUnchanged = false
@@ -134,10 +165,11 @@ final class FileChangeAutopilot {
         if let second = session.secondWriter { keptWriter = second }
         session.secondWriter = nil
         status = "保存して確かめています…"
-        apply()
+        guard needsStepCheck(session) else { return apply() }
+        Task { await checkStepThenApply(session, apply: apply) }
     }
 
-    private func alreadyDone(_ session: FileChangeSession) async {
+    func alreadyDone(_ session: FileChangeSession) async {
         guard await session.skipToNextArtifactTarget() else {
             // Files this run saved are checked before anything is said to pass (2026-11-11: 「通っています」 was said with a
             // compile error left in the file saved just before).
@@ -157,7 +189,7 @@ final class FileChangeAutopilot {
     func applied(_ session: FileChangeSession) {
         guard isOn else { return }
         if let path = session.appliedChange?.proposal.relativePath {
-            savedFiles.append(path)
+            savedFiles.append(path); lastApplied = session.appliedChange?.proposal
             onReport?("\((path as NSString).lastPathComponent) を\(repairRounds == 0 ? "作りました" : "直しました")。")
         }
         if session.canContinueArtifactPlan {
@@ -185,7 +217,9 @@ final class FileChangeAutopilot {
         let root = URL(fileURLWithPath: session.rootPath)
         if passed, repairRounds < Self.maximumRepairRounds,
            case let missing = MissingResourceCheck.diagnostics(rootURL: root) + BackgroundCallbackCheck.diagnostics(rootURL: root)
-               + DuplicateLiteralKeyCheck.diagnostics(rootURL: root),
+               + DuplicateLiteralKeyCheck.diagnostics(rootURL: root) + BundledPromptCheck.diagnostics(rootURL: root)
+               + UnfinishedCodeCheck.diagnostics(rootURL: root, savedFiles: savedFiles,
+                                                 before: { [rootPath = session.rootPath] in UnfinishedCodeCheck.committed($0, root: rootPath) }),
            let first = missing.first {
             repairRounds += 1
             let name = (first.relativePath as NSString).lastPathComponent
@@ -195,6 +229,11 @@ final class FileChangeAutopilot {
                 diagnostics: missing.filter { $0.relativePath == first.relativePath })], unresolvedErrorCount: 0))
             session.askAI()
             return
+        }
+        // 「続けて」 after a run that left only errors: once they are fixed, the request is done (not planned again).
+        if passed, afterPassing != nil, Self.hasPendingRepair(root: rootPath) {
+            afterPassing = nil
+            return finish("できました。残っていたエラーを直して、ビルドとテストに合格しました(修正 \(repairRounds) 回)。" + setAsideNote)
         }
         if passed, let next = afterPassing {
             afterPassing = nil
@@ -207,9 +246,19 @@ final class FileChangeAutopilot {
             return
         }
         if passed {
-            return finish("できました。ビルドとテストに合格しました(保存 \(savedFiles.count) 件、修正 \(repairRounds) 回)。" + setAsideNote)
+            return finish("できました。ビルドとテストに合格しました(保存 \(savedFiles.count) 件、修正 \(repairRounds) 回)。" + setAsideNote + skippedNote)
         }
-        lastFailedPlan = session.validation.failureAnalysis?.repairPlan
+        lastFailedPlan = keepingBetter(session, previous: lastFailedPlan, new: session.validation.failureAnalysis?.repairPlan)
+        // A newer iOS asked for by the code, and the person's iPhone has it: the project's minimum iOS goes up (2026-11-17).
+        if let plan = lastFailedPlan, case let messages = plan.targets.flatMap({ $0.diagnostics.map(\.message) }),
+           let version = DeploymentTargetRaise.required(messages), !raisedTarget,
+           let old = DeploymentTargetRaise.raise(root: session.rootPath, to: version) {
+            raisedTarget = true
+            onReport?("新しい iOS の仕組みを使うので、プロジェクトの最低 iOS を \(old) から \(version) に上げました(つないでいる iPhone はそれ以上の版です)。もう一度確かめます。")
+            status = "最低 iOS を上げて確かめ直しています…"
+            session.validation.start(onComplete: { _ in })
+            return
+        }
         // Old tests set aside are not repaired again while something new fails (2026-11-13: a run whose change broke one
         // test spent its repairs on the reading tests set aside the day before).
         if let full = lastFailedPlan, case let fresh = full.targets.filter({ !setAsideFiles.contains($0.relativePath) }),
@@ -222,11 +271,18 @@ final class FileChangeAutopilot {
             return finish("確かめたら通りませんでしたが、どこを直せばよいかを見つけられませんでした。" + reason
                 + "様子を言葉で書いてもらえれば(例: 「〜すると止まる」)、それをもとに直します。")
         }
+        if let consolidate = onConsolidate, let text = consolidationRequest(session, plan: plan) {
+            afterPassing = nil; isOn = false; repairRounds = 0; consolidate(text); return }
         guard repairRounds < Self.maximumRepairRounds else {
             if setAsideOldTests(session) { return }
-            return finish("\(Self.maximumRepairRounds) 回直しても通りませんでした。下のエラーを見て、指示を足してからもう一度お願いします。")
+            // The request's own files are written: 「続けて」 fixes what is left rather than planning it again.
+            if afterPassing == nil, !savedFiles.isEmpty || Self.hasPendingRepair(root: rootPath) {
+                Self.setPendingRepair(true, root: rootPath)
+            }
+            return finish("\(Self.maximumRepairRounds) 回直しても通りませんでした。" + Self.leftoverErrors(lastFailedPlan)
+                + "\n「続けて」と書けば、作ったものはそのままで、このエラーの直しを続けます。様子や直し方の指示を足してもかまいません。")
         }
-        repairRounds += 1
+        repairRounds += 1; if repairRounds == 1 { RepairHistory.shared.reset(root: rootPath) }
         status = "エラーを直しています(\(repairRounds)/\(Self.maximumRepairRounds) 回目: \(plan.targets[0].relativePath))…"
         onReport?("確かめたら通らなかったので直しています(\(repairRounds) 回目、\((plan.targets[0].relativePath as NSString).lastPathComponent))。")
         await session.continueRepair(with: plan)
@@ -240,12 +296,12 @@ final class FileChangeAutopilot {
     private func setAsideOldTests(_ session: FileChangeSession) -> Bool {
         guard let next = afterPassing, let plan = session.validation.failureAnalysis?.repairPlan ?? lastFailedPlan,
               Self.onlyTestsFail(plan) else { return false }
-        setAsideFiles = Set(plan.targets.map(\.relativePath))
+        // A request about these very tests: its plan, which may change several files, is what fixes them (2026-11-18).
+        if !Self.testsRequested(root: rootPath) { setAsideFiles = Set(plan.targets.map(\.relativePath)) }
         afterPassing = nil
-        isOn = false
-        repairRounds = 0
+        isOn = false; repairRounds = 0
         let names = plan.targets.map { ($0.relativePath as NSString).lastPathComponent }.joined(separator: "、")
-        onReport?("前からある \(names) のテストは、直せないまま残っています。アプリは動く状態なので、先に頼まれたことに進みます。")
+        onReport?(Self.setAsideMessage(names, requested: Self.testsRequested(root: rootPath)))
         next()
         return true
     }
@@ -267,15 +323,6 @@ final class FileChangeAutopilot {
             !target.diagnostics.isEmpty && target.diagnostics.allSatisfy { $0.message.hasPrefix("テスト") }
         }
     }
-
-    /// What stopped a check, in everyday words, when it can be told.
-    static func plainReason(_ output: String) -> String? {
-        if output.contains("Fatal error:") || output.contains("crashed") { return "テストの途中でアプリが落ちました。" }
-        if output.contains("CompileAssetCatalog") { return "アイコンなどの素材をまとめる所で失敗しました。" }
-        if output.contains("error:") { return "ビルドでエラーが出ました。" }
-        return nil
-    }
-
     /// The saved test files with no expectation in them.
     static func emptyTests(_ paths: [String], root: String) -> [String] {
         paths.filter { $0.contains("Tests/") && $0.hasSuffix(".swift") }.filter { path in
@@ -284,12 +331,17 @@ final class FileChangeAutopilot {
         }
     }
 
-    private func finish(_ message: String, closed: Bool = false) {
+    func endRun(_ message: String) { isOn = true; finish(message) }
+
+    func finish(_ message: String, closed: Bool = false) {
         isOn = false
         endedAt = Date()
         // Stopped before the request itself (the project as it was did not pass): the requests waiting after it would stop
         // at the same place, so they wait for 「続けて」 instead (2026-11-12: four requests ended the same way in a minute).
         let blocked = afterPassing != nil
+        if message.hasPrefix("できました") || message.hasPrefix("頼まれたことは、すでにできていました") {
+            Self.setPendingRepair(false, root: rootPath)
+        }
         defer { onEnded?(message.hasPrefix("できました") || message.hasPrefix("頼まれたことは、すでにできていました"), closed || blocked) }
         afterPassing = nil
         status = message

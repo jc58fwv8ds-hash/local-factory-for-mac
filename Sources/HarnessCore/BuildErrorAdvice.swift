@@ -13,6 +13,25 @@ public enum BuildErrorAdvice {
         (#"(isEmpty|→ \"\")[^\[]*\[記録: [^\]]*llama"#,
          "直し方: 文章を作るモデルの結果が空のときは、指示文の先頭に文頭の記号(BOS)が要るのに付けていないことが多いです。"
             + "llama_tokenize の add_special を true にしているか、終わりの判定(EOG や区切りの記号)で最初の 1 語目から止めていないかを確かめてください。"),
+        // 2026-11-18: a new list screen took `@ObservedObject var store: TranscriptStore`, a plain class; six repairs kept
+        // the wrapper and the batch of seven requests stopped.
+        (#"requires that '([^']+)' conform to 'ObservableObject'"#,
+         "直し方: その型は画面に変化を知らせる型(ObservableObject)ではないので、@ObservedObject / @StateObject / @EnvironmentObject は付けられません。"
+            + "このファイルだけで直すときは、その付け方をやめて `let 名前: 型` で受け取り、画面に出す一覧は `@State private var 一覧: [要素] = []` に"
+            + ".onAppear や .task でその型から読み込んで使ってください。型の側が @Observable なら、付け方をやめて普通の let / var で受け取れば変化も画面に届きます。"
+            + "同じ @ObservedObject を残したまま書き直しても、このエラーは消えません。"),
+        // 2026-11-19: a test gathered a translator's per-piece results with `result += segment` inside a @Sendable callback;
+        // six repairs kept the captured var.
+        (#"mutation of captured var '([^']+)' in concurrently-executing code"#,
+         "直し方: @Sendable のクロージャ(コールバックや Task の中)では、外で作った var を書き換えられません。"
+            + "集めた値を入れる小さな箱を作ってください: `final class Collected: @unchecked Sendable { private let lock = NSLock(); private var parts: [String] = []; "
+            + "func add(_ s: String) { lock.lock(); parts.append(s); lock.unlock() }; var text: String { lock.lock(); defer { lock.unlock() }; return parts.joined() } }`。"
+            + "クロージャの中では `collected.add(segment)`、終わったら `collected.text` を使います。var を let にしたり Task で包んだりしても、このエラーは消えません。"),
+        // 2026-11-16: `if let x = controller.errorMessage` on a plain String, given back unchanged twice.
+        (#"initializer for conditional binding must have Optional type, not '([^']+)'"#,
+         "直し方: その値は Optional ではない(nil にならない)ので、if let / guard let は使えません。if let x = 値 の行を、"
+            + "値そのものを使う形に書き換えてください。文字列なら `if !値.isEmpty { … 値 … }`、それ以外は if をやめてそのまま使います。"
+            + "受け取る側の変数が Optional(String? など)なら、そこへはそのまま代入できます。"),
         (#"from (a )?nonisolated deinit|in a nonisolated deinit"#,
          "直し方: deinit は main actor の外で動くので、@MainActor のクラスのプロパティには一切触れられません。deinit の中身は"
             + "すべて消して空にし(必要なら deinit ごと消す)、片づけは stop() など main actor のメソッドで行ってください。"),

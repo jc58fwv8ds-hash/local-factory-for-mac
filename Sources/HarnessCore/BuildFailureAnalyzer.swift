@@ -102,6 +102,8 @@ public enum BuildFailureAnalyzer {
         diagnostics = RedeclarationRetarget.retarget(diagnostics, rootURL: rootURL)
         // A member another file needs and the type lacks: the type's file gets it (2026-11-11).
         diagnostics = MissingMemberRetarget.retarget(diagnostics, rootURL: rootURL)
+        // A closure sent to a project actor's method that does not take it as @Sendable: the declaration's file (2026-11-19).
+        diagnostics = SendableClosureRetarget.retarget(diagnostics, rootURL: rootURL)
         // Errors xcodebuild could not place (inside a macro such as #expect): the files of its 「The following build commands
         // failed: SwiftCompile … File.swift」 list get them (2026-11-12: JapaneseSpeakerTests' #expect errors named no file).
         if diagnostics.isEmpty {

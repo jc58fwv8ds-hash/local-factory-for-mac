@@ -28,7 +28,9 @@ public enum TestFailureAnalyzer {
                 + (context.isEmpty ? "" : " [記録: " + context.joined(separator: ", ") + "]")
             found.append(BuildFailureDiagnostic(validationKind: kind, relativePath: target, line: nil, column: nil,
                                                 message: String(detail.prefix(600))))
-            if found.count >= 4 { break }
+            // Every failing test, not the first four of the whole project (2026-11-17: the reading file had two failing
+            // tests, the translator's three filled the four, and each repair saw one of the two and broke the other).
+            if found.count >= 16 { break }
         }
         // Only xcodebuild's closing list was left (「Failing tests: JapaneseSpeakerTests.convertsThreeBonsToSanbon()」):
         // the tested file, with the tests' names, which say what was expected (2026-11-12).
@@ -77,7 +79,7 @@ public enum TestFailureAnalyzer {
         return files.first { ($0 as NSString).lastPathComponent == testFile }
     }
 
-    static func swiftFiles(under root: URL) -> [String] {
+    public static func swiftFiles(under root: URL) -> [String] {
         guard let entries = FileManager.default.enumerator(at: root, includingPropertiesForKeys: nil,
                                                           options: [.skipsHiddenFiles]) else { return [] }
         var paths: [String] = []

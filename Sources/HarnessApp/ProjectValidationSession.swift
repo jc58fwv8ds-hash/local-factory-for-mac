@@ -62,8 +62,18 @@ final class ProjectValidationSession {
         start(onComplete: onComplete)
     }
 
+    /// Told when a check stops on an error, so a run waiting for it does not wait forever (2026-11-19: the first check of
+    /// a 14Translate request stopped after three minutes, the error went only to this session, and the run said nothing for
+    /// forty minutes with 「止める」 still showing).
+    @ObservationIgnored var onFailure: (@MainActor (String) -> Void)?
+    @ObservationIgnored private var lastOnComplete: (@MainActor (ProjectValidationReport) -> Void)?
+
+    /// The last check started again with what it was to do when done.
+    func retry() { if let lastOnComplete { start(onComplete: lastOnComplete) } }
+
     func start(onComplete: @escaping @MainActor (ProjectValidationReport) -> Void) {
         guard !isRunning else { return }
+        lastOnComplete = onComplete
         recoveryGeneration += 1
         recoveryStatus = nil
         isRunning = true
@@ -88,6 +98,10 @@ final class ProjectValidationSession {
             } catch {
                 errorMessage = error.localizedDescription
                 recoveryStatus = .unresolved
+                isRunning = false
+                validationTask = nil
+                onFailure?(error.localizedDescription)
+                return
             }
             isRunning = false
             validationTask = nil

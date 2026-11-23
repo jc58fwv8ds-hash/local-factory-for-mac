@@ -70,6 +70,9 @@ extension WorkspaceStore {
             try? await Task.sleep(for: .seconds(2))   // the closing screen first, then the next one opens
             guard let self else { return }
             let waiting = AutopilotRequests.shared.hasWaiting(id)
+            // The next request of a split message is its own job, not only the errors the last one left (2026-11-16: it
+            // was ended as 「できました」 once those errors were fixed, its own part never planned).
+            if waiting { FileChangeAutopilot.setPendingRepair(false, root: root) }
             let tally = AutopilotRequests.shared.ended(projectID: id, good: good)
             if waiting { return self.note("次の依頼に進みます。", to: id) }
             if let tally, tally.total > 1 { self.note("分けた依頼 \(tally.total) 件のうち、\(tally.good) 件ができました。", to: id) }
@@ -95,7 +98,15 @@ extension WorkspaceStore {
             let file = report.typeName.flatMap { DeviceCrashFile.declaring($0, under: rootURL) }
             return report.advice + (file.map { "\n直すファイル: \($0)" } ?? "")
         }.joined(separator: "\n\n")
-        return (detail, reports[0].plainSummary)
+        // The code changed since that build went onto the iPhone (2026-11-18: the crash in AnalyzerInput had been fixed in
+        // the code, the report was older, and the plan guessed another cause and rewrote the listener for it).
+        let changed = TestFailureAnalyzer.swiftFiles(under: rootURL).filter { path in
+            !path.contains("Tests/") && ((try? FileManager.default.attributesOfItem(atPath: rootURL.appendingPathComponent(path).path)[.modificationDate] as? Date)
+                .map { $0 > install.installedAt } ?? false)
+        }
+        let stale = changed.isEmpty ? "" : "\n\nこの記録は iPhone に入れた版のもので、そのあと \(changed.prefix(4).joined(separator: "、")) が書き換えられています。"
+            + "記録の原因が今のコードでもう直っていないかを先にコードで確かめ、直っていればそこは変えないこと。直っていれば、同じ所でほかに落ちる原因がないかだけを確かめること。"
+        return (detail + stale, reports[0].plainSummary)
     }
 
     func noteTrouble(crash: Bool, summary: String?, hints: [String], projectID: UUID) {

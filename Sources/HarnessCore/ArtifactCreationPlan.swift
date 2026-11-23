@@ -15,7 +15,8 @@ public struct ArtifactCreationTarget: Identifiable, Codable, Equatable, Sendable
 
 public struct ArtifactCreationPlan: Codable, Equatable, Sendable {
     public static let maximumTargets = 8
-    public static let maximumInstructionCharacters = 1_200
+    /// Room for the user's whole request with its notes (2026-11-16: at 1,200 the bundled model's format notes were cut).
+    public static let maximumInstructionCharacters = 6_000
 
     public let id: UUID
     public let createdAt: Date
@@ -107,6 +108,21 @@ public struct ArtifactCreationPlan: Codable, Equatable, Sendable {
         guard let currentPath, completedPaths.contains(currentPath), let nextTarget else { return }
         self.currentPath = nextTarget.relativePath
         updatedAt = now
+    }
+}
+
+extension ArtifactCreationPlan {
+    /// The file's own step with the user's request under it, so the writer of each file still sees the concrete values,
+    /// lists and formats the user gave (2026-11-16: the plan summed up 「最初の中身は No cap=マジで…」 as 「指定された
+    /// リスト」 and the writer, never shown the list, made up English→Spanish entries of its own).
+    public func writerInstruction(for target: ArtifactCreationTarget) -> String {
+        guard !instruction.isEmpty, instruction != target.instruction else { return target.instruction }
+        return """
+        \(target.instruction)
+
+        ユーザーの元の依頼(このファイルに関わる具体的な値・一覧・形式は省かず、書かれたとおりに使う。ほかのファイルの分はしなくてよい):
+        \(instruction)
+        """
     }
 }
 

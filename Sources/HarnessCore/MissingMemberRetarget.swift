@@ -15,6 +15,10 @@ public enum MissingMemberRetarget {
             }
             let members = ProjectMemberLookup.members(of: type, projectRoot: rootURL)
             guard !members.contains(where: { resembles($0, member) }) else { result.append(diagnostic); continue }
+            // A short generic name on a value type with text in it is the user's guess at a field it has (2026-11-23:
+            // the subtitle list used TranslationPair.text, the pair holds 「translation」; sent to add 「text」, the long
+            // controller file was rewritten six times and broken).
+            if member.count < 5, isValueWithText(type, file: file, rootURL: rootURL) { result.append(diagnostic); continue }
             guard added.insert(type + "." + member).inserted else { continue }
             result.append(BuildFailureDiagnostic(
                 validationKind: diagnostic.validationKind, relativePath: file, line: nil, column: nil,
@@ -22,6 +26,12 @@ public enum MissingMemberRetarget {
                     + "\(type) に \(member) を足してください(使い方: \(diagnostic.message))。"))
         }
         return result
+    }
+
+    static func isValueWithText(_ type: String, file: String, rootURL: URL) -> Bool {
+        guard let text = try? String(contentsOf: rootURL.appendingPathComponent(file), encoding: .utf8),
+              text.range(of: #"\bstruct\s+\#(type)\b"#, options: .regularExpression) != nil else { return false }
+        return ProjectMemberLookup.typeBody(of: type, in: text).range(of: #"(var|let)\s+\w+\s*:\s*String\b"#, options: .regularExpression) != nil
     }
 
     static func declaringFile(of type: String, under root: URL) -> String? {

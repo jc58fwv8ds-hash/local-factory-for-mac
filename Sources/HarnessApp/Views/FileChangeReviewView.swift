@@ -146,11 +146,21 @@ struct FileChangeReviewView: View {
             if startsAutopilotPlan, !autopilotRequested, artifactPlanner.plan == nil {
                 autopilotRequested = true
                 // The project as it is first; the request's plan once it builds and passes (2026-11-10).
-                session.autopilot.checkFirst(session, onComplete: onValidation) {
+                // Two copies of the same work found while checking: their merge is planned, then the request (2026-11-18).
+                session.autopilot.onConsolidate = { merge in
+                    isShowingArtifactPlanner = true
+                    artifactPlanner.instruction = merge + "\n\nそのうえで、もとの依頼: " + initialInstruction
+                    artifactPlanner.generate(existingPaths: session.files.map(\.relativePath))
+                }
+                session.autopilot.checkFirst(session, request: initialInstruction, onComplete: onValidation) {
                     isShowingArtifactPlanner = true
                     artifactPlanner.instruction = initialInstruction
                     autopilotRequested = true
                     artifactPlanner.generate(existingPaths: session.files.map(\.relativePath))
+                    // A plan that could not even start (no model) ends the run saying so (2026-11-19: it waited an hour).
+                    if !artifactPlanner.isGenerating, artifactPlanner.plan == nil {
+                        session.autopilot.endRun("使える AI モデルが見つからないので、計画を作れませんでした。サイドバーの「AIモデル」でモデルを選んでから「続けて」と書いてください。")
+                    }
                 }
             }
         }
@@ -162,6 +172,15 @@ struct FileChangeReviewView: View {
         // 「おまかせで作る」 drives the same steps the buttons do (2026-11-10).
         .onChange(of: session.isGenerating) { wasGenerating, isGenerating in
             if wasGenerating && !isGenerating { session.autopilot.generationFinished(session, apply: applyProposal) }
+        }
+        // A plan that could not be made, in a run asked for in the chat: asked once more, then said in the chat and ended
+        // (2026-11-16: 「同じパスが計画内で重複しています」 stood on the screen and the chat waited half an hour).
+        .onChange(of: artifactPlanner.isGenerating) { wasGenerating, isGenerating in
+            guard wasGenerating, !isGenerating, startsAutopilotPlan, autopilotRequested, artifactPlanner.plan == nil,
+                  let error = artifactPlanner.errorMessage else { return }
+            session.autopilot.planFailed(error) {
+                artifactPlanner.generate(existingPaths: session.files.map(\.relativePath))
+            }
         }
         // A run asked for in the chat reports there; its screen closes when it ends (2026-11-11).
         .onChange(of: session.autopilot.endedAt) { _, ended in

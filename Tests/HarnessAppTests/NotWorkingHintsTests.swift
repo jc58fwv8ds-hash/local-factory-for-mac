@@ -126,3 +126,18 @@ struct NotWorkingHintsTests {
         #expect(!NotWorkingHints.knownTraps([("App/T.swift", translator)]).contains { $0.contains("llama_decode") })
     }
 }
+
+struct AudioSessionClashTests {
+    @Test func aSpeakerOnPlaybackAndAListenerThatTapsFirstAreFound() {
+        let speaker = ("App/Speaker.swift", "try session.setCategory(.playback, mode: .spokenAudio, options: [.defaultToSpeaker, .duckOthers])")
+        let listener = ("App/Listener.swift", "let f = inputNode.outputFormat(forBus: 0)\ninputNode.installTap(onBus: 0, bufferSize: 1024, format: f) { _, _ in }\ntry s.setCategory(.playAndRecord, mode: .measurement, options: [.defaultToSpeaker])")
+        let hints = NotWorkingHints.audioSessionClash([speaker, listener])
+        #expect(hints.contains { $0.hasPrefix("App/Speaker.swift") && $0.contains(".playAndRecord でしか使えない") })
+        #expect(hints.contains { $0.hasPrefix("App/Listener.swift") && $0.contains("installTap のところでアプリが落ちます") })
+        #expect(hints.contains { $0.contains("部品ごとに別々の種類") })
+        #expect(!NotWorkingHints.plain(hints).isEmpty)
+        // One shared .playAndRecord set before the tap: nothing to say.
+        let fine = ("App/Listener.swift", "try s.setCategory(.playAndRecord, options: [.defaultToSpeaker])\ninputNode.installTap(onBus: 0, bufferSize: 1024, format: f) { _, _ in }")
+        #expect(NotWorkingHints.audioSessionClash([fine]).isEmpty)
+    }
+}

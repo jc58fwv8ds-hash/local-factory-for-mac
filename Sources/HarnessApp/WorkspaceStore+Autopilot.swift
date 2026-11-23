@@ -21,13 +21,24 @@ extension WorkspaceStore {
             AutopilotRequests.shared.request(all: left, projectID: record.id)
             return true
         }
+        // 「その案で作って」: the request and the answer it points at go with it (2026-11-16: it was planned from those five
+        // words alone, and the plan rebuilt the whole translation flow instead of the glossary that had been asked for).
+        let followUp = continues ? nil : CodeChatFollowUp.request(text, conversation: record.project.conversation)
+        if let followUp { text = followUp }
+        // A new request (not 「続けて」) is planned on its own; errors left by the last one are no longer the job.
+        if !continues, let root = record.sourceLocation { FileChangeAutopilot.setPendingRepair(false, root: root) }
+        if !continues { AutopilotRequests.shared.forgetUnfinished(projectID: record.id) }
         if continues {
             // After a restart the last request is the latest one in this project's chat that asked for work.
-            let fromChat = record.project.conversation.last { $0.role == .user && CodeChatIntent.asksForWork($0.content) }?.content
+            // Not an earlier 「続けて」 itself (2026-11-18: taken as the request, it was planned as the goal 「続けて」 and the run
+            // went back to old, unrelated work).
+            let fromChat = record.project.conversation.last {
+                $0.role == .user && !CodeChatIntent.isContinue($0.content) && CodeChatIntent.asksForWork($0.content)
+            }?.content
             guard let last = AutopilotRequests.shared.lastText[record.id] ?? fromChat else { return false }
             text = last
         }
-        guard !text.isEmpty, continues || !CodeChatIntent.isQuestion(text) else { return false }
+        guard !text.isEmpty, continues || !CodeChatIntent.isQuestion(instruction) else { return false }
         // An attached screenshot goes with the request as its text, where it is on the screen, and what a model that sees
         // pictures makes of it and of any markup drawn on it (2026-11-11).
         let pictures = visualAttachments.items.compactMap { item in
@@ -42,7 +53,7 @@ extension WorkspaceStore {
         instruction = ""
         // 「落ちる」: the iPhone's crash reports go with the request; 「動かない」: what in the code would keep it from working.
         let crash = CodeChatIntent.mentionsCrash(text), trouble = crash || CodeChatIntent.mentionsNotWorking(text)
-        let several = RequestSplitting.mayHoldSeveral(text) && !continues
+        let several = RequestSplitting.mayHoldSeveral(text) && !continues && followUp == nil
         guard trouble || !images.isEmpty || several, let root = record.sourceLocation else {
             AutopilotRequests.shared.request(text, projectID: record.id)
             return true
@@ -56,7 +67,14 @@ extension WorkspaceStore {
             let context = crash ? await self?.crashContext(root: root) ?? nil : nil
             // What the app wrote while it ran on the iPhone (2026-11-13), and what it shows.
             let console = trouble ? DeviceConsoleLog.tail(projectRoot: root) : []
-            let hints = trouble ? NotWorkingHints.hints(rootURL: URL(fileURLWithPath: root), request: text) + NotWorkingHints.fromConsole(console) : []
+            // Patterns over a whole try (a sentence handled again and again, the same failure each time) are looked for in
+            // more of the log than the model is shown (2026-11-16: 40 lines held one step of a long run of growing pieces).
+            let wide = trouble ? DeviceConsoleLog.lastRun(projectRoot: root) : []
+            // What the iPhone's own record shows goes with every request of the message (2026-11-16: split into 「訳が散発的に
+            // される」 and 「訳されなくなった」, neither had a word the code knew as trouble, and the finding reached neither plan).
+            let shown = trouble ? NotWorkingHints.fromConsole(wide) + NotWorkingHints.repeatedFailures(wide, rootURL: URL(fileURLWithPath: root))
+                + NotWorkingHints.growingPieces(wide) + NotWorkingHints.batchedPieces(wide) : []
+            let hints = (trouble ? NotWorkingHints.hints(rootURL: URL(fileURLWithPath: root), request: text) : []) + shown
             if let self, trouble { self.noteTrouble(crash: crash, summary: context?.summary, hints: hints, projectID: id) }
             if let self, console.count > 1 { self.note("iPhone で動いていたときの記録も読みました(最後の \(console.count) 行)。", to: id) }
             // The app was opened again by hand, so the record stops before what the person saw (2026-11-13).
@@ -67,14 +85,18 @@ extension WorkspaceStore {
             let found = ([context?.detail].compactMap { $0 } + hints
                 + (console.count > 1 ? ["iPhone で動いていたときのアプリの出力(最後の部分。止まった直前に何が起きたかの手がかり):\n" + console.joined(separator: "\n")] : []))
                 .joined(separator: "\n")
-            let items = several ? await self?.splitRequests(text, pictures: seen) ?? [text] : [text]
+            // One request back from the splitter is the message itself, not the splitter's shorter retelling of it
+            // (2026-11-16: 「その案で作って」 came back alone, without the request and the answer it had been given with).
+            let split = several ? await self?.splitRequests(text, pictures: seen) ?? [text] : [text]
+            let items = split.count > 1 ? split : [text]
             if items.count > 1, let self {
                 self.note("依頼を \(items.count) 件に分けました。順に進めます。\n" + items.enumerated().map { "\($0.offset + 1). \($0.element)" }.joined(separator: "\n"), to: id)
             }
             let requests = items.map { item -> String in
                 let troubled = CodeChatIntent.mentionsCrash(item) || CodeChatIntent.mentionsNotWorking(item) || items.count == 1
+                let findings = troubled ? found : shown.joined(separator: "\n")
                 return ([item, items.count > 1 ? "(利用者のメッセージ全体: \(text))" : nil, picturesText.isEmpty ? nil : picturesText,
-                         found.isEmpty || !troubled ? nil : (items.count > 1 ? CodeChatIntent.sharedFindingsHeading : "調べてわかったこと:\n") + found].compactMap { $0 }).joined(separator: "\n\n")
+                         findings.isEmpty ? nil : (items.count > 1 ? CodeChatIntent.sharedFindingsHeading : "調べてわかったこと:\n") + findings].compactMap { $0 }).joined(separator: "\n\n")
             }
             AutopilotRequests.shared.request(all: requests, projectID: id)
         }
@@ -110,11 +132,19 @@ enum CodeChatIntent {
         ["動かない", "動かなかった", "機能していない", "機能しない", "反応しない", "何も起きない", "出ない", "鳴らない", "聞こえない",
          "読み上げない", "表示されない", "効かない", "止まる", "止まって", "おかしい", "変な読み", "読み間違", "ミス", "エラー",
          "効果なし", "効果がない", "皆無", "変わらず", "何も出ない", "無反応", "起こらない", "起きない", "反応がない",
-         "遅れて", "数十秒", "始まらない", "リアルタイム", "待たされ", "間に合わない",
+         "遅れて", "数十秒", "始まらない", "始まらず", "何も始まら", "リアルタイム", "待たされ", "間に合わない",
          "ダメ", "だめ", "駄目", "使えない", "意味がない", "使い物にならない",
-         "抜けが", "抜けも", "抜けて", "抜ける", "欠けて", "飛ばされ", "途切れ",
-         "諦め", "破綻", "疑わしい", "不自然", "精度が"].contains(where: text.contains)
-            || failedAction(text) || slowReport(text)
+         "抜けが", "抜けも", "抜けて", "抜ける", "欠けて", "飛ばされ", "途切れ", "途中で切れ", "切れる", "切れて", "切られ",
+         "諦め", "破綻", "疑わしい", "不自然", "精度が", "散発", "ときどきしか", "たまにしか", "されなくなった", "しなくなった",
+         "なくなった", "されない", "されません"].contains(where: text.contains)
+            || failedAction(text) || slowReport(text) || onlyShows(text)
+    }
+
+    /// 「演説って出るだけ」「英語しか出ない」: only something wrong comes out (2026-11-18: said after trying the app, it matched no
+    /// word above and would have been answered as talk).
+    static func onlyShows(_ text: String) -> Bool {
+        text.range(of: #"(出る|出てくる|表示される|聞こえる|言う|読まれる|訳される|流れる)だけ"#, options: .regularExpression) != nil
+            || text.range(of: #"しか(出|表示され|聞こえ|訳され|読まれ)(ない|ません)"#, options: .regularExpression) != nil
     }
 
     /// 「…が遅く」「遅すぎる」 said as a report, not asked (2026-11-13: 「開始の速度が遅く結果分の抜けもある」 must be work; 「なぜ遅いの？」
@@ -136,9 +166,17 @@ enum CodeChatIntent {
             || text.range(of: #"(繋|つな|接続し)(いで|が)?(ない|ってない|っていない)の?と(一緒|同じ)"#, options: .regularExpression) != nil
     }
 
+    /// 「まだファイルは変えないで」: work held off. A rule about what to make (「PLaMo にない欄は作らないで」「通信の中身は変えないで」)
+    /// is not (2026-11-16: a rebuild request ending in such a rule was answered with a plan and nothing was made).
+    static func holdsOffWork(_ text: String) -> Bool {
+        text.range(of: #"(まだ|ファイル|コード|ソース|何も)[はをもに]?(何も)?(変え|作ら|触ら|いじら|書き換え|直さ)ないで"#,
+                   options: .regularExpression) != nil
+            || ["変えないで", "作らないで", "触らないで"].contains(text.trimmingCharacters(in: CharacterSet(charactersIn: "。.!！ 　ね")))
+    }
+
     static func asksForWork(_ text: String) -> Bool {
-        let holds = ["変えないで", "作らないで", "触らないで", "まだ何も", "相談", "言い直", "説明して", "教えて", "どう思う"]
-        if holds.contains(where: text.contains) { return false }
+        let holds = ["まだ何も", "相談", "言い直", "説明して", "教えて", "どう思う"]
+        if holds.contains(where: text.contains) || holdsOffWork(text) || isContinue(text) { return false }
         if mentionsCrash(text) || mentionsNotWorking(text) { return true }
         // Feedback after trying the app is work too (2026-11-12: 「…が問題」「日本語だけで良いのでは？」「…できたら良いだけ
         // だよね」 went to the chat as a question, and its pictures were refused there).
@@ -147,6 +185,21 @@ enum CodeChatIntent {
         if wishes.contains(where: text.contains) { return true }
         let work = ["作って", "直して", "追加して", "足して", "変えて", "消して", "つないで", "組み込んで", "書いて", "実装して",
                     "修正して", "対応して", "入れて", "作成して", "動くようにして", "できるようにして", "直してくれ", "追加してくれ"]
-        return work.contains(where: text.contains)
+        return work.contains(where: text.contains) || endsAsking(text)
+    }
+
+    /// A sentence that ends as a request to do something (「…外して、…まとめて。」), whatever the verb (2026-11-18: 「翻訳の
+    /// 部分からは外して、読み上げの部分にまとめて」 matched no word of the list, was answered in the chat as talk and nothing was
+    /// changed). Asking to be told or shown something stays talk.
+    static func endsAsking(_ text: String) -> Bool {
+        let talk = ["教えて", "説明して", "答えて", "聞かせて", "出して", "考えて", "見せて", "まとめて話", "待って"]
+        let sentences = text.components(separatedBy: CharacterSet(charactersIn: "。.!！\n"))
+            .map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        return sentences.contains { sentence in
+            guard sentence.range(of: #"[ぁ-んァ-ヶ一-龠](て|で)(ください|下さい|くれ|ほしい|欲しい|ね|よ)?$"#,
+                                 options: .regularExpression) != nil,
+                  sentence.range(of: #"(ない|ず)で(ください|下さい|ね|よ)?$"#, options: .regularExpression) == nil else { return false }
+            return !talk.contains { sentence.hasSuffix($0) || sentence.contains($0 + "ください") }
+        }
     }
 }

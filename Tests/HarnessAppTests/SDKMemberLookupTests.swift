@@ -224,6 +224,17 @@ struct MissingMemberRetargetTests {
             message: "value of type 'Controller' has no member 'isRunnin'")
         #expect(MissingMemberRetarget.retarget([near], rootURL: root).first?.relativePath == "App/Screen.swift")
     }
+
+    @Test func aShortGuessOnAValueWithTextStaysWhereItIsUsed() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: root.appendingPathComponent("App"), withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try "struct TranslationPair: Identifiable {\n    let id = UUID()\n    let original: String\n    let translation: String\n}"
+            .write(to: root.appendingPathComponent("App/Controller.swift"), atomically: true, encoding: .utf8)
+        let diagnostic = BuildFailureDiagnostic(validationKind: .xcodeBuild, relativePath: "App/Screen.swift", line: 9, column: 3,
+            message: "value of type 'TranslationPair' has no member 'text'")
+        #expect(MissingMemberRetarget.retarget([diagnostic], rootURL: root).first?.relativePath == "App/Screen.swift")
+    }
 }
 
 struct ProvisioningProfileRenewalTests {

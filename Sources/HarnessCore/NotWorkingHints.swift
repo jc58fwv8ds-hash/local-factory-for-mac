@@ -12,7 +12,48 @@ public enum NotWorkingHints {
         let files = TestFailureAnalyzer.swiftFiles(under: rootURL).filter { !$0.contains("Tests/") }
         let texts = files.compactMap { path in (try? String(contentsOf: rootURL.appendingPathComponent(path), encoding: .utf8)).map { (path, $0) } }
         let traps = knownTraps(texts).filter { !$0.contains(readingHintMark) || aboutReading(request) }
-        return unreadPublished(texts) + silentErrors(texts) + stopsOnReportedError(texts) + traps + untraced(texts)
+        return audioSessionClash(texts) + samplerWithoutPick(texts) + listensForOneQuery(texts) + unreadPublished(texts) + silentErrors(texts) + stopsOnReportedError(texts) + dropsInput(texts) + speechCuts(texts) + subtitleGaps(texts) + streamGaps(texts) + wrongText(texts) + traps + untraced(texts)
+    }
+
+    /// Two parts that set the shared audio session their own ways (2026-11-16: 14Translate quit the moment 翻訳開始 was
+    /// pressed. The speaker set `.playback` with `.defaultToSpeaker`, which only `.playAndRecord` takes, so it failed with
+    /// -50; the listener read the microphone's format before it set `.playAndRecord`, got an empty one, and installTap with
+    /// it stopped the app).
+    static func audioSessionClash(_ texts: [(String, String)]) -> [String] {
+        var hints: [String] = []
+        for (path, text) in texts {
+            for call in text.components(separatedBy: "setCategory(").dropFirst() {
+                let args = String(call.prefix(200).prefix { $0 != "\n" })
+                if !args.hasPrefix(".playAndRecord"), args.contains(".defaultToSpeaker") {
+                    hints.append("\(path): AVAudioSession の setCategory(\(args.prefix(60))…) に、.playAndRecord でしか使えない指定(.defaultToSpeaker など)が付いています。"
+                        + "この設定はエラー(-50)になり、音声の設定が変わらないままになります。")
+                }
+            }
+            if let tap = text.range(of: "installTap("), let category = text.range(of: "setCategory("), category.lowerBound > tap.lowerBound {
+                hints.append("\(path): マイクの音の形式(inputNode.outputFormat)を読んで installTap する前に、音声の設定(setCategory(.playAndRecord) と setActive)をしてください。"
+                    + "ほかの部品が .playback にしていると形式が空(sampleRate 0)になり、installTap のところでアプリが落ちます。形式の sampleRate と channelCount が 0 なら、録音を始めずにエラーを画面に出してください。")
+            }
+        }
+        let categories = Set(texts.flatMap { $0.1.components(separatedBy: "setCategory(").dropFirst().map { String($0.prefix { $0 != "," && $0 != ")" }) } })
+        if categories.count > 1, texts.contains(where: { $0.1.contains("installTap(") }) {
+            hints.append("音声の設定(AVAudioSession の setCategory)を、部品ごとに別々の種類(\(categories.sorted().joined(separator: "、")))にしています。"
+                + "聞き取りと読み上げを同時に使うアプリでは、設定は 1 か所にまとめ、.playAndRecord(.defaultToSpeaker と .allowBluetoothA2DP)に揃えてください。"
+                + "読み上げの部品が .playback に切り替えると、聞き取りのマイクが使えなくなります。")
+        }
+        return hints
+    }
+
+    /// A llama.cpp sampler chain with no sampler that picks a token (2026-11-16: 14Translate's chain was temp, top-p and
+    /// top-k only, and the first translation stopped the app at llama_sampler_sample's GGML_ASSERT).
+    static func samplerWithoutPick(_ texts: [(String, String)]) -> [String] {
+        let picks = ["llama_sampler_init_dist", "llama_sampler_init_greedy", "llama_sampler_init_mirostat"]
+        return texts.compactMap { path, text in
+            guard text.contains("llama_sampler_chain_init"), text.contains("llama_sampler_chain_add"),
+                  !picks.contains(where: text.contains) else { return nil }
+            return "\(path): llama.cpp の選び方の鎖(llama_sampler_chain)に、最後に 1 つを選ぶ部品(llama_sampler_init_dist(seed) か "
+                + "llama_sampler_init_greedy())がありません。このままだと llama_sampler_sample の GGML_ASSERT(cur_p.selected …) で"
+                + "アプリが落ちます。temp・top_p・top_k などのあと、鎖の最後に llama_sampler_chain_add(chain, llama_sampler_init_dist(LLAMA_DEFAULT_SEED)) を足してください。"
+        }
     }
 
     static let readingHintMark = "日本語の読み上げは、数字と助数詞"
@@ -37,6 +78,13 @@ public enum NotWorkingHints {
             ("端末内の音声認識", "iPhone の中だけで聞き取るための音声データが入っていないと、聞き取りが動きません。"),
             ("フレームごとに認識を始め直して", "音の取り込みの途中で、ほんの一瞬(0.1 秒もない間隔)ごとに聞き取りを始め直しているため、一語も聞き取れず、何も聞こえない状態になっています。"),
             ("No speech detected」(1110)を", "iPhone の記録を見ると、聞き取りの部品は「声が入っていない」と何度も返していて、音が聞き取りまで届いていません。"),
+            (".playAndRecord でしか使えない指定", "読み上げの部品の音声の設定が、組み合わせられない指定のせいで失敗しています。"),
+            ("installTap のところでアプリが落ちます", "聞き取りを始めるとき、マイクを使える設定にする前にマイクの音をつなごうとしていて、そこでアプリが落ちます。開始ボタンを押すとすぐ落ちるのはこのためです。"),
+            (growingMark, "聞き取りの途中結果を、長くなるたびに頭から訳し直して読み上げていて、訳が追いつかずにときどきしか訳されません。"),
+            (shortQueryMark, "聞き取りが「短い語句を 1 つ聞いて終える」設定になっていて、会話を流しても最初の数語で聞き取りが終わります。"),
+            (repeatedMark, "iPhone の記録で、どの文でも同じ失敗が毎回出ています。失敗と決めている判定そのものが、正しい結果まではじいている可能性があります。"),
+            ("最後に 1 つを選ぶ部品", "翻訳モデルが次の文字を選ぶ仕組みに、最後に 1 つに決める部品がないため、訳を始めたとたんにアプリが落ちます。"),
+            ("部品ごとに別々の種類", "聞き取りと読み上げがそれぞれ別の音声の設定をしていて、ぶつかっています。設定を 1 か所にまとめる必要があります。"),
             ("日本語の読み上げは、数字と助数詞", "読み上げは「2頭」のような数と助数詞の組み合わせを読み間違えます。人が言う読みに直してから読み上げる部品が要ります。"),
         ]
         var seen = Set<String>()

@@ -328,7 +328,8 @@ final class FileChangeSession {
 
     /// After a repair still fails to build, the new errors become the next repair (2026-11-10: the sheet stopped at
     /// 「計画の対象をすべて承認しました」 with an empty instruction, and the user had nowhere to go but out).
-    func continueRepair(with plan: BuildRepairPlan) async {
+    func continueRepair(with given: BuildRepairPlan) async {
+        let plan = RepairHistory.shared.leastTriedFirst(given, root: rootPath)
         guard let first = plan.targets.first, !isBusy else { return }
         repairProgress = BuildRepairProgress(plan: plan)
         isApplied = false
@@ -336,6 +337,12 @@ final class FileChangeSession {
         appliedChange = nil
         await select(first.relativePath)
         aiInstruction = first.instruction(source: document?.content, projectRoot: URL(fileURLWithPath: rootPath))
+        if let earlier = RepairHistory.shared.remind(root: rootPath, path: first.relativePath, instruction: aiInstruction) {
+            aiInstruction += earlier
+        }
+        if let request = FileChangeAutopilot.currentRequest(root: rootPath) {
+            aiInstruction += "\n\n利用者がいま頼んでいること(直し方の決まりや値が書いてあれば、それに従う):\n" + String(request.prefix(1_500))
+        }
     }
 
 

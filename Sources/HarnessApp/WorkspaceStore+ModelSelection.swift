@@ -26,8 +26,22 @@ extension WorkspaceStore {
     static var automaticModel: ModelSelection? {
         guard allowsAutomaticModel else { return nil }
         let file = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Models/Qwen3.8-27B-IQ4_XS.gguf")
-        guard FileManager.default.fileExists(atPath: file.path) else { return nil }
-        return ModelSelection(identifier: "qwen3.8-27b-iq4xs", displayName: "Qwen 3.8 27B(自動で読み込み)", runtime: .backburner)
+        if FileManager.default.fileExists(atPath: file.path) {
+            return ModelSelection(identifier: "qwen3.8-27b-iq4xs", displayName: "Qwen 3.8 27B(自動で読み込み)", runtime: .backburner)
+        }
+        // Without that file, the model picked for writing or conversation, when its file is on this Mac (2026-11-19: the
+        // old 27B went to the Trash while Saluki did all the work; 「AI 未接続」 showed, and a request's plan waited an hour
+        // in silence for a model nobody had to pick).
+        return automaticFallback(PurposeModelSettings())
+    }
+
+    static func automaticFallback(_ settings: PurposeModelSettings) -> ModelSelection? {
+        for purpose in [ModelPurpose.writing, .conversation] {
+            guard let selection = settings.chosen(purpose)?.selection, selection.runtime == .backburner else { continue }
+            if let path = BackburnerServer.modelPath(from: selection.identifier), !FileManager.default.fileExists(atPath: path) { continue }
+            return selection
+        }
+        return nil
     }
 
     func selectModel(_ model: InstalledModel) {

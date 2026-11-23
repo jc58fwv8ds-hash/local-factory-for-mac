@@ -24,15 +24,15 @@ extension FileChangeSession {
     }
 
     func prepareCurrentArtifactTarget() async {
-        guard let target = artifactPlan?.currentTarget else { return }
+        guard let plan = artifactPlan, let target = plan.currentTarget else { return }
         isApplied = false
         if files.contains(where: { $0.relativePath == target.relativePath }) {
             await select(target.relativePath)
-            aiInstruction = target.instruction
+            aiInstruction = plan.writerInstruction(for: target)
             return
         }
         beginNewFile()
         newFileRelativePath = target.relativePath
-        aiInstruction = target.instruction
+        aiInstruction = plan.writerInstruction(for: target)
     }
 }
