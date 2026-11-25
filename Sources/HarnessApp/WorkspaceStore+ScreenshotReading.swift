@@ -19,7 +19,7 @@ extension WorkspaceStore {
     /// The model that reads pictures: the catalog's prompt writer (a 9B model with its picture part, 2026-11-07).
     var pictureReadingModel: ModelSelection? {
         let settings = purposeSettings
-        return settings.catalog.roles?["promptWriter"].flatMap { settings.catalog.option(id: $0, for: .writing)?.selection }
+        return settings.role("promptWriter")
     }
 
     private func describeScreenshot(_ image: InferenceImage, request: String) async -> String? {

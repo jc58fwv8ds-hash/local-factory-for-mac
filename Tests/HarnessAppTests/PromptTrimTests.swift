@@ -87,3 +87,26 @@ struct ExcerptAnswerTests {
         if case .failed = ReplaceEdit.apply(oneSide, to: file) {} else { Issue.record("a gap on one side was placed") }
     }
 }
+
+struct ReadAheadAndTriedTests {
+    @Test func theReadAheadIsTheExactStartOfTheNextRequest() throws {
+        let document = EditableSourceDocument(relativePath: "App/A.swift", content: "struct A {\n    var a = 1\n}")
+        let ahead = try #require(ReplaceEdit.readAhead(document: document))
+        let next = ReplaceEdit.messages(document: document, instruction: "a を 2 にしてください")
+        #expect(ahead[0].content == next[0].content)
+        #expect(next[1].content.hasPrefix(ahead[1].content))
+        // A file the next request may show in part: no read-ahead.
+        let middle = EditableSourceDocument(relativePath: "B.swift", content: String(repeating: "let x = 1\n", count: 1_500))
+        #expect(ReplaceEdit.readAhead(document: middle) == nil)
+    }
+
+    @Test func aRepeatedRequestCarriesTheChangeThatDidNotWork() throws {
+        let tried = TriedEdits()
+        let key = TriedEdits.key(path: "A.swift", content: "let a = 1", instruction: "直して")
+        #expect(tried.note(for: key) == nil)
+        tried.record(key, before: "let a = 1", after: "let a = 2")
+        let note = try #require(tried.note(for: key))
+        #expect(note.contains("- let a = 1") && note.contains("+ let a = 2") && note.contains("同じ直しは返さず"))
+        #expect(tried.note(for: TriedEdits.key(path: "A.swift", content: "let a = 2", instruction: "直して")) == nil)
+    }
+}

@@ -7,6 +7,9 @@ extension FileChangeSession {
         var instruction = aiInstruction.trimmingCharacters(in: .whitespacesAndNewlines)
         // How the Apple types the step names are really declared, from this Mac's SDK (2026-11-17: SpeechAnalyzer(recognizer:)).
         if let reference = SDKSwiftInterfaceLookup.shared.reference(for: instruction) { instruction += "\n\n" + reference }
+        // 2026-11-25: the same request again (same file, same text, same instruction) carries what was tried (TriedEdits).
+        let triedKey = document.map { TriedEdits.key(path: $0.relativePath, content: $0.content, instruction: instruction) }
+        if let triedKey, let note = TriedEdits.shared.note(for: triedKey) { instruction += note }
         let creationPath = newFileRelativePath.trimmingCharacters(in: .whitespacesAndNewlines)
         let existingDocument = document
         let createsFile = isCreatingNewFile
@@ -64,6 +67,7 @@ extension FileChangeSession {
                         content = FunctionEdit.splice(content, into: existingDocument.content) ?? existingDocument.content
                     }
                 }
+                if let triedKey, let existingDocument { TriedEdits.shared.record(triedKey, before: existingDocument.content, after: content) }
                 let generatedProposal: FileChangeProposal
                 if createsFile {
                     generatedProposal = try await editor.makeCreationProposal(
@@ -157,6 +161,23 @@ extension FileChangeSession {
             return FileExcerpt.excerpt(of: document.content, instruction: trimmed) == nil ? document.content : nil
         case .failed:
             return nil
+        }
+    }
+
+    /// While the project builds after a change, the model reads the changed file the way the next request on it starts,
+    /// so a repair of that file does not read it again (ReplaceEdit.readAhead, 2026-11-25). Only for the local server,
+    /// whose idle time this uses; the answer (one token) is thrown away.
+    func readAheadNextEdit() {
+        // The file as the change left it (the session's `document` still holds it as it was).
+        guard let model = secondWriter ?? model, model.runtime == .backburner, let applied = appliedChange?.proposal,
+              case let document = EditableSourceDocument(relativePath: applied.relativePath, content: applied.proposedContent),
+              let messages = ReplaceEdit.readAhead(document: document) else { return }
+        let request = InferenceRequest(runtime: model.runtime, modelIdentifier: model.identifier, messages: messages,
+                                       maximumOutputTokens: 1, temperature: 0)
+        let provider = inferenceProvider
+        Task.detached(priority: .utility) {
+            // Nothing to do when it fails: the next request reads the file itself.
+            do { for try await _ in await provider.events(for: request) {} } catch {}
         }
     }
 

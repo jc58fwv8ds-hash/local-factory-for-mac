@@ -27,10 +27,12 @@ struct PurposeModelSettings {
 
     /// The option the user picked for a purpose; nil means the project's model (the default).
     /// The coding model asked when the project's own gives nothing usable (role 「secondCoder」, 2026-11-12).
-    var secondCoder: ModelSelection? {
-        // Only a model whose file is still on this Mac (2026-11-23: the role named a trashed 35B, and the repair stopped at
-        // 「Backburner を起動できませんでした」).
-        guard let selection = catalog.roles?["secondCoder"].flatMap({ catalog.option(id: $0, for: .writing)?.selection }) else { return nil }
+    var secondCoder: ModelSelection? { role("secondCoder") }
+
+    /// The catalog's model for a role, only when its file is still on this Mac (2026-11-23: the role named a trashed 35B, and
+    /// the repair stopped at 「Backburner を起動できませんでした」; 2026-11-25: the prompt writer's 9B was gone after a cleanup).
+    func role(_ name: String) -> ModelSelection? {
+        guard let selection = catalog.roles?[name].flatMap({ catalog.option(id: $0, for: .writing)?.selection }) else { return nil }
         if selection.runtime == .backburner, let path = BackburnerServer.modelPath(from: selection.identifier),
            !FileManager.default.fileExists(atPath: path) { return nil }
         return selection

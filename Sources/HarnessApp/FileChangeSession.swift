@@ -304,6 +304,7 @@ final class FileChangeSession {
         let requiresFinalArtifactValidation = artifactPlan?.isFullyApplied == true
         guard (!automatically || shouldValidateAfterApply || requiresFinalArtifactValidation),
               validation.isSupported else { return }
+        readAheadNextEdit()
         if automatically {
             validation.startAutomatically(onStart: onStart, onComplete: onComplete)
         } else if !validation.isRunning {

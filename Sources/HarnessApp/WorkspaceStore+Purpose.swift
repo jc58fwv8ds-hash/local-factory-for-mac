@@ -200,7 +200,7 @@ extension WorkspaceStore {
         }
         // The prompt writer of the catalog's roles (2026-11-07: a 9B model that also sees pictures, 22 tokens/s), else the chat's
         // own model (usually already in memory), else the writing choice's "large" role, else the project's model.
-        let writer = settings.catalog.roles?["promptWriter"].flatMap { settings.catalog.option(id: $0, for: .writing)?.selection }
+        let writer = settings.role("promptWriter")
             ?? settings.chosen(.conversation)?.selection ?? settings.chosen(.writing).flatMap { settings.catalog.roleModel("large", chosen: $0) } ?? (project.selectedModel ?? WorkspaceStore.automaticModel)
         // The last output of the same kind in this conversation: a new instruction may be a change to it.
         let ids = Set(project.conversation.map(\.id))
