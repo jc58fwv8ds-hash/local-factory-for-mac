@@ -9,6 +9,8 @@ final class HarnessApplicationDelegate: NSObject, NSApplicationDelegate {
         if HelperNode.Configuration.saved.enabled {
             Task.detached(priority: .utility) { _ = await HelperNode.shared.ensureReady() }
         }
+        // 2026-11-25: Xcode's developer data kept from piling up (DeveloperDataJanitor).
+        DeveloperDataSweeper.start()
         let current = NSRunningApplication.current
         guard let bundleIdentifier = current.bundleIdentifier else { return }
         let peers = NSWorkspace.shared.runningApplications.filter {

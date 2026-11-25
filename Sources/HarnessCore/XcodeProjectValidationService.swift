@@ -26,9 +26,14 @@ public struct XcodeProjectValidationService: ProjectValidating, Sendable {
         let environment = try await xcodeEnvironment(rootURL: rootURL)
 
         let startedAt = Date()
-        let derivedDataURL = FileManager.default.temporaryDirectory
+        // 2026-11-25: the project's kept folder (BuildCache), so later checks compile only what changed; a temporary one
+        // when another check of the same project holds it.
+        let cached = BuildCache.checkOut(project: rootURL, stamp: Self.xcodeStamp(developerDirectory: environment["DEVELOPER_DIR"]))
+        let derivedDataURL = cached ?? FileManager.default.temporaryDirectory
             .appendingPathComponent("HarnessDerivedData-\(UUID().uuidString)", isDirectory: true)
-        defer { try? FileManager.default.removeItem(at: derivedDataURL) }
+        defer {
+            if let cached { BuildCache.checkIn(cached) } else { try? FileManager.default.removeItem(at: derivedDataURL) }
+        }
         // Listing also fetches the project's Swift packages into the run's folder, outside the sandbox (it needs the
         // network; SwiftPM evaluates the manifests in its own sandbox). Build and test then use only that copy.
         let listResult = try await runner.run(
@@ -55,7 +60,7 @@ public struct XcodeProjectValidationService: ProjectValidating, Sendable {
         ) else {
             throw ProjectValidationError.xcodeSchemeUnavailable(container.name)
         }
-        let buildResult = try await runner.run(
+        var buildResult = try await runner.run(
             kind: .xcodeBuild,
             executableURL: URL(fileURLWithPath: "/usr/bin/sandbox-exec"),
             arguments: isolated(buildArguments(
@@ -66,6 +71,16 @@ public struct XcodeProjectValidationService: ProjectValidating, Sendable {
             currentDirectoryURL: rootURL,
             environment: isolatedEnvironment(environment, derivedDataURL: derivedDataURL)
         )
+        if buildResult.exitCode != 0, let cached, BuildCache.clearIfStale(cached, output: buildResult.output) {
+            buildResult = try await runner.run(
+                kind: .xcodeBuild,
+                executableURL: URL(fileURLWithPath: "/usr/bin/sandbox-exec"),
+                arguments: isolated(buildArguments(container: container, scheme: scheme, derivedDataURL: derivedDataURL),
+                                    derivedDataURL: derivedDataURL),
+                currentDirectoryURL: rootURL,
+                environment: isolatedEnvironment(environment, derivedDataURL: derivedDataURL)
+            )
+        }
         let buildContext = "[Local Factory] \(container.relativePath) / scheme: \(scheme) / Debug / 署名なし / 隔離(通信なし)"
         let buildOutput = buildResult.output.isEmpty
             ? buildContext
@@ -95,6 +110,17 @@ public struct XcodeProjectValidationService: ProjectValidating, Sendable {
             finishedAt: .now,
             checks: checks
         )
+    }
+
+    /// The Xcode in use, for BuildCache: a cache made by another Xcode is started anew.
+    static func xcodeStamp(developerDirectory: String? = nil) -> String {
+        let directory = developerDirectory
+            ?? (try? FileManager.default.destinationOfSymbolicLink(atPath: "/var/db/xcode_select_link"))
+            ?? "/Applications/Xcode.app/Contents/Developer"
+        let version = URL(fileURLWithPath: directory).deletingLastPathComponent().appendingPathComponent("version.plist")
+        let build = (try? Data(contentsOf: version))
+            .flatMap { try? PropertyListSerialization.propertyList(from: $0, format: nil) as? [String: Any] }?["ProductBuildVersion"] as? String
+        return directory + " " + (build ?? "?")
     }
 
     private func xcodeEnvironment(rootURL: URL) async throws -> [String: String] {
@@ -166,7 +192,8 @@ public struct XcodeProjectValidationService: ProjectValidating, Sendable {
         } catch {
             return unavailableTestCheck("Simulatorを確認できませんでした：\(error.localizedDescription)")
         }
-        guard let destination = XcodeTestDestinationSelector.preferred(from: devices) else {
+        let last = UserDefaults.standard.string(forKey: XcodeTestDestinationSelector.lastDeviceKey)
+        guard let destination = XcodeTestDestinationSelector.preferred(from: devices, last: last) else {
             return unavailableTestCheck("利用できるiPhone Simulatorがありません。XcodeのComponentsを確認してください。")
         }
         let result = try await runner.run(
@@ -181,6 +208,7 @@ public struct XcodeProjectValidationService: ProjectValidating, Sendable {
             currentDirectoryURL: rootURL,
             environment: isolatedEnvironment(environment, derivedDataURL: derivedDataURL)
         )
+        UserDefaults.standard.set(destination.id, forKey: XcodeTestDestinationSelector.lastDeviceKey)
         let context = "[Local Factory] \(destination.name)（\(destination.runtimeName)）でテスト(隔離・通信なし)"
         return ProjectValidationCheck(
             kind: .xcodeTest,
