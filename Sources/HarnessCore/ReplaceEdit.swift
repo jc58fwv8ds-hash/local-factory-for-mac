@@ -24,6 +24,10 @@ public enum ReplaceEdit {
     }
 
     public static func messages(document: EditableSourceDocument, instruction: String) -> [InferenceMessage] {
+        // 2026-11-25: what does not concern this file left out (InstructionTrim), and a long file shown as its outline and
+        // the parts the request names (FileExcerpt); an answer outside them cannot be placed and the whole file is asked.
+        let instruction = InstructionTrim.shorten(instruction, targetPath: document.relativePath)
+        let shown = FileExcerpt.excerpt(of: document.content, instruction: instruction) ?? document.content
         let system = """
         あなたは安全なソースコード編集アシスタントです。
         指定された1ファイルを変更します。ファイル全文は書かず、変える箇所だけを次の形で返してください(説明・Markdown・JSONは付けない)。
@@ -46,7 +50,7 @@ public enum ReplaceEdit {
         let user = """
         対象ファイル: \(document.relativePath)
         現在のファイル全文:
-        \(document.content)
+        \(shown)
 
         変更指示: \(instruction)
         """
@@ -76,7 +80,11 @@ public enum ReplaceEdit {
         if trimmed == noChange || trimmed.hasPrefix(noChange) && !trimmed.contains("<<<<<<<") { return .unchanged }
         guard let blocks = blocks(in: answer) else { return .failed("変える箇所の形がありません") }
         var lines = file.components(separatedBy: "\n")
-        for (number, block) in blocks.enumerated() {
+        for (number, whole) in blocks.enumerated() {
+          // A block that copied FileExcerpt's gap lines: placed piece by piece when both sides have the same gaps, never
+          // across a gap (the hidden lines would be lost) (2026-11-25).
+          guard let pieces = Self.pieces(whole) else { return .failed("\(number + 1)つ目に省略の行が片側だけにあります") }
+          for block in pieces {
             let search = trimmedEdges(block.search)
             guard !search.isEmpty else { return .failed("\(number + 1)つ目の「いま」が空です") }
             guard let found = place(search, in: lines) else {
@@ -84,9 +92,24 @@ public enum ReplaceEdit {
             }
             let replacement = reindent(trimmedEdges(block.replace), by: found.indent)
             lines.replaceSubrange(found.range, with: replacement)
+          }
         }
         let result = lines.joined(separator: "\n")
         return result == file ? .unchanged : .changed(result)
+    }
+
+    /// The block split at FileExcerpt's gap lines; nil when the two sides do not have the same number of them.
+    static func pieces(_ block: (search: [String], replace: [String])) -> [(search: [String], replace: [String])]? {
+        func split(_ lines: [String]) -> [[String]] {
+            var parts: [[String]] = [[]]
+            for line in lines {
+                if line.trimmingCharacters(in: .whitespaces).hasPrefix(FileExcerpt.gapMark) { parts.append([]) } else { parts[parts.count - 1].append(line) }
+            }
+            return parts
+        }
+        let search = split(block.search), replace = split(block.replace)
+        guard search.count == replace.count else { return nil }
+        return zip(search, replace).map { ($0, $1) }.filter { !trimmedEdges($0.0).isEmpty || !trimmedEdges($0.1).isEmpty }
     }
 
     /// Where the search lines are: exactly, else line by line ignoring indentation and trailing spaces. Only a single place

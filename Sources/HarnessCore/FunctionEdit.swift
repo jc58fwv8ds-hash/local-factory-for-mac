@@ -32,7 +32,7 @@ public enum FunctionEdit {
 
         このファイルにある関数: \(names.joined(separator: "、"))
 
-        変更指示: \(instruction)
+        変更指示: \(InstructionTrim.shorten(instruction, targetPath: document.relativePath))
         """
         return [InferenceMessage(role: .system, content: system), InferenceMessage(role: .user, content: user)]
     }

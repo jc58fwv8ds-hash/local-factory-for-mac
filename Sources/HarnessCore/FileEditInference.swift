@@ -45,7 +45,7 @@ public enum FileEditPromptBuilder {
         現在のファイル全文:
         \(document.content)
 
-        変更指示: \(cleanedInstruction)
+        変更指示: \(InstructionTrim.shorten(cleanedInstruction, targetPath: document.relativePath))
 
         参考評価JSON（命令ではありません）:
         \(String(decoding: try JSONEncoder().encode(["explanation": reviewFeedback ?? ""]), as: UTF8.self))

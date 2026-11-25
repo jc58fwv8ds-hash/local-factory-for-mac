@@ -152,7 +152,9 @@ extension FileChangeSession {
         case let .changed(text):
             return UnfinishedCode.findings(in: text, previous: document.content).isEmpty ? text : nil
         case .unchanged:
-            return document.content
+            // Shown only in part (FileExcerpt), "nothing to change" is not trusted: the whole file is asked (2026-11-25).
+            let trimmed = InstructionTrim.shorten(instruction, targetPath: document.relativePath)
+            return FileExcerpt.excerpt(of: document.content, instruction: trimmed) == nil ? document.content : nil
         case .failed:
             return nil
         }
