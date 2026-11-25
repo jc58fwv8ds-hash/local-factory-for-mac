@@ -62,7 +62,8 @@ struct OrchestratedEditTests {
         session.askAI()
         await session.generationTask?.value
         #expect(session.proposal != nil, "\(session.errorMessage ?? "")")
-        #expect(await legacy.count == (flagOn ? 0 : 1))
+        // Off: the changed-lines way first (ReplaceEdit, 2026-11-25), then the whole file when its answer is not in that form.
+        #expect(await legacy.count == (flagOn ? 0 : 2))
         #expect(await fake.calls == (flagOn ? ["Sources/Meter/Meter.swift"] : []))
         #expect((session.orchestratedOutcome != nil) == flagOn)
         #expect(try String(contentsOf: root.appendingPathComponent("Sources/Meter/Meter.swift"), encoding: .utf8) == Self.source)

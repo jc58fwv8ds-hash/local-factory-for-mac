@@ -48,14 +48,21 @@ extension FileChangeSession {
                 } else {
                     return finishGeneration()
                 }
-                var content = try await writtenContent(
-                    messages: messages,
-                    model: model,
-                    previous: existingDocument?.content
-                )
-                // A long file's answer holds only the functions that change; they go into the file (2026-11-18).
-                if !createsFile, let existingDocument, FunctionEdit.applies(to: existingDocument.content) {
-                    content = FunctionEdit.splice(content, into: existingDocument.content) ?? existingDocument.content
+                var content: String
+                // 2026-11-25: the changed lines only (ReplaceEdit); the whole-file way when they cannot be placed.
+                if !createsFile, let existingDocument,
+                   let quick = try await replaceEdited(existingDocument, instruction: instruction, model: model) {
+                    content = quick
+                } else {
+                    content = try await writtenContent(
+                        messages: messages,
+                        model: model,
+                        previous: existingDocument?.content
+                    )
+                    // A long file's answer holds only the functions that change; they go into the file (2026-11-18).
+                    if !createsFile, let existingDocument, FunctionEdit.applies(to: existingDocument.content) {
+                        content = FunctionEdit.splice(content, into: existingDocument.content) ?? existingDocument.content
+                    }
                 }
                 let generatedProposal: FileChangeProposal
                 if createsFile {
@@ -122,6 +129,33 @@ extension FileChangeSession {
             ]
         }
         return content
+    }
+
+    /// The file with the answer's changed lines put in, the file itself when the model says nothing needs changing, or nil
+    /// when the answer cannot be placed exactly or leaves a stand-in (the caller then asks for the whole file).
+    private func replaceEdited(_ document: EditableSourceDocument, instruction: String, model: ModelSelection) async throws -> String? {
+        let request = InferenceRequest(
+            runtime: model.runtime,
+            modelIdentifier: model.identifier,
+            messages: ReplaceEdit.messages(document: document, instruction: instruction),
+            maximumOutputTokens: InferenceOutputBudget.fileChange(existingBytes: document.content.utf8.count),
+            temperature: 0
+        )
+        var response = ""
+        for try await delta in await inferenceProvider.events(for: request) {
+            try Task.checkCancellation()
+            response += delta
+            if DegenerateOutput.isRunaway(response) { return nil }
+        }
+        try Task.checkCancellation()
+        switch ReplaceEdit.apply(response, to: document.content) {
+        case let .changed(text):
+            return UnfinishedCode.findings(in: text, previous: document.content).isEmpty ? text : nil
+        case .unchanged:
+            return document.content
+        case .failed:
+            return nil
+        }
     }
 
     func stopAI() {
