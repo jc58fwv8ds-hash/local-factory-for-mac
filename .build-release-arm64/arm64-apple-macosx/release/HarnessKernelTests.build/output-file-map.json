@@ -1,0 +1,32 @@
+{
+  "": {
+    "dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessKernelTests.build/HarnessKernelTests.d",
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessKernelTests.build/HarnessKernelTests.o",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessKernelTests.build/primary.swiftdeps"
+  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Tests/HarnessKernelTests/KernelExecutionBudgetTests.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessKernelTests.build/KernelExecutionBudgetTests.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessKernelTests.build/KernelExecutionBudgetTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessKernelTests.build/KernelExecutionBudgetTests.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessKernelTests.build/KernelExecutionBudgetTests.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Tests/HarnessKernelTests/KernelRecoveryTests.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessKernelTests.build/KernelRecoveryTests.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessKernelTests.build/KernelRecoveryTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessKernelTests.build/KernelRecoveryTests.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessKernelTests.build/KernelRecoveryTests.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Tests/HarnessKernelTests/KernelRoutedStartTests.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessKernelTests.build/KernelRoutedStartTests.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessKernelTests.build/KernelRoutedStartTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessKernelTests.build/KernelRoutedStartTests.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessKernelTests.build/KernelRoutedStartTests.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Tests/HarnessKernelTests/KernelRoutingPersistenceTests.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessKernelTests.build/KernelRoutingPersistenceTests.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessKernelTests.build/KernelRoutingPersistenceTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessKernelTests.build/KernelRoutingPersistenceTests.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessKernelTests.build/KernelRoutingPersistenceTests.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Tests/HarnessKernelTests/KernelRoutingPolicyTests.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessKernelTests.build/KernelRoutingPolicyTests.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessKernelTests.build/KernelRoutingPolicyTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessKernelTests.build/KernelRoutingPolicyTests.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessKernelTests.build/KernelRoutingPolicyTests.dia"  }
+}

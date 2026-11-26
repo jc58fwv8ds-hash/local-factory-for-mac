@@ -44,4 +44,17 @@ struct StepCheckTests {
         ])
         #expect(diff == "+         outStatus.pointee = .noDataNow")
     }
+
+    // 2026-11-25 review: an answer that could not be read was taken as OK and the change was saved as checked.
+    @Test func anUnreadableAnswerIsNotAPass() {
+        #expect(StepCheck.verdict(from: "OK") == .ok)
+        #expect(StepCheck.verdict(from: "OK。\n変更は頼まれたとおりです。") == .ok)
+        #expect(StepCheck.verdict(from: "**OK**") == .ok)
+        #expect(StepCheck.verdict(from: "MISSING: 途中結果をまだ毎回訳しています。") == .missing("途中結果をまだ毎回訳しています。"))
+        #expect(StepCheck.verdict(from: "") == .unreadable)
+        #expect(StepCheck.verdict(from: "確認しましたが、判断できません。") == .unreadable)
+        #expect(StepCheck.verdict(from: "OKAY, but the listener is still missing") == .unreadable)
+        #expect(StepCheck.verdict(from: "MISSING:") == .unreadable)
+        #expect(StepCheck.missing(from: "判断できません") == nil)
+    }
 }

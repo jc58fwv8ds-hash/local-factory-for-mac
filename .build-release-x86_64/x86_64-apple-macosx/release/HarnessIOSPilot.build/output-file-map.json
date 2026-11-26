@@ -1,0 +1,17 @@
+{
+  "": {
+    "dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/HarnessIOSPilot.build/HarnessIOSPilot.d",
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/HarnessIOSPilot.build/HarnessIOSPilot.o",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/HarnessIOSPilot.build/primary.swiftdeps"
+  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessIOSPilot/HarnessIOSPilot.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/HarnessIOSPilot.build/HarnessIOSPilot.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/HarnessIOSPilot.build/HarnessIOSPilot~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/HarnessIOSPilot.build/HarnessIOSPilot.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/HarnessIOSPilot.build/HarnessIOSPilot.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessIOSPilot/PersonalMemoryAcceptance.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/HarnessIOSPilot.build/PersonalMemoryAcceptance.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/HarnessIOSPilot.build/PersonalMemoryAcceptance~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/HarnessIOSPilot.build/PersonalMemoryAcceptance.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/HarnessIOSPilot.build/PersonalMemoryAcceptance.dia"  }
+}

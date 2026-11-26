@@ -115,8 +115,23 @@ extension FileChangeAutopilot {
                                            file: proposal.proposedContent))],
                                        maximumOutputTokens: 400, temperature: 0)
         var answer = ""
-        do { for try await piece in await session.inferenceProvider.events(for: request) { answer += piece } } catch { return apply() }
-        guard isOn, let missing = StepCheck.missing(from: answer) else { return apply() }
+        do { for try await piece in await session.inferenceProvider.events(for: request) { answer += piece } } catch { answer = "" }
+        guard isOn else { return apply() }
+        let missing: String
+        switch StepCheck.verdict(from: answer) {
+        case .ok:
+            stepUnverified.remove(proposal.relativePath)
+            return apply()
+        case .unreadable:
+            // Not a pass (2026-11-25 review): the change is saved so the run can go on, and the end says it was not checked.
+            stepUnverified.insert(proposal.relativePath)
+            onReport?("\((proposal.relativePath as NSString).lastPathComponent) は、頼まれたとおりかを確かめる返事が読めませんでした。"
+                + "確かめられないまま保存し、最後にそう伝えます。")
+            return apply()
+        case let .missing(text):
+            stepUnverified.remove(proposal.relativePath)
+            missing = text
+        }
         let name = (proposal.relativePath as NSString).lastPathComponent
         if last {
             // One step that will not go in no longer holds back the others (2026-11-18: the listener's crash fix was saved,
@@ -136,12 +151,6 @@ extension FileChangeAutopilot {
         session.proposal = nil
         status = "足りない所を足して書き直しています…"
         session.askAI()
-    }
-
-    /// The steps left out because they would not go in, said at the end of a run that otherwise passed.
-    var skippedNote: String {
-        let left = stepChecked.filter { $0.value > StepCheck.maximumChecks }.keys.map { ($0 as NSString).lastPathComponent }.sorted()
-        return left.isEmpty ? "" : "ただし、\(left.joined(separator: "、")) の変更は入れられなかったので、元のままです。「続けて」と書けば、そこをもう一度試します。"
     }
 
     /// What stopped a check, in everyday words, when it can be told (2026-11-17: a full disk was told as an asset failure).
@@ -227,5 +236,34 @@ extension FileChangeAutopilot {
         onReport?("通らないテストは、ほかのテストがすでに確かめていて通っている内容と同じでした(同じ処理が二か所にあります)。"
             + "直し続けるのをやめ、一か所にまとめます。")
         return duplicates.map(\.request).joined(separator: "\n")
+    }
+
+    /// The end of a run that went through, told as this run's change apart from failures that were there before it
+    /// (2026-11-25 review: 「ビルドとテストに合格しました」 was said with set-aside tests still failing).
+    func verdict(fixedLeftover: Bool, report: ProjectValidationReport) -> RunVerdict {
+        let name: (String) -> String = { ($0 as NSString).lastPathComponent }
+        return RunVerdict(saved: savedFiles.count, repairRounds: repairRounds,
+                          stillFailingBefore: report.succeeded ? [] : setAsideFiles.map(name),
+                          leftOut: fixedLeftover ? [] : stepChecked.filter { $0.value > StepCheck.maximumChecks }.keys.map(name),
+                          unverified: stepUnverified.filter { savedFiles.contains($0) }.map(name), fixedLeftover: fixedLeftover)
+    }
+
+    func finish(_ verdict: RunVerdict) {
+        // A run whose own change went through still counts as ended well for what waits after it; the message says what is left.
+        finish(verdict.message, good: true)
+    }
+
+    /// A failure that is only tests failing, not code that does not build.
+    nonisolated static func onlyTestsFail(_ plan: BuildRepairPlan) -> Bool {
+        !plan.targets.isEmpty && plan.targets.allSatisfy { target in
+            !target.diagnostics.isEmpty && target.diagnostics.allSatisfy { $0.message.hasPrefix("テスト") }
+        }
+    }
+    /// The saved test files with no expectation in them.
+    static func emptyTests(_ paths: [String], root: String) -> [String] {
+        paths.filter { $0.contains("Tests/") && $0.hasSuffix(".swift") }.filter { path in
+            guard let text = try? String(contentsOfFile: (root as NSString).appendingPathComponent(path), encoding: .utf8) else { return false }
+            return text.range(of: #"#expect|#require|XCTAssert|XCTUnwrap|XCTFail"#, options: .regularExpression) == nil
+        }
     }
 }

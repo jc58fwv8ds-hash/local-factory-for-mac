@@ -196,7 +196,8 @@ enum FileEditingChecks {
             "Sources/Bad\n.swift",
             "node_modules/Generated.js",
             "Sources/private_key.swift",
-            "Missing/New.swift"
+            "A/B/C/D/New.swift",
+            "Sources/.hidden/New.swift"
         ] {
             do {
                 _ = try await editor.makeCreationProposal(

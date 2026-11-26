@@ -1,52 +1,6 @@
 import Foundation
 import HarnessCore
 
-/// One image asked for in the chat (2026-10-09): the instruction becomes an English prompt (the "large" role model), the
-/// language models leave memory, and the image model chosen for 画像を作る runs. The picture is saved on this Mac.
-@MainActor
-@Observable
-final class ImageChange: Identifiable {
-    enum Status: Equatable { case running(String), ready(URL), failed(String), stopped }
-    /// Image and video jobs run one at a time, in the order asked (2026-11-04: a second request beside a running one looked
-    /// stuck on 「言葉にしています」 because its writer was waiting for the model memory).
-    static var lastInQueue: Task<Void, Never>?
-    var task: Task<Void, Never>?
-    var isRunning: Bool { if case .running = status { true } else { false } }
-    let id: UUID
-    let instruction: String
-    var status: Status = .running("準備しています")
-    /// For the remaining time: what the time is filed under once the model is known, and when the job began.
-    var jobKind: String?
-    var startedAt = Date()
-    /// Where the output will be, once the model runs: its script may write how far it has got beside it.
-    var output: URL?
-    var prompt: String?
-    /// A video's character: the attached picture (a generated image attached again), which becomes its first frame.
-    var referenceImage: Data?
-    /// More attached pictures for a video: keyframes after the first (2026-11-10).
-    var keyframeImages: [Data] = []
-    var face: (project: UUID, attached: Data?)?   // the conversation's first face, and a newly attached one (2026-11-10)
-    /// A picture attached to an image request: its person is described to the prompt writer (2026-11-07: an attached person
-    /// was ignored and the prompt said only "a person").
-    var personPicture: Data?
-    /// The lines as a voice file made elsewhere (a copy, removed once done): the mouth moves to it.
-    var voiceFile: URL?
-    /// What the video says (2026-11-10): lines as the request asks, none, or the user's own script read by one voice each.
-    var speech: VideoSpeech = .auto
-    var script = ""
-    /// The seed it was made with; a follow-up that changes this output uses it again.
-    var seed = Int.random(in: 1...999_999)
-    /// A video request (2026-10-19): the same flow with the 動画を作る model, saved as .mp4.
-    let isVideo: Bool
-    var purpose: ModelPurpose { isVideo ? .video : .image }
-
-    init(id: UUID, instruction: String, isVideo: Bool = false) {
-        self.id = id
-        self.instruction = instruction
-        self.isVideo = isVideo
-    }
-}
-
 /// A request that needs the user's yes first (a sexual remake of an attached photo): the text waits here.
 struct PendingConsent: Equatable {
     let instruction: String
@@ -296,6 +250,7 @@ extension WorkspaceStore {
             await voiceTheScript(change, noun: noun)
             guard !Task.isCancelled else { return }
             let longScenes = await longSceneCount(change, option: option, seconds: seconds)
+            var pictureNote = ""
             defer { if let file = change.voiceFile { try? FileManager.default.removeItem(at: file) } }
             if longScenes == nil, let file = change.voiceFile { speech = file }
             if change.isVideo, longScenes == nil, change.voiceFile == nil, change.speech == .auto, VoiceLine.wanted(change.instruction), let writer {
@@ -321,7 +276,9 @@ extension WorkspaceStore {
             } else if let first = option.firstTry, !change.isVideo, await quickPictureHolds(first, option: option, prompt: prompt, output: output, options: options, writer: writer) {
                 // the quick picture shows what was asked
             } else {
-                change.seed = try await checkedPicture(option: option, prompt: prompt, output: output, options: options, isVideo: change.isVideo, writer: writer) { change.status = .running($0) }
+                let checked = try await checkedPicture(option: option, prompt: prompt, output: output, options: options, isVideo: change.isVideo, writer: writer) { change.status = .running($0) }
+                change.seed = checked.seed
+                if !change.isVideo, writer != nil { pictureNote = checked.outcome.note }
             }
             guard !Task.isCancelled else { return }
             if let line, speech == nil, let command = settings.catalog.voiceCommand {
@@ -340,7 +297,7 @@ extension WorkspaceStore {
             // Said when a voice was asked for and none could be made, instead of a silent video passing for one.
             let voiceMissing = change.isVideo && longScenes == nil && change.voiceFile == nil
                 && ((change.speech == .auto && VoiceLine.wanted(change.instruction) && line == nil) || change.speech == .script) ? "声は作れませんでした。" : ""
-            appendAssistantNote("\(noun)ができました(\(option.label))。\(voiceMissing)\(unwritten)保存先: \(output.path)")
+            appendAssistantNote("\(noun)ができました(\(option.label))。\(pictureNote)\(voiceMissing)\(unwritten)保存先: \(output.path)")
         } catch {
             guard !Task.isCancelled else { return }
             change.status = .failed(error.localizedDescription)

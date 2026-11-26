@@ -118,6 +118,8 @@ public actor ProjectFileEditor: ProjectFileEditing {
                 rootPath: rootPath,
                 relativePath: proposal.relativePath
             )
+            // Folders the plan adds above a new file are made here, after the checks (2026-11-26 baseline).
+            try fileManager.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
             try writeNew(proposal.proposedContent, to: url)
             return
         }
@@ -206,12 +208,24 @@ public actor ProjectFileEditor: ProjectFileEditing {
             throw ProjectFileEditError.fileAlreadyExists
         }
 
-        let parentURL = targetURL.deletingLastPathComponent()
+        // The nearest folder that exists; up to ArtifactPlanDirectoryPolicy.maximumNewDirectoryDepth folders above the file
+        // may be new (made by apply), none hidden or excluded (2026-11-26 baseline: Sources/<name> of a new project).
+        var parentURL = targetURL.deletingLastPathComponent()
+        var added: [String] = []
         var isDirectory: ObjCBool = false
-        guard fileManager.fileExists(atPath: parentURL.path, isDirectory: &isDirectory),
-              isDirectory.boolValue else {
-            throw ProjectFileEditError.parentDirectoryMissing
+        while !fileManager.fileExists(atPath: parentURL.path, isDirectory: &isDirectory) {
+            if let values = try? parentURL.resourceValues(forKeys: [.isSymbolicLinkKey]), values.isSymbolicLink == true {
+                throw ProjectFileEditError.invalidRelativePath  // a dangling link in the way
+            }
+            added.append(parentURL.lastPathComponent)
+            guard parentURL.path.hasPrefix(rootPrefix),
+                  added.count <= ArtifactPlanDirectoryPolicy.maximumNewDirectoryDepth,
+                  ArtifactPlanDirectoryPolicy.isAllowedNewDirectoryName(parentURL.lastPathComponent) else {
+                throw ProjectFileEditError.parentDirectoryMissing
+            }
+            parentURL = parentURL.deletingLastPathComponent()
         }
+        guard isDirectory.boolValue else { throw ProjectFileEditError.parentDirectoryMissing }
         let resolvedParent = parentURL.resolvingSymlinksInPath().standardizedFileURL
         guard resolvedParent.path == parentURL.path,
               resolvedParent.path == rootURL.path || resolvedParent.path.hasPrefix(rootPrefix) else {

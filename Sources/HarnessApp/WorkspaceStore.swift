@@ -8,7 +8,7 @@ enum StudioSection: String, CaseIterable, Identifiable {
     case projects = "プロジェクト"
     case apps = "アプリ"
     case models = "AIモデル"
-    case voices = "声", dailyNews = "毎日のニュース", agent = "エージェント", training = "学習"
+    case voices = "声", agent = "エージェント", training = "学習"
     case developer = "開発"
 
     var id: String { rawValue }

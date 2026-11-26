@@ -31,9 +31,6 @@ struct RootView: View {
             } else if store.selectedSection == .agent {
                 AgentView(agent: AgentStore.shared, onInstallRemoteApp: { store.selectedSection = .apps })
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else if store.selectedSection == .dailyNews {
-                DailyNewsView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if store.selectedSection == .training {
                 TrainingView()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -186,12 +183,6 @@ private struct SidebarView: View {
                     isSelected: store.selectedSection == .training
                 ) { store.selectedSection = .training }
                 }
-                SidebarButton(
-                    title: "毎日のニュース",
-                    systemImage: "play.rectangle",
-                    accessibilityID: "sidebar-daily-news",
-                    isSelected: store.selectedSection == .dailyNews
-                ) { store.selectedSection = .dailyNews }
 #if DEBUG
                 if store.workspaceMode == .code {
                 SidebarButton(

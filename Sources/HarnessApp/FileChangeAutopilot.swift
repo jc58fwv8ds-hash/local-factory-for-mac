@@ -27,6 +27,8 @@ final class FileChangeAutopilot {
     var planRetried = false
     /// Files of the plan whose change was checked against their step (once each; 2026-11-16).
     var stepChecked: [String: Int] = [:]
+    /// Files saved although their step check gave no answer that could be read (2026-11-25 review: that was taken as OK).
+    var stepUnverified: Set<String> = []
     var raisedTarget = false; @ObservationIgnored var validationRetried = false
     private var triedSecondWriter = false
     private var keptWriter: ModelSelection?
@@ -57,7 +59,7 @@ final class FileChangeAutopilot {
         repairRounds = 0
         retriedUnchanged = false; triedSecondWriter = false; keptWriter = nil
         savedFiles = []; lastApplied = nil
-        stepChecked = [:]
+        stepChecked = [:]; stepUnverified = []
         raisedTarget = false
         status = "案を作っています…"
         session.askAI()
@@ -72,7 +74,7 @@ final class FileChangeAutopilot {
         repairRounds = 0
         retriedUnchanged = false; triedSecondWriter = false; keptWriter = nil
         savedFiles = []; lastApplied = nil
-        stepChecked = [:]
+        stepChecked = [:]; stepUnverified = []
         raisedTarget = false
         afterPassing = next
         lastFailedPlan = nil
@@ -233,7 +235,7 @@ final class FileChangeAutopilot {
         // 「続けて」 after a run that left only errors: once they are fixed, the request is done (not planned again).
         if passed, afterPassing != nil, Self.hasPendingRepair(root: rootPath) {
             afterPassing = nil
-            return finish("できました。残っていたエラーを直して、ビルドとテストに合格しました(修正 \(repairRounds) 回)。" + setAsideNote)
+            return finish(verdict(fixedLeftover: true, report: report))
         }
         if passed, let next = afterPassing {
             afterPassing = nil
@@ -246,7 +248,7 @@ final class FileChangeAutopilot {
             return
         }
         if passed {
-            return finish("できました。ビルドとテストに合格しました(保存 \(savedFiles.count) 件、修正 \(repairRounds) 回)。" + setAsideNote + skippedNote)
+            return finish(verdict(fixedLeftover: false, report: report))
         }
         lastFailedPlan = keepingBetter(session, previous: lastFailedPlan, new: session.validation.failureAnalysis?.repairPlan)
         // A newer iOS asked for by the code, and the person's iPhone has it: the project's minimum iOS goes up (2026-11-17).
@@ -317,32 +319,17 @@ final class FileChangeAutopilot {
             + " のテストは、まだ通らないままです)"
     }
 
-    /// A failure that is only tests failing, not code that does not build.
-    nonisolated static func onlyTestsFail(_ plan: BuildRepairPlan) -> Bool {
-        !plan.targets.isEmpty && plan.targets.allSatisfy { target in
-            !target.diagnostics.isEmpty && target.diagnostics.allSatisfy { $0.message.hasPrefix("テスト") }
-        }
-    }
-    /// The saved test files with no expectation in them.
-    static func emptyTests(_ paths: [String], root: String) -> [String] {
-        paths.filter { $0.contains("Tests/") && $0.hasSuffix(".swift") }.filter { path in
-            guard let text = try? String(contentsOfFile: (root as NSString).appendingPathComponent(path), encoding: .utf8) else { return false }
-            return text.range(of: #"#expect|#require|XCTAssert|XCTUnwrap|XCTFail"#, options: .regularExpression) == nil
-        }
-    }
-
     func endRun(_ message: String) { isOn = true; finish(message) }
 
-    func finish(_ message: String, closed: Bool = false) {
+    func finish(_ message: String, closed: Bool = false, good: Bool? = nil) {
         isOn = false
         endedAt = Date()
         // Stopped before the request itself (the project as it was did not pass): the requests waiting after it would stop
         // at the same place, so they wait for 「続けて」 instead (2026-11-12: four requests ended the same way in a minute).
         let blocked = afterPassing != nil
-        if message.hasPrefix("できました") || message.hasPrefix("頼まれたことは、すでにできていました") {
-            Self.setPendingRepair(false, root: rootPath)
-        }
-        defer { onEnded?(message.hasPrefix("できました") || message.hasPrefix("頼まれたことは、すでにできていました"), closed || blocked) }
+        let ended = good ?? (message.hasPrefix("できました") || message.hasPrefix("頼まれたことは、すでにできていました"))
+        if ended { Self.setPendingRepair(false, root: rootPath) }
+        defer { onEnded?(ended, closed || blocked) }
         afterPassing = nil
         status = message
         onReport?(message)

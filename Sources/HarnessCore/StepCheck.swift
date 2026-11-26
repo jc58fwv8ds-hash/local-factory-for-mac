@@ -52,12 +52,30 @@ public enum StepCheck {
             + "ここに無い部分も、ファイルには変更せずに残っています:\n" + text
     }
 
-    /// What is still missing, or nil when the answer says OK or cannot be read.
-    public static func missing(from answer: String) -> String? {
+    /// What the check's answer says. An answer that is neither a clear OK nor a MISSING with its reason is `.unreadable`,
+    /// never a pass (2026-11-25 review: an unreadable answer was taken as OK, and the change was saved as checked).
+    public enum Verdict: Equatable, Sendable {
+        case ok
+        case missing(String)
+        case unreadable
+    }
+
+    public static func verdict(from answer: String) -> Verdict {
         let text = StructuredModelResponse.jsonText(from: answer).trimmingCharacters(in: .whitespacesAndNewlines)
-        guard let range = text.range(of: "MISSING:") else { return nil }
-        let rest = text[range.upperBound...].trimmingCharacters(in: .whitespacesAndNewlines)
-        return rest.count >= 4 ? String(rest.prefix(600)) : nil
+        if let range = text.range(of: "MISSING:") {
+            let rest = text[range.upperBound...].trimmingCharacters(in: .whitespacesAndNewlines)
+            return rest.count >= 4 ? .missing(String(rest.prefix(600))) : .unreadable
+        }
+        // OK alone on the first line (「OK」「OK。」「**OK**」), not a word that merely starts with it.
+        let first = text.components(separatedBy: .newlines).first?
+            .trimmingCharacters(in: CharacterSet.whitespaces.union(.punctuationCharacters).union(CharacterSet(charactersIn: "*`。"))) ?? ""
+        return first.uppercased() == "OK" ? .ok : .unreadable
+    }
+
+    /// What is still missing; nil when the answer says OK or cannot be read (use `verdict(from:)` to tell those apart).
+    public static func missing(from answer: String) -> String? {
+        if case let .missing(rest) = verdict(from: answer) { return rest }
+        return nil
     }
 
     /// The changed lines only, for the check; lines that only moved or changed their indentation are left out

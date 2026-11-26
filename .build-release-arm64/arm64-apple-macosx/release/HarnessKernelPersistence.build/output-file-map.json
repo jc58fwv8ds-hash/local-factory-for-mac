@@ -1,0 +1,12 @@
+{
+  "": {
+    "dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessKernelPersistence.build/HarnessKernelPersistence.d",
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessKernelPersistence.build/HarnessKernelPersistence.o",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessKernelPersistence.build/primary.swiftdeps"
+  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessKernelPersistence/FileKernelJournal.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessKernelPersistence.build/FileKernelJournal.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessKernelPersistence.build/FileKernelJournal~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessKernelPersistence.build/FileKernelJournal.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessKernelPersistence.build/FileKernelJournal.dia"  }
+}

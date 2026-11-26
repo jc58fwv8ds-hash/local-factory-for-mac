@@ -1,0 +1,247 @@
+{
+  "": {
+    "dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/HarnessCoreChecks.d",
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/HarnessCoreChecks.o",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/primary.swiftdeps"
+  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessCoreChecks/AppleAppLibraryChecks.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/AppleAppLibraryChecks.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/AppleAppLibraryChecks~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/AppleAppLibraryChecks.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/AppleAppLibraryChecks.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessCoreChecks/AppleAppLibraryIntegrationChecks.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/AppleAppLibraryIntegrationChecks.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/AppleAppLibraryIntegrationChecks~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/AppleAppLibraryIntegrationChecks.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/AppleAppLibraryIntegrationChecks.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessCoreChecks/AppleAppScaffoldingChecks.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/AppleAppScaffoldingChecks.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/AppleAppScaffoldingChecks~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/AppleAppScaffoldingChecks.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/AppleAppScaffoldingChecks.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessCoreChecks/ArtifactCreationPlanChecks.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ArtifactCreationPlanChecks.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ArtifactCreationPlanChecks~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ArtifactCreationPlanChecks.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ArtifactCreationPlanChecks.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessCoreChecks/BuildFailureAnalysisChecks.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/BuildFailureAnalysisChecks.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/BuildFailureAnalysisChecks~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/BuildFailureAnalysisChecks.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/BuildFailureAnalysisChecks.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessCoreChecks/CheckSupport.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/CheckSupport.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/CheckSupport~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/CheckSupport.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/CheckSupport.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessCoreChecks/ComputerOperationChecks.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ComputerOperationChecks.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ComputerOperationChecks~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ComputerOperationChecks.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ComputerOperationChecks.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessCoreChecks/ConversationEvaluationChecks.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ConversationEvaluationChecks.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ConversationEvaluationChecks~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ConversationEvaluationChecks.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ConversationEvaluationChecks.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessCoreChecks/ConversationEvaluationScenarios.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ConversationEvaluationScenarios.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ConversationEvaluationScenarios~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ConversationEvaluationScenarios.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ConversationEvaluationScenarios.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessCoreChecks/ConversationRephraseChecks.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ConversationRephraseChecks.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ConversationRephraseChecks~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ConversationRephraseChecks.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ConversationRephraseChecks.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessCoreChecks/CreationLoopChecks.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/CreationLoopChecks.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/CreationLoopChecks~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/CreationLoopChecks.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/CreationLoopChecks.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessCoreChecks/ExplanationEvaluationScenarios.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ExplanationEvaluationScenarios.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ExplanationEvaluationScenarios~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ExplanationEvaluationScenarios.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ExplanationEvaluationScenarios.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessCoreChecks/FileEditingChecks.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/FileEditingChecks.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/FileEditingChecks~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/FileEditingChecks.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/FileEditingChecks.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessCoreChecks/HarnessCoreChecks.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/HarnessCoreChecks.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/HarnessCoreChecks~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/HarnessCoreChecks.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/HarnessCoreChecks.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessCoreChecks/InstructionContinuationChecks.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/InstructionContinuationChecks.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/InstructionContinuationChecks~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/InstructionContinuationChecks.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/InstructionContinuationChecks.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessCoreChecks/ModelAcquisitionChecks.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ModelAcquisitionChecks.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ModelAcquisitionChecks~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ModelAcquisitionChecks.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ModelAcquisitionChecks.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessCoreChecks/ModelHostResourceChecks.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ModelHostResourceChecks.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ModelHostResourceChecks~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ModelHostResourceChecks.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ModelHostResourceChecks.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessCoreChecks/ModelInferenceChecks.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ModelInferenceChecks.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ModelInferenceChecks~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ModelInferenceChecks.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ModelInferenceChecks.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessCoreChecks/PhysicalDeviceChecks.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/PhysicalDeviceChecks.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/PhysicalDeviceChecks~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/PhysicalDeviceChecks.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/PhysicalDeviceChecks.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessCoreChecks/PhysicalDeviceIntegrationChecks.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/PhysicalDeviceIntegrationChecks.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/PhysicalDeviceIntegrationChecks~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/PhysicalDeviceIntegrationChecks.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/PhysicalDeviceIntegrationChecks.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessCoreChecks/PolicyWorkspaceChecks.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/PolicyWorkspaceChecks.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/PolicyWorkspaceChecks~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/PolicyWorkspaceChecks.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/PolicyWorkspaceChecks.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessCoreChecks/PrimaryInstructionIntentChecks.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/PrimaryInstructionIntentChecks.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/PrimaryInstructionIntentChecks~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/PrimaryInstructionIntentChecks.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/PrimaryInstructionIntentChecks.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessCoreChecks/ProductionE2EChecks.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ProductionE2EChecks.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ProductionE2EChecks~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ProductionE2EChecks.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ProductionE2EChecks.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessCoreChecks/ProductionE2EEngine.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ProductionE2EEngine.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ProductionE2EEngine~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ProductionE2EEngine.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ProductionE2EEngine.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessCoreChecks/ProductionMultiItemE2EChecks.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ProductionMultiItemE2EChecks.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ProductionMultiItemE2EChecks~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ProductionMultiItemE2EChecks.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ProductionMultiItemE2EChecks.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessCoreChecks/ProductionMultiItemFixture.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ProductionMultiItemFixture.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ProductionMultiItemFixture~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ProductionMultiItemFixture.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ProductionMultiItemFixture.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessCoreChecks/ProjectOperationCheckpointChecks.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ProjectOperationCheckpointChecks.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ProjectOperationCheckpointChecks~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ProjectOperationCheckpointChecks.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ProjectOperationCheckpointChecks.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessCoreChecks/ProjectValidationChecks.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ProjectValidationChecks.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ProjectValidationChecks~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ProjectValidationChecks.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ProjectValidationChecks.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessCoreChecks/RemoteInstructionChecks.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/RemoteInstructionChecks.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/RemoteInstructionChecks~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/RemoteInstructionChecks.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/RemoteInstructionChecks.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessCoreChecks/RepairResumeChecks.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/RepairResumeChecks.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/RepairResumeChecks~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/RepairResumeChecks.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/RepairResumeChecks.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessCoreChecks/ReplanGUIFixture.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ReplanGUIFixture.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ReplanGUIFixture~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ReplanGUIFixture.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ReplanGUIFixture.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessCoreChecks/ReplySuggestionEvaluationChecks.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ReplySuggestionEvaluationChecks.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ReplySuggestionEvaluationChecks~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ReplySuggestionEvaluationChecks.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/ReplySuggestionEvaluationChecks.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessCoreChecks/RunCoordinatorChecks.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/RunCoordinatorChecks.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/RunCoordinatorChecks~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/RunCoordinatorChecks.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/RunCoordinatorChecks.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessCoreChecks/SimulatorChecks.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/SimulatorChecks.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/SimulatorChecks~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/SimulatorChecks.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/SimulatorChecks.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessCoreChecks/SimulatorIntegrationChecks.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/SimulatorIntegrationChecks.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/SimulatorIntegrationChecks~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/SimulatorIntegrationChecks.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/SimulatorIntegrationChecks.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessCoreChecks/SourceContextSelectionChecks.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/SourceContextSelectionChecks.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/SourceContextSelectionChecks~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/SourceContextSelectionChecks.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/SourceContextSelectionChecks.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessCoreChecks/SourceMonitoringChecks.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/SourceMonitoringChecks.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/SourceMonitoringChecks~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/SourceMonitoringChecks.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/SourceMonitoringChecks.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessCoreChecks/TermExplanationChecks.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/TermExplanationChecks.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/TermExplanationChecks~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/TermExplanationChecks.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/TermExplanationChecks.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessCoreChecks/VisualCommunicationChecks.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/VisualCommunicationChecks.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/VisualCommunicationChecks~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/VisualCommunicationChecks.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/VisualCommunicationChecks.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessCoreChecks/VoiceArchitectureChecks.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/VoiceArchitectureChecks.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/VoiceArchitectureChecks~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/VoiceArchitectureChecks.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/VoiceArchitectureChecks.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessCoreChecks/VoiceBenchmarkGUIFixture.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/VoiceBenchmarkGUIFixture.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/VoiceBenchmarkGUIFixture~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/VoiceBenchmarkGUIFixture.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/VoiceBenchmarkGUIFixture.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessCoreChecks/VoiceCapsuleGUIFixture.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/VoiceCapsuleGUIFixture.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/VoiceCapsuleGUIFixture~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/VoiceCapsuleGUIFixture.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/VoiceCapsuleGUIFixture.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessCoreChecks/WorkPlanChecks.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/WorkPlanChecks.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/WorkPlanChecks~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/WorkPlanChecks.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/WorkPlanChecks.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessCoreChecks/WorkPlanReplanEvaluationChecks.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/WorkPlanReplanEvaluationChecks.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/WorkPlanReplanEvaluationChecks~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/WorkPlanReplanEvaluationChecks.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/WorkPlanReplanEvaluationChecks.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessCoreChecks/WorkPlanReplanEvaluationEngine.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/WorkPlanReplanEvaluationEngine.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/WorkPlanReplanEvaluationEngine~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/WorkPlanReplanEvaluationEngine.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/WorkPlanReplanEvaluationEngine.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessCoreChecks/WorkPlanReplanLongEvaluationChecks.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/WorkPlanReplanLongEvaluationChecks.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/WorkPlanReplanLongEvaluationChecks~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/WorkPlanReplanLongEvaluationChecks.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/WorkPlanReplanLongEvaluationChecks.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessCoreChecks/WorkspaceRecoveryChecks.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/WorkspaceRecoveryChecks.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/WorkspaceRecoveryChecks~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/WorkspaceRecoveryChecks.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/WorkspaceRecoveryChecks.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Sources/HarnessCoreChecks/XcodeValidationChecks.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/XcodeValidationChecks.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/XcodeValidationChecks~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/XcodeValidationChecks.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-arm64/arm64-apple-macosx/release/HarnessCoreChecks.build/XcodeValidationChecks.dia"  }
+}

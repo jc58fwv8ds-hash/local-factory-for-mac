@@ -41,12 +41,22 @@ enum ArtifactCreationPlanChecks {
         try expect(rewrite.targets.map(\.relativePath) == ["Sources/App.swift", "Sources/B.swift"],
                    "A plan could not rewrite an existing file")
 
+        // The same file named twice is one step with both instructions (2026-11-16), not a refused plan.
+        let merged = try ArtifactPlanResponseParser.plan(
+            from: #"{"files":[{"path":"Sources/A.swift","instruction":"x"},{"path":"sources/a.swift","instruction":"y"}]}"#,
+            instruction: "merge", existingPaths: existing)
+        try expect(merged.targets.count == 1 && merged.targets[0].instruction == "x\ny", "A file named twice was not merged")
+        // New folders under one that holds files are allowed, bounded (2026-11-26 baseline).
+        let fresh = try ArtifactPlanResponseParser.plan(
+            from: #"{"files":[{"path":"Sources/mojisu/main.swift","instruction":"x"},{"path":"Tests/mojisuTests/T.swift","instruction":"y"}]}"#,
+            instruction: "new", existingPaths: [])
+        try expect(fresh.targets.count == 2, "A new project's folders were refused")
+
         let invalidPayloads = [
             #"{"files":[{"path":"../Outside.swift","instruction":"x"},{"path":"Sources/B.swift","instruction":"y"}]}"#,
-            #"{"files":[{"path":"Sources/A.swift","instruction":"x"},{"path":"Sources/A.swift","instruction":"y"}]}"#,
-            #"{"files":[{"path":"Sources/A.swift","instruction":"x"},{"path":"sources/a.swift","instruction":"y"}]}"#,
             #"{"files":[{"path":"Sources/Only.swift","instruction":"x"}]}"#,
-            #"{"files":[{"path":"New/A.swift","instruction":"x"},{"path":"Sources/B.swift","instruction":"y"}]}"#
+            #"{"files":[{"path":"A/B/C/D/E.swift","instruction":"x"},{"path":"Sources/B.swift","instruction":"y"}]}"#,
+            #"{"files":[{"path":"Sources/.hidden/A.swift","instruction":"x"},{"path":"Sources/B.swift","instruction":"y"}]}"#
         ]
         for payload in invalidPayloads {
             do {

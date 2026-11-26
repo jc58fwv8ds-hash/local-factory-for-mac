@@ -28,12 +28,19 @@ struct ImageGenerationOptions: Sendable {
 struct ImageGenerationService: ImageGenerating {
     enum Failure: LocalizedError {
         case noCommand, notInstalled(String), failed(String), noImage
+        /// The tool ended with an error (its exit code and the end of its log).
+        case exited(Int32, String)
+        /// The tool made only part of what was asked and said so (exit code 3, e.g. a long video missing scenes); the
+        /// partial file is kept at its place, and this is not a success.
+        case partial(String)
         var errorDescription: String? {
             switch self {
             case .noCommand: "この画像モデルには実行方法が設定されていません(purpose-models.json の command)。"
             case .notInstalled(let tool): "画像を作るプログラム「\(tool)」が見つかりません。導入してからもう一度試してください。"
             case .failed(let log): "画像を作れませんでした。記録の最後: \(log)"
             case .noImage: "画像のファイルができませんでした。"
+            case .exited(let code, let log): "画像を作るプログラムがエラーで終わりました(終了コード \(code))。記録の最後: \(log)"
+            case .partial(let log): "一部だけしか作れませんでした。途中までのファイルは残してありますが、頼まれた全部ではありません。記録の最後: \(log)"
             }
         }
     }
@@ -49,17 +56,42 @@ struct ImageGenerationService: ImageGenerating {
         guard let executable = Self.resolve(program) else { throw Failure.notInstalled(program) }
         // "No model" under a lease for the whole run: running language requests finish first, and a chat request that comes
         // in meanwhile waits instead of loading the 27B beside the image model.
+        // A file already at the output (an earlier run's) must not pass for this run's result (2026-11-25 review).
+        let before = Self.modificationDate(output)
         let log = try await ModelRuntimes.shared.withLease(.none) {
             try Task.checkCancellation()
             await Self.releaseLanguageModels()
             let arguments = Self.arguments(template.dropFirst(), prompt: prompt, output: output, seed: options.seed, seconds: options.seconds, image: options.image, audio: options.audio, plan: options.plan, keyframes: options.keyframes, face: options.face)
             try FileManager.default.createDirectory(at: output.deletingLastPathComponent(), withIntermediateDirectories: true)
-            return try await Self.run(executable, arguments, limit: option.timeLimit ?? (1200 + Double(options.seconds ?? 0) * 150))
+            do {
+                return try await Self.run(executable, arguments, limit: option.timeLimit ?? (1200 + Double(options.seconds ?? 0) * 150))
+            } catch Failure.exited(Self.partialExitCode, let log) where FileManager.default.fileExists(atPath: output.path) {
+                throw Failure.partial(log)
+            }
         }
         try Task.checkCancellation()
-        guard FileManager.default.fileExists(atPath: output.path) else {
+        guard Self.madeAnew(output, before: before) else {
             throw log.isEmpty ? Failure.noImage : Failure.failed(String(log.suffix(300)))
         }
+    }
+
+    /// The exit code a tool uses for 「only part of it was made; the partial file is at the output」 (long_video.py).
+    static let partialExitCode: Int32 = 3
+
+    static func modificationDate(_ url: URL) -> Date? {
+        (try? FileManager.default.attributesOfItem(atPath: url.path))?[.modificationDate] as? Date
+    }
+
+    /// The output exists and was written by this run (it was not there before, or it changed since).
+    static func madeAnew(_ output: URL, before: Date?) -> Bool {
+        guard let now = modificationDate(output) else { return false }
+        return before.map { now > $0 } ?? true
+    }
+
+    /// Whether a finished tool succeeded: a normal exit with code 0. A tool stopped by a signal (the time limit, 止める,
+    /// a crash) or ending with an error is not, whatever files it left (2026-11-25 review: the exit was never looked at).
+    static func succeeded(status: Int32, reason: Process.TerminationReason) -> Bool {
+        reason == .exit && status == 0
     }
 
     static func arguments(_ template: ArraySlice<String>, prompt: String, output: URL, seed: Int = Int.random(in: 1...999_999),
@@ -106,7 +138,7 @@ struct ImageGenerationService: ImageGenerating {
         }
     }
 
-    /// Runs the tool with a time limit (20 minutes, more for a long video); returns its combined output. Cancelling the
+    /// Runs the tool with a time limit (20 minutes, more for a long video); returns its combined output, and throws `Failure.exited` when it does not end with code 0. Cancelling the
     /// task stops the tool (the card's 止める).
     static func run(_ executable: URL, _ arguments: [String], limit: Double = 1200) async throws -> String {
         let running = RunningProcess()
@@ -130,10 +162,14 @@ struct ImageGenerationService: ImageGenerating {
             let collected = OutputTail()
             pipe.fileHandleForReading.readabilityHandler = { collected.append($0.availableData) }
             running.attach(process)
-            process.terminationHandler = { _ in
+            process.terminationHandler = { finished in
                 running.finished()
                 pipe.fileHandleForReading.readabilityHandler = nil
                 collected.append(pipe.fileHandleForReading.readDataToEndOfFile())
+                guard succeeded(status: finished.terminationStatus, reason: finished.terminationReason) else {
+                    let code = finished.terminationReason == .exit ? finished.terminationStatus : 128 + finished.terminationStatus
+                    return continuation.resume(throwing: Failure.exited(code, String(collected.text.suffix(300))))
+                }
                 continuation.resume(returning: collected.text)
             }
             do {

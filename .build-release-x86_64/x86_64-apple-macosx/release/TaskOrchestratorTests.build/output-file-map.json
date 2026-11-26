@@ -1,0 +1,62 @@
+{
+  "": {
+    "dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/TaskOrchestratorTests.build/TaskOrchestratorTests.d",
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/TaskOrchestratorTests.build/TaskOrchestratorTests.o",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/TaskOrchestratorTests.build/primary.swiftdeps"
+  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Tests/TaskOrchestratorTests/AgreedTestLiveTests.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/TaskOrchestratorTests.build/AgreedTestLiveTests.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/TaskOrchestratorTests.build/AgreedTestLiveTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/TaskOrchestratorTests.build/AgreedTestLiveTests.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/TaskOrchestratorTests.build/AgreedTestLiveTests.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Tests/TaskOrchestratorTests/BatchExaminerStageTests.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/TaskOrchestratorTests.build/BatchExaminerStageTests.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/TaskOrchestratorTests.build/BatchExaminerStageTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/TaskOrchestratorTests.build/BatchExaminerStageTests.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/TaskOrchestratorTests.build/BatchExaminerStageTests.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Tests/TaskOrchestratorTests/BatchPipelineReplayTests.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/TaskOrchestratorTests.build/BatchPipelineReplayTests.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/TaskOrchestratorTests.build/BatchPipelineReplayTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/TaskOrchestratorTests.build/BatchPipelineReplayTests.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/TaskOrchestratorTests.build/BatchPipelineReplayTests.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Tests/TaskOrchestratorTests/BatchProposalFormatRepairTests.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/TaskOrchestratorTests.build/BatchProposalFormatRepairTests.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/TaskOrchestratorTests.build/BatchProposalFormatRepairTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/TaskOrchestratorTests.build/BatchProposalFormatRepairTests.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/TaskOrchestratorTests.build/BatchProposalFormatRepairTests.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Tests/TaskOrchestratorTests/ClarifyQuestionsTests.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/TaskOrchestratorTests.build/ClarifyQuestionsTests.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/TaskOrchestratorTests.build/ClarifyQuestionsTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/TaskOrchestratorTests.build/ClarifyQuestionsTests.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/TaskOrchestratorTests.build/ClarifyQuestionsTests.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Tests/TaskOrchestratorTests/ExampleCheckStageTests.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/TaskOrchestratorTests.build/ExampleCheckStageTests.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/TaskOrchestratorTests.build/ExampleCheckStageTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/TaskOrchestratorTests.build/ExampleCheckStageTests.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/TaskOrchestratorTests.build/ExampleCheckStageTests.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Tests/TaskOrchestratorTests/InferenceHealthReuseTests.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/TaskOrchestratorTests.build/InferenceHealthReuseTests.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/TaskOrchestratorTests.build/InferenceHealthReuseTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/TaskOrchestratorTests.build/InferenceHealthReuseTests.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/TaskOrchestratorTests.build/InferenceHealthReuseTests.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Tests/TaskOrchestratorTests/InferenceRouteTests.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/TaskOrchestratorTests.build/InferenceRouteTests.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/TaskOrchestratorTests.build/InferenceRouteTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/TaskOrchestratorTests.build/InferenceRouteTests.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/TaskOrchestratorTests.build/InferenceRouteTests.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Tests/TaskOrchestratorTests/OrchestratorKillResumeTests.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/TaskOrchestratorTests.build/OrchestratorKillResumeTests.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/TaskOrchestratorTests.build/OrchestratorKillResumeTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/TaskOrchestratorTests.build/OrchestratorKillResumeTests.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/TaskOrchestratorTests.build/OrchestratorKillResumeTests.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Tests/TaskOrchestratorTests/SecondCandidateTests.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/TaskOrchestratorTests.build/SecondCandidateTests.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/TaskOrchestratorTests.build/SecondCandidateTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/TaskOrchestratorTests.build/SecondCandidateTests.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/TaskOrchestratorTests.build/SecondCandidateTests.dia"  },
+  "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/Tests/TaskOrchestratorTests/SharedContextMessagesTests.swift": {
+    "object": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/TaskOrchestratorTests.build/SharedContextMessagesTests.swift.o",
+    "swiftmodule": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/TaskOrchestratorTests.build/SharedContextMessagesTests~partial.swiftmodule",
+    "swift-dependencies": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/TaskOrchestratorTests.build/SharedContextMessagesTests.swiftdeps",
+    "diagnostics": "/Users/yuta/Documents/Codex/2026-08-23/h/work/phase-b/work/public-repo/.build-release-x86_64/x86_64-apple-macosx/release/TaskOrchestratorTests.build/SharedContextMessagesTests.dia"  }
+}

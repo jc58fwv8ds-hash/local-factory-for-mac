@@ -49,7 +49,7 @@ extension WorkspaceStore {
     }
 
     /// Whether the writer, looking at the picture, says it shows what was asked with an unbroken body (PictureCheck); nil
-    /// when the check could not run.
+    /// when the check could not run or its reply said neither.
     func pictureShowsRequest(_ data: Data, prompt: String, writer: ModelSelection) async -> Bool? {
         let request = InferenceRequest(runtime: writer.runtime, modelIdentifier: writer.identifier, messages: [
             InferenceMessage(role: .user, content: PictureCheck.request(prompt: prompt))
@@ -58,26 +58,33 @@ extension WorkspaceStore {
         do {
             for try await piece in await inferenceProvider.events(for: request) { reply += piece }
         } catch { return nil }
-        return PictureCheck.passed(reply)
+        return PictureCheck.verdict(reply)
     }
 
     /// The full way, checked too, and made again with another seed when the check fails (2026-11-14, the user: 「2の確認は
     /// 最終画像にも入れてください。不合格なら作り直しで、数分増えるのは構いません」; a picture with four arms had passed
-    /// unchecked). Up to two more tries; the last one is kept when none passes. Returns the seed of the picture kept.
+    /// unchecked). Up to two more tries; the last one is kept when none passes, and the outcome says so (2026-11-25 review).
+    /// Returns the seed of the picture kept and how it stands.
     func checkedPicture(option: PurposeModelOption, prompt: String, output: URL, options: ImageGenerationOptions, isVideo: Bool,
-                        writer: ModelSelection?, status: (String) -> Void) async throws -> Int {
+                        writer: ModelSelection?, status: (String) -> Void) async throws -> (seed: Int, outcome: PictureCheck.Outcome) {
         var options = options
-        for attempt in 0..<(isVideo || writer == nil ? 1 : PictureCheck.tries) {
+        var outcome = PictureCheck.Outcome.unchecked
+        let tries = isVideo || writer == nil ? 1 : PictureCheck.tries
+        for attempt in 0..<tries {
             if attempt > 0 {
                 status("確かめた結果、頼みと合わない所があったので作り直しています(\(attempt + 1) 回目)")
                 options.seed += 7_919 * attempt
                 try? FileManager.default.removeItem(at: GeneratedMedia.stepsFolder(of: output))
             }
             try await imageGenerator.generate(option: option, prompt: prompt, output: output, options: options)
-            guard !Task.isCancelled, !isVideo, let writer, let data = try? Data(contentsOf: output) else { break }
-            if await pictureShowsRequest(data, prompt: prompt, writer: writer) != false { break }  // unchecked is kept
+            guard !Task.isCancelled, !isVideo, let writer, let data = try? Data(contentsOf: output) else { outcome = .unchecked; break }
+            switch await pictureShowsRequest(data, prompt: prompt, writer: writer) {
+            case true?: return (options.seed, .passed)
+            case false?: outcome = .failedKept(tries: attempt + 1)
+            case nil: outcome = .unchecked  // made again, like a failure; kept as unchecked if it is the last
+            }
         }
-        return options.seed
+        return (options.seed, outcome)
     }
 
     /// A video longer than one clip: the prompt writer splits it into scenes, each made from where the one before ended

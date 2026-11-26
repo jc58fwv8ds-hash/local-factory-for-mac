@@ -22,6 +22,33 @@ public enum PictureCheck {
     }
 
     public static func passed(_ reply: String) -> Bool {
-        reply.uppercased().replacingOccurrences(of: " ", with: "").contains("MATCH:YES")
+        verdict(reply) == true
+    }
+
+    /// true for MATCH: YES, false for MATCH: NO, nil when the reply says neither (not a pass).
+    public static func verdict(_ reply: String) -> Bool? {
+        let text = reply.uppercased().replacingOccurrences(of: " ", with: "")
+        if text.contains("MATCH:YES") { return true }
+        if text.contains("MATCH:NO") { return false }
+        return nil
+    }
+
+    /// How the picture that was kept stands (2026-11-25 review: after three failed tries the last picture was kept and
+    /// shown as done, with nothing saying it had failed the check).
+    public enum Outcome: Equatable, Sendable {
+        case passed
+        /// Every try failed the check; the last picture is kept anyway.
+        case failedKept(tries: Int)
+        /// The check did not run or its reply could not be read (a video, no prompt writer, an error).
+        case unchecked
+
+        /// What the note about the finished picture says, or "" when it passed or was never meant to be checked.
+        public var note: String {
+            switch self {
+            case .passed: ""
+            case .failedKept(let tries): "ただし、確かめでは頼みと合わない所がありました(\(tries) 回作り直しても合格しなかったので、最後の画像を残しています)。"
+            case .unchecked: "頼みと合っているかは確かめられませんでした。"
+            }
+        }
     }
 }
