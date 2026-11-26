@@ -6,3 +6,6 @@ xcuserdata/
 *.xcuserstate
 __pycache__/
 work/
+
+.build-release-arm64/
+.build-release-x86_64/
